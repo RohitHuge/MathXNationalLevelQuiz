@@ -3,16 +3,30 @@
 @theme {
   --color-slate-900: #0a0a14;
   --color-slate-800: #131424;
+  --color-slate-700: #1c1d30;
+  --color-slate-100: #f1f5f9;
+  --color-white: #ffffff;
 
   /* Cyber Neon Palette */
   --color-neon-cyan: #00f3ff;
   --color-neon-purple: #b026ff;
   --color-neon-blue: #0066ff;
 
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
   --color-gray-200: #e5e7eb;
   --color-gray-300: #d1d5db;
   --color-gray-400: #9ca3af;
+  --color-gray-600: #4b5563;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-red-50: #fef2f2;
+  --color-red-400: #f87171;
   --color-red-500: #ff3366;
+  --color-green-50: #f0fdf4;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
 
   --font-base: 'Inter', system-ui, sans-serif;
 }
@@ -27,6 +41,16 @@
       radial-gradient(circle at 15% 50%, rgba(176, 38, 255, 0.08) 0%, transparent 50%),
       radial-gradient(circle at 85% 30%, rgba(0, 243, 255, 0.08) 0%, transparent 50%);
     background-attachment: fixed;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Light Theme Class applied to body */
+  body.light-mode {
+    background-color: var(--color-gray-50);
+    color: var(--color-gray-900);
+    background-image:
+      radial-gradient(circle at 15% 50%, rgba(176, 38, 255, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(0, 102, 255, 0.03) 0%, transparent 50%);
   }
 }
 
