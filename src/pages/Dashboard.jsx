@@ -2,10 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { ThemeCard } from '../components/ui/ThemeCard';
 import { ThemeButton } from '../components/ui/ThemeButton';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../lib/appwrite';
 
 export default function Dashboard({ user }) {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+
+    // Floating math symbols for background
+    const MATH_SYMBOLS = ['∑', 'π', '∞', '√', '∫', 'Δ', 'θ', 'λ', '±', '≡', 'φ', 'Ω', '∂', '∇', '∈'];
+
+    function FloatingSymbol({ symbol, style }) {
+        return (
+            <span
+                className="absolute select-none text-blue-400 font-bold pointer-events-none"
+                style={style}
+                aria-hidden="true"
+            >
+                {symbol}
+            </span>
+        );
+    }
+
+    // Pre-generated positions so they don't re-randomize on render
+    const SYMBOL_DATA = MATH_SYMBOLS.map((sym, i) => ({
+        symbol: sym,
+        style: {
+            top: `${5 + (i * 6.2) % 90}%`,
+            left: `${3 + (i * 7.3) % 94}%`,
+            fontSize: `${1.2 + (i % 4) * 0.5}rem`,
+            opacity: 0.07 + (i % 5) * 0.025,
+            animation: `float ${5 + (i % 4) * 2}s ease-in-out ${i * 0.6}s infinite`,
+        },
+    }));
 
     useEffect(() => {
         // Simulate loading
@@ -16,17 +44,26 @@ export default function Dashboard({ user }) {
     }, []);
 
     return (
-        <div className="max-w-6xl mx-auto">
-            <div className="mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="relative min-h-[calc(100vh-100px)] w-full max-w-6xl mx-auto overflow-hidden">
+            {/* ── Floating math symbols background ── */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {SYMBOL_DATA.map((item, i) => (
+                    <FloatingSymbol key={i} symbol={item.symbol} style={item.style} />
+                ))}
+            </div>
+
+            <div className="relative z-10 w-full mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4">
                 <div>
-                    <h2 className="text-4xl font-black text-white mb-2 tracking-tight">Examination <span className="text-gradient">Terminal</span></h2>
+                    <h2 className="text-4xl font-black text-white mb-2 tracking-tight">Examination <span className="text-blue-500">Terminal</span></h2>
                     <p className="text-[var(--color-gray-400)] text-lg">
-                        Welcome, Public User. Select a simulation to begin.
+                        Welcome to MathX. Select a simulation to begin.
                     </p>
                 </div>
-                <div className="glass-panel px-5 py-2.5 rounded-xl flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-neon-cyan)] animate-pulse shadow-[0_0_10px_var(--color-neon-cyan)]"></div>
-                    <span className="text-sm font-bold text-[var(--color-neon-cyan)] tracking-widest uppercase">System Online</span>
+                <div className="flex flex-col items-end gap-3">
+                    <div className="bg-slate-800 border border-slate-700 px-5 py-2.5 rounded-xl flex items-center gap-3">
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_var(--color-blue-500)]"></div>
+                        <span className="text-sm font-bold text-blue-400 tracking-widest uppercase">System Online</span>
+                    </div>
                 </div>
             </div>
 

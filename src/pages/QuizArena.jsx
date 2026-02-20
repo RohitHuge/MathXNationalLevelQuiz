@@ -4,43 +4,43 @@ import { useNavigate } from 'react-router-dom';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 
-const DEMO_QUESTIONS = [
-    {
-        $id: 'q1',
-        questionText: 'Evaluate the definite integral: $$\\int_{0}^{\\pi/2} \\sin^2(x) \\, dx$$',
-        options: ['$$\\pi$$', '$$\\pi/2$$', '$$\\pi/4$$', '$$1$$'],
-        correctOptionIndex: 2,
-        points: 10
-    },
-    {
-        $id: 'q2',
-        questionText: 'Find the eigenvalues of the matrix $$A = \\begin{pmatrix} 2 & 1 \\\\ 1 & 2 \\end{pmatrix}$$',
-        options: ['$$1 \\text{ and } 3$$', '$$2 \\text{ and } 2$$', '$$-1 \\text{ and } -3$$', '$$0 \\text{ and } 4$$'],
-        correctOptionIndex: 0,
-        points: 15
-    },
-    {
-        $id: 'q3',
-        questionText: 'If $$f(x) = e^{2x} \\cos(3x)$$, what is $$f\'(0)$$?',
-        options: ['$$2$$', '$$3$$', '$$-3$$', '$$5$$'],
-        correctOptionIndex: 0,
-        points: 10
-    },
-    {
-        $id: 'q4',
-        questionText: 'Determine the radius of convergence of the power series $$\\sum_{n=1}^\\infty \\frac{x^n}{n!}$$',
-        options: ['$$0$$', '$$1$$', '$$e$$', '$$\\infty$$'],
-        correctOptionIndex: 3,
-        points: 10
-    },
-    {
-        $id: 'q5',
-        questionText: 'What is the sum of the first 100 positive integers? $$\\sum_{i=1}^{100} i$$',
-        options: ['$$5050$$', '$$5000$$', '$$1000$$', '$$5500$$'],
-        correctOptionIndex: 0,
-        points: 5
+// Generate 50 basic math questions for demo purposes
+const DEMO_QUESTIONS = Array.from({ length: 50 }, (_, i) => {
+    // We'll rotate between different types of basic questions so it's not totally repetitive
+    const type = i % 5;
+    let questionText, options, correctOptionIndex;
+
+    if (type === 0) {
+        questionText = `Solve the algebraic expression: $$${i + 2}x + ${i + 5} = ${i * 3 + 10}$$`;
+        options = [`$$x = \\frac{${i * 3 + 5}}{${i + 2}}$$`, `$$x = ${i + 1}$$`, `$$x = 0$$`, `$$x = -${i}$$`];
+        correctOptionIndex = 0;
+    } else if (type === 1) {
+        questionText = `Evaluate the definite integral: $$\\int_{0}^{\\pi/2} \\sin^2(x) \\, dx$$`;
+        options = ['$$\\pi$$', '$$\\pi/2$$', '$$\\pi/4$$', '$$1$$'];
+        correctOptionIndex = 2;
+    } else if (type === 2) {
+        questionText = `Find the eigenvalues of the matrix $$A = \\begin{pmatrix} ${i} & 1 \\\\ 1 & ${i} \\end{pmatrix}$$`;
+        options = [`$$${i - 1} \\text{ and } ${i + 1}$$`, `$$${i} \\text{ and } ${i}$$`, `$$0 \\text{ and } ${i}$$`, `$$1 \\text{ and } -1$$`];
+        correctOptionIndex = 0;
+    } else if (type === 3) {
+        questionText = `If $$f(x) = e^{${i}x} \\cos(x)$$, what is $$f'(0)$$?`;
+        options = [`$$${i}$$`, `$$${i + 1}$$`, `$$0$$`, `$$1$$`];
+        correctOptionIndex = 0;
+    } else {
+        questionText = `What is the sum of the first ${i + 10} positive integers?`;
+        const sum = ((i + 10) * (i + 11)) / 2;
+        options = [`$$${sum}$$`, `$$${sum - 5}$$`, `$$${sum + 10}$$`, `$$${sum * 2}$$`];
+        correctOptionIndex = 0;
     }
-];
+
+    return {
+        $id: `q${i + 1}`,
+        questionText,
+        options,
+        correctOptionIndex,
+        points: 4 // 50 questions * 4 = 200 PTS max
+    };
+});
 
 export default function QuizArena({ user }) {
     const navigate = useNavigate();
@@ -50,7 +50,7 @@ export default function QuizArena({ user }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState({});
     const [markedForReview, setMarkedForReview] = useState({}); // Stores boolean flag per index
-    const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 mins default
+    const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 mins default
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState(0);
 
