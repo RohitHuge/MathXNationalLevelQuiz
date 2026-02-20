@@ -1,12 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ThemeCard } from '../components/ui/ThemeCard';
-import { ThemeButton } from '../components/ui/ThemeButton';
+
+import 'katex/dist/katex.min.css';
+import Latex from 'react-latex-next';
 
 const DEMO_QUESTIONS = [
-    { $id: 'q1', questionText: 'If 3x + 4 = 19, what is the value of x?', options: ['3', '4', '5', '6'], correctOptionIndex: 2, points: 5 },
-    { $id: 'q2', questionText: 'What is the sum of the first 100 positive integers?', options: ['5050', '5000', '1000', '5500'], correctOptionIndex: 0, points: 10 },
-    { $id: 'q3', questionText: 'Evaluate the derivative of x^3 at x = 2.', options: ['12', '8', '6', '16'], correctOptionIndex: 0, points: 10 },
+    {
+        $id: 'q1',
+        questionText: 'Evaluate the definite integral: $$\\int_{0}^{\\pi/2} \\sin^2(x) \\, dx$$',
+        options: ['$$\\pi$$', '$$\\pi/2$$', '$$\\pi/4$$', '$$1$$'],
+        correctOptionIndex: 2,
+        points: 10
+    },
+    {
+        $id: 'q2',
+        questionText: 'Find the eigenvalues of the matrix $$A = \\begin{pmatrix} 2 & 1 \\\\ 1 & 2 \\end{pmatrix}$$',
+        options: ['$$1 \\text{ and } 3$$', '$$2 \\text{ and } 2$$', '$$-1 \\text{ and } -3$$', '$$0 \\text{ and } 4$$'],
+        correctOptionIndex: 0,
+        points: 15
+    },
+    {
+        $id: 'q3',
+        questionText: 'If $$f(x) = e^{2x} \\cos(3x)$$, what is $$f\'(0)$$?',
+        options: ['$$2$$', '$$3$$', '$$-3$$', '$$5$$'],
+        correctOptionIndex: 0,
+        points: 10
+    },
+    {
+        $id: 'q4',
+        questionText: 'Determine the radius of convergence of the power series $$\\sum_{n=1}^\\infty \\frac{x^n}{n!}$$',
+        options: ['$$0$$', '$$1$$', '$$e$$', '$$\\infty$$'],
+        correctOptionIndex: 3,
+        points: 10
+    },
+    {
+        $id: 'q5',
+        questionText: 'What is the sum of the first 100 positive integers? $$\\sum_{i=1}^{100} i$$',
+        options: ['$$5050$$', '$$5000$$', '$$1000$$', '$$5500$$'],
+        correctOptionIndex: 0,
+        points: 5
+    }
 ];
 
 export default function QuizArena({ user }) {
@@ -16,12 +49,12 @@ export default function QuizArena({ user }) {
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState({});
+    const [markedForReview, setMarkedForReview] = useState({}); // Stores boolean flag per index
     const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 mins default
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState(0);
 
     useEffect(() => {
-        // Simulate loading the test payload
         setTimeout(() => setLoading(false), 2000);
     }, []);
 
@@ -47,6 +80,13 @@ export default function QuizArena({ user }) {
         }));
     };
 
+    const toggleReview = () => {
+        setMarkedForReview(prev => ({
+            ...prev,
+            [currentIndex]: !prev[currentIndex]
+        }));
+    };
+
     const calculateScore = () => {
         let totalScore = 0;
         DEMO_QUESTIONS.forEach((q, idx) => {
@@ -58,6 +98,9 @@ export default function QuizArena({ user }) {
     };
 
     const handleSubmit = async () => {
+        if (!window.confirm("Are you sure you want to finish the exam?\nAny unattempted questions will score 0.")) {
+            return;
+        }
         setSubmitted(true);
         setScore(calculateScore());
     };
@@ -70,39 +113,38 @@ export default function QuizArena({ user }) {
 
     if (loading) return (
         <div className="min-h-[80vh] flex flex-col items-center justify-center">
-            <div className="w-20 h-20 border-4 border-white/5 border-t-[var(--color-neon-cyan)] rounded-full animate-spin shadow-[0_0_20px_rgba(0,243,255,0.4)] mb-8"></div>
-            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-neon-cyan)] to-[var(--color-neon-purple)] tracking-widest uppercase animate-pulse">
-                Generating Node Sequence
+            <div className="w-12 h-12 border-4 border-slate-800 border-t-blue-500 rounded-full animate-spin mb-6"></div>
+            <div className="text-xl font-semibold text-slate-400 tracking-wide">
+                Loading Quiz Data...
             </div>
         </div>
     );
 
     if (submitted) {
         return (
-            <div className="max-w-3xl mx-auto mt-20 relative">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--color-neon-purple)]/10 rounded-full blur-[100px] pointer-events-none"></div>
-                <ThemeCard glowColor="purple" className="text-center py-16 px-8 relative z-10 border-[var(--color-neon-purple)] bg-[var(--color-slate-900)]/80 backdrop-blur-xl">
-                    <div className="w-24 h-24 glass-panel rounded-full flex items-center justify-center mx-auto mb-8 border border-[var(--color-neon-cyan)] shadow-[0_0_30px_rgba(0,243,255,0.3)]">
-                        <svg className="w-12 h-12 text-[var(--color-neon-cyan)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="max-w-xl mx-auto mt-20 px-4">
+                <div className="bg-slate-900 border border-slate-800 text-center py-16 px-8 rounded-2xl shadow-xl">
+                    <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-10 h-10 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 className="text-5xl font-black mb-4 text-white tracking-tight">Sequence Terminated</h2>
-                    <p className="text-[var(--color-gray-300)] mb-12 text-lg">Transmission complete. The neural databanks have recorded your results.</p>
+                    <h2 className="text-3xl font-bold mb-4 text-white">Quiz Completed</h2>
+                    <p className="text-slate-400 mb-10">Your results have been successfully recorded.</p>
 
-                    <div className="glass-panel rounded-3xl p-10 mb-12 border border-[var(--color-neon-purple)]/30 inline-block shadow-[inset_0_0_50px_rgba(176,38,255,0.1)]">
-                        <div className="text-sm text-[var(--color-neon-purple)] font-bold mb-3 uppercase tracking-[0.2em]">Final Evaluation Score</div>
-                        <div className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-[var(--color-gray-500)] tracking-tighter drop-shadow-2xl">
-                            {score} <span className="text-3xl font-bold text-[var(--color-gray-500)] tracking-normal align-top mt-4 inline-block">PTS</span>
+                    <div className="bg-slate-800/50 rounded-2xl p-8 mb-10 border border-slate-700/50 inline-block">
+                        <div className="text-sm text-slate-400 font-medium mb-2 uppercase tracking-wider">Final Score</div>
+                        <div className="text-6xl font-black text-white tracking-tight">
+                            {score} <span className="text-xl font-bold text-slate-500">PTS</span>
                         </div>
                     </div>
 
                     <div>
-                        <ThemeButton onClick={() => navigate('/dashboard')} variant="primary" className="px-12 py-4 text-lg">
-                            Return to Nexus
-                        </ThemeButton>
+                        <button onClick={() => navigate('/dashboard')} className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-colors">
+                            Return to Dashboard
+                        </button>
                     </div>
-                </ThemeCard>
+                </div>
             </div>
         );
     }
@@ -110,81 +152,157 @@ export default function QuizArena({ user }) {
     const currentQ = DEMO_QUESTIONS[currentIndex];
 
     return (
-        <div className="max-w-5xl mx-auto relative min-h-[85vh] flex flex-col">
-            {/* Top HUD */}
-            <div className="flex justify-between items-center mb-8 glass-panel rounded-2xl p-5 border border-[var(--color-neon-cyan)]/20 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-                <div className="flex items-center gap-4">
-                    <div className="glass-panel px-5 py-2.5 rounded-xl font-bold text-lg text-white border border-white/10 flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-neon-purple)] shadow-[0_0_10px_var(--color-neon-purple)]"></div>
-                        Node <span className="text-[var(--color-neon-purple)]">{currentIndex + 1}</span> of {DEMO_QUESTIONS.length}
+        <div className="w-full max-w-7xl mx-auto h-[calc(100vh-100px)] flex flex-col md:flex-row gap-6 p-4">
+            {/* LEFT AREA: Quiz Content Container */}
+            <div className="flex-1 flex flex-col h-full min-w-0 pb-4">
+
+                {/* Question Panel */}
+                <div className="flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-t-xl overflow-hidden min-h-0">
+                    <div className="w-full p-6 flex justify-between items-center border-b border-slate-800 shrink-0 bg-slate-900/50">
+                        <div className="px-3 py-1 bg-slate-800 rounded text-slate-300 font-semibold text-sm">
+                            Question <span className="text-white font-bold ml-1">{currentIndex + 1}</span> of {DEMO_QUESTIONS.length}
+                        </div>
+
+                        <button
+                            onClick={toggleReview}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-semibold transition-colors border ${markedForReview[currentIndex]
+                                ? 'bg-orange-500/10 text-orange-400 border-orange-500/30'
+                                : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-white'
+                                }`}
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {markedForReview[currentIndex] ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                )}
+                            </svg>
+                            {markedForReview[currentIndex] ? 'Marked' : 'Mark for Review'}
+                        </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col">
+                        <h3 className="text-xl md:text-2xl font-semibold mb-8 text-white leading-relaxed shrink-0">
+                            <Latex>{currentQ?.questionText}</Latex>
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pb-4 shrink-0">
+                            {currentQ?.options?.map((opt, i) => {
+                                const isSelected = answers[currentIndex] === i;
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => handleSelect(i)}
+                                        className={`w-full text-left p-4 rounded-xl border transition-all duration-150 flex items-center gap-4 group shrink-0 ${isSelected
+                                            ? 'bg-blue-600/10 border-blue-500 text-white'
+                                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600 hover:text-white'
+                                            }`}
+                                    >
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${isSelected ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-400 group-hover:bg-slate-600 group-hover:text-white'}`}>
+                                            {String.fromCharCode(65 + i)}
+                                        </div>
+                                        <span className="text-lg font-medium overflow-x-auto custom-scrollbar">
+                                            <Latex>{opt}</Latex>
+                                        </span>
+                                    </button>
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
-                <div className={`glass-panel flex items-center gap-3 font-mono text-3xl font-black px-6 py-2.5 rounded-xl border tracking-widest ${timeLeft < 60 ? 'bg-red-500/10 text-red-500 border-red-500/50 animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.4)]' : 'text-[var(--color-neon-cyan)] border-[var(--color-neon-cyan)]/30 shadow-[0_0_20px_rgba(0,243,255,0.2)]'}`}>
-                    <svg className={`w-8 h-8 ${timeLeft < 60 ? 'text-red-500' : 'text-[var(--color-neon-cyan)]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {formatTime(timeLeft)}
+
+                {/* Bottom Nav */}
+                <div className="shrink-0 bg-slate-900 border-x border-b border-slate-800 flex justify-between items-center p-4 rounded-b-xl border-t border-t-slate-800/50">
+                    <button
+                        onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
+                        disabled={currentIndex === 0}
+                        className="px-6 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700"
+                    >
+                        Previous
+                    </button>
+
+                    <button
+                        onClick={() => setCurrentIndex(prev => Math.min(DEMO_QUESTIONS.length - 1, prev + 1))}
+                        disabled={currentIndex === DEMO_QUESTIONS.length - 1}
+                        className={`px-8 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed border ${currentIndex === DEMO_QUESTIONS.length - 1 ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-600'}`}
+                    >
+                        Next
+                    </button>
                 </div>
             </div>
 
-            {/* Main Panel */}
-            <ThemeCard glowColor="cyan" className="flex-1 flex flex-col justify-center p-8 lg:p-14 mb-8">
-                <div className="relative z-10">
-                    <h3 className="text-3xl lg:text-5xl font-black mb-14 leading-snug text-white tracking-tight">
-                        {currentQ?.questionText}
-                    </h3>
+            {/* RIGHT AREA: Timer & Overview Sidebar (Desktop) */}
+            <div className="w-full md:w-[300px] lg:w-[340px] shrink-0 flex flex-col gap-4 h-full pb-4">
 
-                    <div className="space-y-4 w-full max-w-4xl">
-                        {currentQ?.options?.map((opt, i) => {
-                            const isSelected = answers[currentIndex] === i;
+                {/* Timer Panel */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl text-center py-6 shrink-0 shadow-sm">
+                    <div className="text-slate-400 uppercase tracking-wider text-xs font-semibold mb-2 flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Time Remaining
+                    </div>
+                    <div className={`font-mono text-4xl font-bold tracking-tight ${timeLeft < 60 ? 'text-red-500' : 'text-white'}`}>
+                        {formatTime(timeLeft)}
+                    </div>
+                </div>
+
+                {/* Questions Overview Panel */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl flex-1 flex flex-col p-5 min-h-0 shadow-sm">
+                    <h4 className="shrink-0 text-white font-semibold tracking-wider uppercase mb-4 flex items-center gap-3 border-b border-slate-800 pb-3 text-sm">
+                        Navigation
+                    </h4>
+
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-2 overflow-y-auto custom-scrollbar flex-1 content-start pr-1 pb-2">
+                        {DEMO_QUESTIONS.map((_, idx) => {
+                            const isCurrent = currentIndex === idx;
+                            const isAnswered = answers[idx] !== undefined;
+                            const isMarked = markedForReview[idx];
+
+                            let styling = 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700';
+
+                            if (isCurrent) {
+                                styling = 'bg-blue-600 text-white border-blue-500 shadow-sm font-bold z-10';
+                            } else if (isMarked) {
+                                styling = 'bg-orange-500/10 text-orange-400 border-orange-500/30';
+                            } else if (isAnswered) {
+                                styling = 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+                            }
+
                             return (
                                 <button
-                                    key={i}
-                                    onClick={() => handleSelect(i)}
-                                    className={`w-full text-left p-6 rounded-2xl border-2 transition-all duration-300 flex items-center gap-6 group relative overflow-hidden ${isSelected
-                                            ? 'border-[var(--color-neon-cyan)] bg-[var(--color-neon-cyan)]/10 text-white shadow-[0_0_30px_rgba(0,243,255,0.15)] scale-[1.01]'
-                                            : 'border-white/5 glass-panel text-[var(--color-gray-300)] hover:border-[var(--color-neon-purple)]/50 hover:bg-white/5 hover:text-white'
-                                        }`}
+                                    key={idx}
+                                    onClick={() => setCurrentIndex(idx)}
+                                    className={`w-full aspect-square rounded-lg flex items-center justify-center font-medium text-sm transition-colors border ${styling}`}
                                 >
-                                    {isSelected && (
-                                        <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-neon-cyan)]/20 to-transparent pointer-events-none"></div>
+                                    {idx + 1}
+                                    {isMarked && !isCurrent && (
+                                        <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-orange-400"></div>
                                     )}
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shrink-0 transition-colors ${isSelected ? 'bg-[var(--color-neon-cyan)] text-black shadow-[0_0_15px_var(--color-neon-cyan)]' : 'glass-panel text-[var(--color-gray-400)] group-hover:text-[var(--color-neon-purple)] group-hover:border-[var(--color-neon-purple)]'}`}>
-                                        {String.fromCharCode(65 + i)}
-                                    </div>
-                                    <span className="text-2xl font-semibold tracking-wide relative z-10">{opt}</span>
                                 </button>
-                            )
+                            );
                         })}
                     </div>
+
+                    {/* Legend */}
+                    <div className="shrink-0 mt-4 border-t border-slate-800 pt-3 grid grid-cols-2 gap-y-2 gap-x-2 text-xs text-slate-400 font-medium">
+                        <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded bg-blue-600"></div> Current</div>
+                        <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded bg-blue-500/10 border border-blue-500/30"></div> Answered</div>
+                        <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded bg-orange-500/10 border border-orange-500/30"></div> Marked</div>
+                        <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded bg-slate-800 border border-slate-700"></div> Unvisited</div>
+                    </div>
+
+                    <div className="shrink-0 mt-auto pt-4">
+                        <button
+                            onClick={handleSubmit}
+                            className="w-full py-3 rounded-lg text-sm font-semibold tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+                        >
+                            SUBMIT EXAM
+                        </button>
+                    </div>
                 </div>
-            </ThemeCard>
-
-            {/* Bottom Nav */}
-            <div className="glass-panel flex justify-between items-center mt-auto p-6 rounded-2xl border border-white/10 shadow-2xl">
-                <ThemeButton
-                    variant="secondary"
-                    onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
-                    disabled={currentIndex === 0}
-                    className="px-10 py-3 text-lg"
-                >
-                    &lt; Previous
-                </ThemeButton>
-
-                {currentIndex === DEMO_QUESTIONS.length - 1 ? (
-                    <ThemeButton variant="primary" onClick={handleSubmit} className="px-12 py-3 text-lg bg-gradient-to-r from-green-500 to-emerald-400 shadow-[0_0_20px_rgba(34,197,94,0.4)]">
-                        INITIATE SUBMISSION Sequence
-                    </ThemeButton>
-                ) : (
-                    <ThemeButton
-                        variant="cyan"
-                        onClick={() => setCurrentIndex(prev => Math.min(DEMO_QUESTIONS.length - 1, prev + 1))}
-                        className="px-12 py-3 text-lg"
-                    >
-                        Next &gt;
-                    </ThemeButton>
-                )}
             </div>
+
         </div>
     );
 }
