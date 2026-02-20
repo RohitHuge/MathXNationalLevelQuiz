@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --color-slate-900: #0a0a14;
+  --color-slate-800: #131424;
+
+  /* Cyber Neon Palette */
+  --color-neon-cyan: #00f3ff;
+  --color-neon-purple: #b026ff;
+  --color-neon-blue: #0066ff;
+
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-red-500: #ff3366;
+
+  --font-base: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-slate-900);
+    color: var(--color-gray-200);
+    font-family: var(--font-base);
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(circle at 15% 50%, rgba(176, 38, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(0, 243, 255, 0.08) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+/* Glassmorphism & Neon */
+.glass-panel {
+  background: rgba(19, 20, 36, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.4),
+    0 0 20px rgba(0, 243, 255, 0.2);
+  border-color: rgba(0, 243, 255, 0.5);
+}
+
+.neon-glow-purple {
+  box-shadow: 0 0 10px rgba(176, 38, 255, 0.4),
+    0 0 20px rgba(176, 38, 255, 0.2);
+  border-color: rgba(176, 38, 255, 0.5);
+}
+
+.neon-glow-blue {
+  box-shadow: 0 0 10px rgba(0, 102, 255, 0.4),
+    0 0 20px rgba(0, 102, 255, 0.2);
+  border-color: rgba(0, 102, 255, 0.5);
+}
+
+.text-gradient {
+  background: linear-gradient(to right, var(--color-neon-cyan), var(--color-neon-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
