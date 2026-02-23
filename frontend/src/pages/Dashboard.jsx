@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ThemeButton } from '../components/ui/ThemeButton';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../lib/appwrite';
-import anime from 'animejs/lib/anime.es.js';
+import { animate, stagger } from 'animejs';
 
 const MATH_SYMBOLS = ['∑', 'π', '∞', '√', '∫', 'Δ', 'θ', 'λ', '±', '≡', 'φ', 'Ω', '∂', '∇', '∈'];
 const SYMBOL_COUNT = 80;
@@ -46,26 +46,24 @@ export default function Dashboard({ user }) {
                 container.appendChild(span);
             });
 
-            anime({
-                targets: '.portal-container',
+            animate('.portal-container', {
                 rotateZ: [0, 360],
                 duration: 120000,
                 loop: true,
-                easing: 'linear'
+                ease: 'linear'
             });
 
-            anime({
-                targets: '.anime-symbol',
+            animate('.anime-symbol', {
                 translateZ: '+=3500px',
                 opacity: [
-                    { value: 0, duration: 0 },
-                    { value: 0.8, duration: 1500, easing: 'easeOutSine' },
-                    { value: 0, duration: 1500, delay: 2000, easing: 'easeInSine' }
+                    { to: 0, duration: 0 },
+                    { to: 0.8, duration: 1500, ease: 'outSine' },
+                    { to: 0, duration: 1500, delay: 2000, ease: 'inSine' }
                 ],
                 duration: () => 5000 + Math.random() * 3000,
                 loop: true,
-                delay: anime.stagger(30, { start: 0 }),
-                easing: 'linear'
+                delay: stagger(30, { start: 0 }),
+                ease: 'linear'
             });
         }
 
