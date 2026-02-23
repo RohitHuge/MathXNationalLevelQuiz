@@ -67,55 +67,71 @@ export const ClientView = () => {
                     </div>
                 </div>
 
-                {/* Question Area */}
-                <div className="text-center mb-12">
-                    <h2 className="text-2xl text-gray-300 font-medium mb-6">
-                        {activeQuestion ? activeQuestion.text : 'Waiting for question...'}
-                    </h2>
-                    <div className="text-4xl sm:text-5xl py-8 px-4 bg-brand-dark/40 rounded-xl border border-brand-blue/30 glow-blue">
-                        {activeQuestion && activeQuestion.mathText ? (
-                            <BlockMath math={activeQuestion.mathText} />
-                        ) : (
-                            <BlockMath math="\int_{0}^{\infty} \frac{\sin x}{x} dx" />
-                        )}
+                {!activeQuestion ? (
+                    <div className="flex flex-col items-center justify-center py-20 space-y-8 animate-in zoom-in duration-500">
+                        <div className="relative w-24 h-24 flex items-center justify-center">
+                            <div className="absolute inset-0 border-4 border-brand-cyan/20 rounded-full"></div>
+                            <div className="absolute inset-0 border-4 border-brand-cyan border-t-transparent rounded-full animate-spin"></div>
+                            <Timer className="text-brand-cyan absolute" size={32} />
+                        </div>
+                        <div className="text-center space-y-2">
+                            <h2 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-brand-cyan to-brand-purple animate-pulse">
+                                Waiting for question...
+                            </h2>
+                            <p className="text-gray-400 font-medium">Keep your fastest fingers ready!</p>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <>
+                        {/* Question Area */}
+                        <div className="text-center mb-12 animate-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-2xl text-gray-300 font-medium mb-6">
+                                {activeQuestion.text}
+                            </h2>
+                            <div className="text-4xl sm:text-5xl py-8 px-4 bg-brand-dark/40 rounded-xl border border-brand-blue/30 glow-blue">
+                                {activeQuestion.mathText && (
+                                    <BlockMath math={activeQuestion.mathText} />
+                                )}
+                            </div>
+                        </div>
 
-                {/* Input Area */}
-                <div className="flex flex-col items-center gap-6 mb-10">
-                    <input
-                        type="number"
-                        step="any"
-                        placeholder="Enter numerical answer..."
-                        value={numericAnswer}
-                        onChange={(e) => !isLocked && setNumericAnswer(e.target.value)}
-                        disabled={isLocked}
-                        className={`w-full max-w-md text-center text-4xl p-4 rounded-xl border-2 bg-brand-dark/60 outline-none transition-all duration-300 font-mono
-                            ${isLocked
-                                ? 'border-green-500 bg-green-500/10 shadow-[0_0_20px_rgba(34,197,94,0.3)] text-green-400 opacity-90 grayscale'
-                                : 'border-brand-panel-border focus:border-brand-cyan focus:shadow-[0_0_15px_rgba(0,255,255,0.2)] text-white'
-                            }
-                        `}
-                    />
-                </div>
+                        {/* Input Area */}
+                        <div className="flex flex-col items-center gap-6 mb-10 animate-in slide-in-from-bottom-6 duration-500">
+                            <input
+                                type="number"
+                                step="any"
+                                placeholder="Enter numerical answer..."
+                                value={numericAnswer}
+                                onChange={(e) => !isLocked && setNumericAnswer(e.target.value)}
+                                disabled={isLocked}
+                                className={`w-full max-w-md text-center text-4xl p-4 rounded-xl border-2 bg-brand-dark/60 outline-none transition-all duration-300 font-mono
+                                    ${isLocked
+                                        ? 'border-green-500 bg-green-500/10 shadow-[0_0_20px_rgba(34,197,94,0.3)] text-green-400 opacity-90 grayscale'
+                                        : 'border-brand-panel-border focus:border-brand-cyan focus:shadow-[0_0_15px_rgba(0,255,255,0.2)] text-white'
+                                    }
+                                `}
+                            />
+                        </div>
 
-                {/* Action Button */}
-                <div className="flex justify-center">
-                    <Button
-                        className="w-1/2 max-w-sm py-5 text-xl tracking-widest uppercase font-black"
-                        variant={isLocked ? 'secondary' : 'glow'}
-                        onClick={handleLock}
-                        disabled={numericAnswer.trim() === '' || isLocked}
-                    >
-                        {isLocked ? (
-                            <>
-                                <Lock size={24} /> Answer Locked
-                            </>
-                        ) : (
-                            'Lock Answer'
-                        )}
-                    </Button>
-                </div>
+                        {/* Action Button */}
+                        <div className="flex justify-center animate-in slide-in-from-bottom-8 duration-500">
+                            <Button
+                                className="w-1/2 max-w-sm py-5 text-xl tracking-widest uppercase font-black"
+                                variant={isLocked ? 'secondary' : 'glow'}
+                                onClick={handleLock}
+                                disabled={numericAnswer.trim() === '' || isLocked}
+                            >
+                                {isLocked ? (
+                                    <>
+                                        <Lock size={24} /> Answer Locked
+                                    </>
+                                ) : (
+                                    'Lock Answer'
+                                )}
+                            </Button>
+                        </div>
+                    </>
+                )}
 
             </Card>
         </div>
