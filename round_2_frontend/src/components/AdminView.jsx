@@ -1,0 +1,105 @@
+import React, { useState } from 'react';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
+import { Send, Trophy, Clock, Users } from 'lucide-react';
+
+export const AdminView = () => {
+    const [questionSent, setQuestionSent] = useState(false);
+
+    // Mock data for connected clients
+    const clients = [
+        { id: '1', name: 'Team Alpha', time: '1.24s', correct: true },
+        { id: '2', name: 'Team Beta', time: '1.85s', correct: true },
+        { id: '3', name: 'Team Gamma', time: '2.10s', correct: false },
+        { id: '4', name: 'Team Delta', time: '---', correct: null },
+    ];
+
+    return (
+        <div className="max-w-6xl mx-auto p-6 space-y-8 animate-in fade-in zoom-in duration-500">
+            <header className="flex justify-between items-center mb-10">
+                <div>
+                    <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-brand-cyan to-brand-purple">
+                        MathX Admin Control
+                    </h1>
+                    <p className="text-gray-400 mt-2">Fastest Fingers First - Round 2</p>
+                </div>
+                <div className="flex gap-4">
+                    <div className="glass-panel px-4 py-2 rounded-lg flex items-center gap-2">
+                        <Users className="text-brand-cyan" size={20} />
+                        <span className="font-bold">44 Connected</span>
+                    </div>
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                {/* Left Panel - Controls */}
+                <div className="lg:col-span-1 space-y-6">
+                    <Card>
+                        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                            <Send className="text-brand-purple" />
+                            Question Control
+                        </h2>
+                        <div className="space-y-4">
+                            <div className="bg-brand-dark/50 p-4 rounded-lg border border-brand-panel-border">
+                                <p className="text-sm text-gray-400 mb-1">Current Question</p>
+                                <p className="font-mono text-lg">Q1. Integration Limits</p>
+                            </div>
+
+                            <Button
+                                variant={questionSent ? "secondary" : "glow"}
+                                className="w-full py-4 text-lg"
+                                onClick={() => setQuestionSent(!questionSent)}
+                            >
+                                {questionSent ? 'Question Sent' : 'Send Question 1'}
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Right Panel - Leaderboard */}
+                <div className="lg:col-span-2">
+                    <Card className="h-full">
+                        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                            <Trophy className="text-brand-cyan" />
+                            Fastest Responses
+                        </h2>
+
+                        <div className="space-y-3">
+                            {clients.map((client, idx) => (
+                                <div
+                                    key={client.id}
+                                    className={`flex items-center justify-between p-4 rounded-xl border ${idx === 0 && client.correct
+                                            ? 'bg-brand-blue/20 border-brand-cyan glow-cyan'
+                                            : 'bg-brand-dark/50 border-brand-panel-border hover:border-brand-purple transition-colors'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <span className={`text-2xl font-black ${idx === 0 ? 'text-brand-cyan' : 'text-gray-500'}`}>
+                                            #{idx + 1}
+                                        </span>
+                                        <span className="font-bold text-lg">{client.name}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-6">
+                                        {client.correct !== null && (
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${client.correct ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                                }`}>
+                                                {client.correct ? 'CORRECT' : 'INCORRECT'}
+                                            </span>
+                                        )}
+                                        <div className="flex items-center gap-2 font-mono text-xl w-24 justify-end text-brand-cyan">
+                                            <Clock size={16} />
+                                            {client.time}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+
+            </div>
+        </div>
+    );
+};
