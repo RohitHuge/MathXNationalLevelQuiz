@@ -59,12 +59,24 @@ io.on('connection', (socket) => {
             activeQuestion = await prisma.question.findUnique({
                 where: { id: questionData.id }
             });
-            // Broadcast to all clients
-            io.emit('question:active', activeQuestion);
-            // Reset leaderboard for this question
-            io.to('admins').emit('leaderboard:update', { questionId: activeQuestion.id, answers: [] });
+
+            // Fallback if the requested DB id doesn't exist
+            if (!activeQuestion) {
+                console.log(`Question ${questionData.id} not found, falling back to first available query.`);
+                activeQuestion = await prisma.question.findFirst();
+            }
+
+            if (activeQuestion) {
+                console.log(`Broadcasting question ${activeQuestion.id} to all clients`);
+                // Broadcast to all clients
+                io.emit('question:active', activeQuestion);
+                // Reset leaderboard for this question
+                io.to('admins').emit('leaderboard:update', { questionId: activeQuestion.id, answers: [] });
+            } else {
+                console.error('No questions found in the database to send!');
+            }
         } catch (e) {
-            console.error(e);
+            console.error('Error in admin:send_question:', e);
         }
     });
 
