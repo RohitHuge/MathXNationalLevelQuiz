@@ -46,29 +46,27 @@ function WelcomeScreen() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<WelcomeScreen />} />
-          <Route
-            path="/admin"
-            element={
-              <SocketProvider isAdmin={true}>
-                <AdminView />
-              </SocketProvider>
-            }
-          />
-          <Route
-            path="/client"
-            element={
-              <SocketProvider isAdmin={false} clientName={`Team-${Math.floor(Math.random() * 1000)}`}>
-                <ClientView />
-              </SocketProvider>
-            }
-          />
-        </Routes>
-      </MainLayout>
-    </BrowserRouter>
+    <MainLayout>
+      <Routes>
+        <Route path="/" element={<WelcomeScreen />} />
+        <Route
+          path="/admin"
+          element={
+            <SocketProvider isAdmin={true}>
+              <AdminView />
+            </SocketProvider>
+          }
+        />
+        <Route
+          path="/client"
+          element={
+            <SocketProvider isAdmin={false} clientName={`Team-${Math.floor(Math.random() * 1000)}`}>
+              <ClientView />
+            </SocketProvider>
+          }
+        />
+      </Routes>
+    </MainLayout>
   );
 }
 
