@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ThemeCard } from '../components/ui/ThemeCard';
 import { ThemeButton } from '../components/ui/ThemeButton';
 import { animate, stagger } from 'animejs';
+import { useSocket } from '../SocketContext';
 
 const MATH_SYMBOLS = ['∑', 'π', '∞', '√', '∫', 'Δ', 'θ', 'λ', '±', '≡', 'φ', 'Ω', '∂', '∇', '∈'];
 const SYMBOL_COUNT = 80;
@@ -42,6 +43,7 @@ const SYMBOL_DATA = Array.from({ length: SYMBOL_COUNT }).map((_, i) => {
 export default function WaitingRoom({ user }) {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { socket } = useSocket();
 
     const [loading, setLoading] = useState(true);
     const [status, setStatus] = useState('Establishing Secure Connection...');
@@ -53,6 +55,19 @@ export default function WaitingRoom({ user }) {
         duration: 15,
         questionCount: 3
     };
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleStage = (data) => {
+            if (data.stage === 'quiz') {
+                navigate(`/quiz/${id}`);
+            }
+        };
+
+        socket.on('stage:change', handleStage);
+        return () => socket.off('stage:change', handleStage);
+    }, [socket, navigate, id]);
 
     useEffect(() => {
         setTimeout(() => setStatus('Loading Simulator Data...'), 600);

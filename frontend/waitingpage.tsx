@@ -1,6 +1,20 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSocket } from "../SocketContext";
+import { useEffect, useState, useRef, useCallback } from "react";
+
+interface FloatingSymbol {
+    id: number;
+    symbol: string;
+    x: number;
+    y: number;
+    size: number;
+    speed: number;
+    opacity: number;
+    rotation: number;
+    rotationSpeed: number;
+    delay: number;
+    drift: number;
+    driftSpeed: number;
+    color: string;
+}
 
 const MATH_SYMBOLS = [
     "π", "∑", "∫", "√", "∞", "Δ", "θ", "λ", "μ", "σ",
@@ -12,11 +26,11 @@ const MATH_SYMBOLS = [
     "x²", "eⁿ", "n!", "∛", "∜"
 ];
 
-function getRandomSymbol() {
+function getRandomSymbol(): string {
     return MATH_SYMBOLS[Math.floor(Math.random() * MATH_SYMBOLS.length)];
 }
 
-function getRandomColor() {
+function getRandomColor(): string {
     const colors = [
         // Soft purple tones
         "rgba(161, 70, 212, 0.45)",
@@ -31,7 +45,7 @@ function getRandomColor() {
     return colors[Math.floor(Math.random() * colors.length)];
 }
 
-function createSymbol(id, canvasHeight) {
+function createSymbol(id: number, canvasHeight: number): FloatingSymbol {
     return {
         id,
         symbol: getRandomSymbol(),
@@ -59,19 +73,17 @@ function PulsingDot() {
     );
 }
 
-export default function Dashboard({ user }) {
-    const navigate = useNavigate();
-    const { socket } = useSocket();
-    const [symbols, setSymbols] = useState([]);
-    const animationRef = useRef(0);
-    const lastTimeRef = useRef(0);
+export function App() {
+    const [symbols, setSymbols] = useState<FloatingSymbol[]>([]);
+    const animationRef = useRef<number>(0);
+    const lastTimeRef = useRef<number>(0);
     const symbolIdRef = useRef(0);
     const [showContent, setShowContent] = useState(false);
     const [time, setTime] = useState(new Date());
 
     const initSymbols = useCallback(() => {
         const count = 60;
-        const initial = [];
+        const initial: FloatingSymbol[] = [];
         for (let i = 0; i < count; i++) {
             const sym = createSymbol(symbolIdRef.current++, 100);
             sym.y = Math.random() * 120 - 10;
@@ -79,19 +91,6 @@ export default function Dashboard({ user }) {
         }
         setSymbols(initial);
     }, []);
-
-    useEffect(() => {
-        if (!socket) return;
-
-        const handleStage = (data) => {
-            if (data.stage === 'waiting') {
-                navigate('/waiting-room/demo');
-            }
-        };
-
-        socket.on('stage:change', handleStage);
-        return () => socket.off('stage:change', handleStage);
-    }, [socket, navigate]);
 
     useEffect(() => {
         initSymbols();
@@ -104,7 +103,7 @@ export default function Dashboard({ user }) {
     }, []);
 
     useEffect(() => {
-        const animate = (timestamp) => {
+        const animate = (timestamp: number) => {
             if (!lastTimeRef.current) lastTimeRef.current = timestamp;
             const delta = timestamp - lastTimeRef.current;
             lastTimeRef.current = timestamp;
@@ -144,7 +143,7 @@ export default function Dashboard({ user }) {
 
     return (
         <div
-            className="fixed inset-0 w-screen h-screen overflow-hidden"
+            className="relative min-h-screen w-full overflow-hidden"
             style={{
                 background:
                     "linear-gradient(135deg, #3b0b6d 0%, #180b2b 40%, #031622 70%, #027c96 100%)",
@@ -186,7 +185,7 @@ export default function Dashboard({ user }) {
 
             {/* Main content */}
             <div
-                className={`relative z-10 flex h-full flex-col items-center justify-center px-4 transition-all duration-1500 ${showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                className={`relative z-10 flex min-h-screen flex-col items-center justify-center px-4 transition-all duration-1500 ${showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                     }`}
             >
                 {/* Glowing background behind heading */}

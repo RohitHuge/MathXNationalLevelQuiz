@@ -1,0 +1,27 @@
+{
+  "name": "mathxnationallevelquiz",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RohitHuge/MathXNationalLevelQuiz.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RohitHuge/MathXNationalLevelQuiz/issues"
+  },
+  "homepage": "https://github.com/RohitHuge/MathXNationalLevelQuiz#readme",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import WaitingRoom from './pages/WaitingRoom';
 import QuizArena from './pages/QuizArena';
 import Admin from './pages/Admin';
 import LoginPage from './pages/LoginPage';
+import { FastFingersHome } from './pages/FastFingersHome';
+import { FastFingersAdmin } from './pages/FastFingersAdmin';
+import { FastFingersClient } from './pages/FastFingersClient';
 import { getCurrentUser, logout } from './lib/appwrite';
+import { SocketProvider } from './SocketContext';
 
 const ProtectedRoute = ({ user, loading, children }) => {
   if (loading) {
@@ -19,9 +23,10 @@ const ProtectedRoute = ({ user, loading, children }) => {
   return children;
 };
 
-function App() {
+function AppContent() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     checkUser();
@@ -47,9 +52,11 @@ function App() {
     }
   };
 
+  const isDashboard = location.pathname === '/dashboard';
+
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-[var(--color-slate-900)] text-[var(--color-gray-200)] font-base selection:bg-[var(--color-blue-500)] selection:text-white">
+    <div className="min-h-screen bg-[var(--color-slate-900)] text-[var(--color-gray-200)] font-base selection:bg-[var(--color-blue-500)] selection:text-white flex flex-col">
+      {!isDashboard && (
         <header className="border-b border-gray-800 sticky top-0 z-40 bg-[var(--color-slate-900)]/80 backdrop-blur-md">
           <div className="container mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -72,49 +79,71 @@ function App() {
             </div>
           </div>
         </header>
+      )}
 
-        <main className="container mx-auto px-4 py-8 relative z-10">
-          <Routes>
-            <Route
-              path="/"
-              element={<Navigate to={user ? "/dashboard" : "/login"} />}
-            />
-            <Route
-              path="/login"
-              element={user ? <Navigate to="/dashboard" /> : <LoginPage />}
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute user={user} loading={loading}>
-                  <Dashboard user={user} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/waiting-room/:id"
-              element={
-                <ProtectedRoute user={user} loading={loading}>
-                  <WaitingRoom user={user} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/quiz/:id"
-              element={
-                <ProtectedRoute user={user} loading={loading}>
-                  <QuizArena user={user} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={<Admin />}
-            />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </main>
-      </div>
+      <main className={isDashboard ? "relative z-10 w-full flex-grow p-0 m-0" : "container mx-auto px-4 py-8 relative z-10 flex-grow"}>
+        <Routes>
+          <Route
+            path="/"
+            element={<Navigate to={user ? "/dashboard" : "/login"} />}
+          />
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/dashboard" /> : <LoginPage />}
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute user={user} loading={loading}>
+                <Dashboard user={user} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/waiting-room/:id"
+            element={
+              <ProtectedRoute user={user} loading={loading}>
+                <WaitingRoom user={user} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quiz/:id"
+            element={
+              <ProtectedRoute user={user} loading={loading}>
+                <QuizArena user={user} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={<Admin />}
+          />
+          <Route
+            path="/round2"
+            element={<FastFingersHome />}
+          />
+          <Route
+            path="/round2/admin"
+            element={<FastFingersAdmin />}
+          />
+          <Route
+            path="/round2/client"
+            element={<FastFingersClient />}
+          />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <SocketProvider>
+        <AppContent />
+      </SocketProvider>
     </BrowserRouter>
   );
 }
