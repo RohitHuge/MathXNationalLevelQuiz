@@ -4,6 +4,7 @@ import http from 'http';
 import cors from 'cors';
 import pkg from 'pg';
 import dotenv from 'dotenv';
+import { Client, Users, ID } from 'node-appwrite';
 
 dotenv.config();
 
@@ -12,6 +13,14 @@ const { Pool } = pkg;
 const app = express();
 app.use(cors());
 app.use(express.json()); // Allow parsing JSON incoming HTTP requests
+
+// Initialize Appwrite Admin SDK
+const appwriteClient = new Client()
+    .setEndpoint('https://sgp.cloud.appwrite.io/v1') // Default endpoint, change if needed
+    .setProject(process.env.APPWRITE_PROJECT_ID)
+    .setKey(process.env.APPWRITE_API_KEY);
+
+const appwriteUsers = new Users(appwriteClient);
 
 // Determine Postgres Pool connection string natively via process.env
 const pool = new Pool({
@@ -34,13 +43,35 @@ const io = new Server(server, {
 
 // REST API endpoint: Testing Registration Form
 app.post('/api/register', async (req, res) => {
-    const { fullName, email, collegeName } = req.body;
+    const { fullName, email, collegeName, password } = req.body;
 
-    if (!fullName || !email) {
-        return res.status(400).json({ error: 'Full name and email are required.' });
+    if (!fullName || !email || !password) {
+        return res.status(400).json({ error: 'Full name, email, and password are required.' });
     }
 
     try {
+        // 1. Create User in Appwrite Auth
+        console.log(`[Register] Creating Appwrite Identity for: ${email}`);
+        let newAppwriteUser;
+        try {
+            newAppwriteUser = await appwriteUsers.create(
+                ID.unique(),
+                email,
+                undefined, // phone
+                password,
+                fullName
+            );
+        } catch (appwriteErr) {
+            console.error('[Register] Appwrite Auth Creation Failed:', appwriteErr.message);
+            // Appwrite uses status codes, 409 usually means user already exists
+            if (appwriteErr.code === 409) {
+                return res.status(409).json({ error: 'This email is already registered in Auth.' });
+            }
+            return res.status(500).json({ error: 'Failed to create User Auth profile.' });
+        }
+
+        // 2. Insert User into PostgreSQL to satisfy Relational Constraints
+        console.log(`[Register] Creating PostgreSQL Definition for: ${email}`);
         const query = `
             INSERT INTO public.users (full_name, email, college_name) 
             VALUES ($1, $2, $3) 
@@ -48,12 +79,16 @@ app.post('/api/register', async (req, res) => {
         `;
         const result = await pool.query(query, [fullName, email, collegeName || null]);
 
-        // Respond with the newly created Postgres user definition
-        res.status(201).json(result.rows[0]);
+        // Respond with the newly created Postgres user definition combined with Appwrite info
+        res.status(201).json({
+            sqlUser: result.rows[0],
+            appwriteUserId: newAppwriteUser.$id
+        });
     } catch (error) {
         console.error('Registration API Error:', error);
+
         if (error.code === '23505') { // Postgres unique_violation code
-            return res.status(409).json({ error: 'This email is already registered.' });
+            return res.status(409).json({ error: 'This email was registered recently in the database.' });
         }
         res.status(500).json({ error: 'Internal Server Error' });
     }

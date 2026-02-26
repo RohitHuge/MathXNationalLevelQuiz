@@ -5,7 +5,7 @@ import { ThemeButton } from '../components/ui/ThemeButton';
 
 export default function RegisterTesting() {
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({ fullName: '', email: '', collegeName: '' });
+    const [formData, setFormData] = useState({ fullName: '', email: '', collegeName: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -29,8 +29,8 @@ export default function RegisterTesting() {
             }
 
             // Save the returned PostgreSQL UUID to use in Quiz submissions
-            localStorage.setItem('mathx_postgres_user_id', data.id);
-            localStorage.setItem('mathx_postgres_user_name', data.full_name);
+            localStorage.setItem('mathx_postgres_user_id', data.sqlUser.id);
+            localStorage.setItem('mathx_postgres_user_name', data.sqlUser.full_name);
 
             // Successfully seeded, push them to dashboard
             navigate('/dashboard');
@@ -75,6 +75,18 @@ export default function RegisterTesting() {
                             className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2.5 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-[var(--color-gray-300)] mb-1">Password</label>
+                        <input
+                            type="password"
+                            required
+                            minLength={8}
+                            className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-4 py-2.5 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         />
                     </div>
 
