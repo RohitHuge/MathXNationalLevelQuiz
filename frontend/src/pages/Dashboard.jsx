@@ -80,18 +80,6 @@ export default function Dashboard({ user }) {
         setSymbols(initial);
     }, []);
 
-    useEffect(() => {
-        if (!socket) return;
-
-        const handleStage = (data) => {
-            if (data.stage === 'waiting') {
-                navigate('/waiting-room/demo');
-            }
-        };
-
-        socket.on('stage:change', handleStage);
-        return () => socket.off('stage:change', handleStage);
-    }, [socket, navigate]);
 
     useEffect(() => {
         initSymbols();

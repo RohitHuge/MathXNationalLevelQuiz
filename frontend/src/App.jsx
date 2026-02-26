@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import WaitingRoom from './pages/WaitingRoom';
 import QuizArena from './pages/QuizArena';
 import Admin from './pages/Admin';
 import LoginPage from './pages/LoginPage';
+import RegisterTesting from './pages/RegisterTesting';
 import { FastFingersHome } from './pages/FastFingersHome';
 import { FastFingersAdmin } from './pages/FastFingersAdmin';
 import { FastFingersClient } from './pages/FastFingersClient';
 import { getCurrentUser, logout } from './lib/appwrite';
-import { SocketProvider } from './SocketContext';
+import { SocketProvider, useSocket } from './SocketContext';
 
 const ProtectedRoute = ({ user, loading, children }) => {
   if (loading) {
@@ -27,6 +28,46 @@ function AppContent() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { socket } = useSocket();
+
+  // Unified Global Routing Watchdog
+  useEffect(() => {
+    if (!socket || !user) return; // Only bind if authenticated and connected
+
+    // Listen for state synchronization payload from PostgreSQL
+    socket.on('server:sync_state', (state) => {
+      // Do not interrupt the administrator dashboard
+      if (location.pathname.includes('/admin')) return;
+
+      const roundStr = String(state.round).toUpperCase();
+      const stageNum = parseInt(state.stage, 10);
+      let targetPath = '/dashboard';
+
+      if (roundStr === 'A') { // Round 1 Logic
+        if (stageNum === 0) targetPath = '/dashboard';
+        else if (stageNum === 1) targetPath = '/waiting-room';
+        else if (stageNum === 2) targetPath = '/quiz';
+        else if (stageNum === 3) targetPath = '/leaderboard';
+      } else if (roundStr === 'B') { // Round 2 logic
+        if (stageNum === 0) targetPath = '/round2/dashboard'; // Placeholder
+        else if (stageNum === 1) targetPath = '/round2/waiting'; // Placeholder
+        else if (stageNum === 2) targetPath = '/round2/client';
+      }
+
+      // Prevent looping redirect if already on exactly that path
+      if (location.pathname !== targetPath) {
+        navigate(targetPath);
+      }
+    });
+
+    // Directly request the exact Postgres chronological state upon mount/reload
+    if (!location.pathname.includes('/admin')) {
+      socket.emit('client:request_state');
+    }
+
+    return () => socket.off('server:sync_state');
+  }, [socket, user, location.pathname, navigate]);
 
   useEffect(() => {
     checkUser();
@@ -92,6 +133,10 @@ function AppContent() {
             element={user ? <Navigate to="/dashboard" /> : <LoginPage />}
           />
           <Route
+            path="/register"
+            element={<RegisterTesting />}
+          />
+          <Route
             path="/dashboard"
             element={
               <ProtectedRoute user={user} loading={loading}>
@@ -100,7 +145,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/waiting-room/:id"
+            path="/waiting-room"
             element={
               <ProtectedRoute user={user} loading={loading}>
                 <WaitingRoom user={user} />
@@ -108,7 +153,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/quiz/:id"
+            path="/quiz"
             element={
               <ProtectedRoute user={user} loading={loading}>
                 <QuizArena user={user} />

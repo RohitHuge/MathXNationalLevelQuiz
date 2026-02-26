@@ -4,47 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 
-// Generate 50 basic math questions for demo purposes
-const DEMO_QUESTIONS = Array.from({ length: 50 }, (_, i) => {
-    // We'll rotate between different types of basic questions so it's not totally repetitive
-    const type = i % 5;
-    let questionText, options, correctOptionIndex;
-
-    if (type === 0) {
-        questionText = `Solve the algebraic expression: $$${i + 2}x + ${i + 5} = ${i * 3 + 10}$$`;
-        options = [`$$x = \\frac{${i * 3 + 5}}{${i + 2}}$$`, `$$x = ${i + 1}$$`, `$$x = 0$$`, `$$x = -${i}$$`];
-        correctOptionIndex = 0;
-    } else if (type === 1) {
-        questionText = `Evaluate the definite integral: $$\\int_{0}^{\\pi/2} \\sin^2(x) \\, dx$$`;
-        options = ['$$\\pi$$', '$$\\pi/2$$', '$$\\pi/4$$', '$$1$$'];
-        correctOptionIndex = 2;
-    } else if (type === 2) {
-        questionText = `Find the eigenvalues of the matrix $$A = \\begin{pmatrix} ${i} & 1 \\\\ 1 & ${i} \\end{pmatrix}$$`;
-        options = [`$$${i - 1} \\text{ and } ${i + 1}$$`, `$$${i} \\text{ and } ${i}$$`, `$$0 \\text{ and } ${i}$$`, `$$1 \\text{ and } -1$$`];
-        correctOptionIndex = 0;
-    } else if (type === 3) {
-        questionText = `If $$f(x) = e^{${i}x} \\cos(x)$$, what is $$f'(0)$$?`;
-        options = [`$$${i}$$`, `$$${i + 1}$$`, `$$0$$`, `$$1$$`];
-        correctOptionIndex = 0;
-    } else {
-        questionText = `What is the sum of the first ${i + 10} positive integers?`;
-        const sum = ((i + 10) * (i + 11)) / 2;
-        options = [`$$${sum}$$`, `$$${sum - 5}$$`, `$$${sum + 10}$$`, `$$${sum * 2}$$`];
-        correctOptionIndex = 0;
-    }
-
-    return {
-        $id: `q${i + 1}`,
-        questionText,
-        options,
-        correctOptionIndex,
-        points: 4 // 50 questions * 4 = 200 PTS max
-    };
-});
+import { useSocket } from '../SocketContext';
 
 export default function QuizArena({ user }) {
     const navigate = useNavigate();
 
+    const { socket } = useSocket();
+    const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -52,8 +18,10 @@ export default function QuizArena({ user }) {
     const [markedForReview, setMarkedForReview] = useState({}); // Stores boolean flag per index
     const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 mins default
     const [submitted, setSubmitted] = useState(false);
-    const [score, setScore] = useState(0);
     const [isDarkMode, setIsDarkMode] = useState(true);
+
+    // Fetch User ID from Local Storage (mapped during /register)
+    const storedUserId = localStorage.getItem('mathx_postgres_user_id');
 
     // Effect to toggle the body class for global background styling
     useEffect(() => {
@@ -65,8 +33,21 @@ export default function QuizArena({ user }) {
     }, [isDarkMode]);
 
     useEffect(() => {
-        setTimeout(() => setLoading(false), 2000);
-    }, []);
+        if (!socket) return;
+
+        // Initial Fetch
+        socket.emit('client:fetch_all_questions');
+
+        // Listen for returned array
+        socket.on('server:all_questions', (fetchedQuestions) => {
+            setQuestions(fetchedQuestions);
+            setLoading(false);
+        });
+
+        return () => {
+            socket.off('server:all_questions');
+        };
+    }, [socket]);
 
     useEffect(() => {
         if (loading || submitted || timeLeft <= 0) return;
@@ -86,7 +67,7 @@ export default function QuizArena({ user }) {
     const handleSelect = (optionIndex) => {
         setAnswers(prev => ({
             ...prev,
-            [currentIndex]: optionIndex
+            [questions[currentIndex].id]: optionIndex
         }));
     };
 
@@ -97,22 +78,20 @@ export default function QuizArena({ user }) {
         }));
     };
 
-    const calculateScore = () => {
-        let totalScore = 0;
-        DEMO_QUESTIONS.forEach((q, idx) => {
-            if (answers[idx] === q.correctOptionIndex) {
-                totalScore += q.points || 10;
-            }
-        });
-        return totalScore;
-    };
-
     const handleSubmit = async () => {
-        if (!window.confirm("Are you sure you want to finish the exam?\nAny unattempted questions will score 0.")) {
+        if (!window.confirm("Are you sure you want to finish the exam?\nUnattempted questions will not be scored.")) {
             return;
         }
+
+        // Emit payload heavily mapped to postgres relationships
+        if (socket && storedUserId) {
+            socket.emit('client:submit_exam', {
+                userId: storedUserId,
+                answers: answers
+            });
+        }
+
         setSubmitted(true);
-        setScore(calculateScore());
     };
 
     const formatTime = (seconds) => {
@@ -143,10 +122,7 @@ export default function QuizArena({ user }) {
                     <p className="text-slate-400 mb-10">Your results have been successfully recorded.</p>
 
                     <div className="bg-slate-800/50 rounded-2xl p-8 mb-10 border border-slate-700/50 inline-block">
-                        <div className="text-sm text-slate-400 font-medium mb-2 uppercase tracking-wider">Final Score</div>
-                        <div className="text-6xl font-black text-white tracking-tight">
-                            {score} <span className="text-xl font-bold text-slate-500">PTS</span>
-                        </div>
+                        <div className="text-xl text-slate-400 font-medium mb-2 uppercase tracking-wider">Please observe the Admin Leaderboard for grading.</div>
                     </div>
 
                     <div>
@@ -159,7 +135,13 @@ export default function QuizArena({ user }) {
         );
     }
 
-    const currentQ = DEMO_QUESTIONS[currentIndex];
+    const currentQ = questions[currentIndex];
+
+    if (!currentQ && !loading) return (
+        <div className="min-h-[80vh] flex flex-col items-center justify-center text-white">
+            <h2 className="text-2xl font-bold">No active questions available.</h2>
+        </div>
+    );
 
     return (
         <div className={`w-full max-w-7xl mx-auto h-[calc(100vh-100px)] flex flex-col md:flex-row gap-6 p-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -195,7 +177,7 @@ export default function QuizArena({ user }) {
                         }`}>
                         <div className={`px-3 py-1 rounded font-semibold text-sm ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-blue-50 text-blue-700 border border-blue-100'
                             }`}>
-                            Question <span className="font-bold ml-1">{currentIndex + 1}</span> of {DEMO_QUESTIONS.length}
+                            Question <span className="font-bold ml-1">{currentIndex + 1}</span> of {questions.length}
                         </div>
 
                         <button
@@ -221,14 +203,17 @@ export default function QuizArena({ user }) {
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col">
-                        <h3 className={`text-xl md:text-2xl font-semibold mb-8 leading-relaxed shrink-0 ${isDarkMode ? 'text-white' : 'text-gray-900'
+                        <h3 className={`text-xl md:text-2xl font-semibold mb-8 leading-relaxed shrink-0 flex flex-col gap-4 ${isDarkMode ? 'text-white' : 'text-gray-900'
                             }`}>
-                            <Latex>{currentQ?.questionText}</Latex>
+                            <span><Latex>{currentQ?.content?.text || ''}</Latex></span>
+                            {currentQ?.content?.mathText && (
+                                <Latex>{currentQ.content.mathText}</Latex>
+                            )}
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pb-4 shrink-0">
-                            {currentQ?.options?.map((opt, i) => {
-                                const isSelected = answers[currentIndex] === i;
+                            {currentQ?.content?.options?.map((opt, i) => {
+                                const isSelected = answers[currentQ.id] === i;
 
                                 let buttonClass = 'bg-white border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-900';
                                 let iconClass = 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-700';
@@ -279,9 +264,9 @@ export default function QuizArena({ user }) {
                     </button>
 
                     <button
-                        onClick={() => setCurrentIndex(prev => Math.min(DEMO_QUESTIONS.length - 1, prev + 1))}
-                        disabled={currentIndex === DEMO_QUESTIONS.length - 1}
-                        className={`px-8 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed border ${currentIndex === DEMO_QUESTIONS.length - 1
+                        onClick={() => setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))}
+                        disabled={currentIndex === questions.length - 1}
+                        className={`px-8 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed border ${currentIndex === questions.length - 1
                             ? (isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-gray-100 text-gray-400 border-gray-200')
                             : (isDarkMode ? 'bg-cyan-600 hover:bg-cyan-500 text-white border-cyan-600' : 'bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-700 shadow-sm')
                             }`}
@@ -319,9 +304,9 @@ export default function QuizArena({ user }) {
                     </h4>
 
                     <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-2 overflow-y-auto custom-scrollbar content-start pr-1 pb-2 flex-grow">
-                        {DEMO_QUESTIONS.map((_, idx) => {
+                        {questions.map((q, idx) => {
                             const isCurrent = currentIndex === idx;
-                            const isAnswered = answers[idx] !== undefined;
+                            const isAnswered = answers[q.id] !== undefined;
                             const isMarked = markedForReview[idx];
 
                             let styling = isDarkMode

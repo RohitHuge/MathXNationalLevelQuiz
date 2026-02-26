@@ -31,9 +31,9 @@ export default function Admin() {
         }
     };
 
-    const handleStageChange = (stage) => {
+    const handleStageChange = (round, stage) => {
         if (socket && isConnected) {
-            socket.emit('admin:change_stage', { stage });
+            socket.emit('admin:change_stage', { round, stage });
         }
     };
 
@@ -102,7 +102,7 @@ export default function Admin() {
                     <ThemeButton
                         variant="primary"
                         className="w-full bg-[var(--color-neon-purple)]/20 border-[var(--color-neon-purple)]/50 text-white hover:bg-[var(--color-neon-purple)] hover:shadow-[0_0_20px_var(--color-neon-purple)]"
-                        onClick={() => handleStageChange('waiting')}
+                        onClick={() => handleStageChange('A', 1)}
                         disabled={!isConnected}
                     >
                         Push to Waiting Room
@@ -119,10 +119,27 @@ export default function Admin() {
                     <ThemeButton
                         variant="primary"
                         className="w-full"
-                        onClick={() => handleStageChange('quiz')}
+                        onClick={() => handleStageChange('A', 2)}
                         disabled={!isConnected}
                     >
                         Commence Simulation
+                    </ThemeButton>
+                </ThemeCard>
+
+                {/* Control Panel: Reset to Dashboard */}
+                <ThemeCard className="flex flex-col h-full border-blue-500/20 hover:border-blue-500/50 transition-colors relative overflow-hidden group md:col-span-2 mt-4">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                    <h3 className="text-2xl font-black text-white mb-4 relative z-10">0. System Reset</h3>
+                    <p className="text-[var(--color-gray-400)] mb-8 relative z-10 flex-grow">
+                        Terminate the current phase and force all participants globally back to the main Hub Dashboard.
+                    </p>
+                    <ThemeButton
+                        variant="secondary"
+                        className="w-full border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                        onClick={() => handleStageChange('A', 0)}
+                        disabled={!isConnected}
+                    >
+                        Return All to Dashboard
                     </ThemeButton>
                 </ThemeCard>
             </div>

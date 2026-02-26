@@ -41,7 +41,6 @@ const SYMBOL_DATA = Array.from({ length: SYMBOL_COUNT }).map((_, i) => {
 
 
 export default function WaitingRoom({ user }) {
-    const { id } = useParams();
     const navigate = useNavigate();
     const { socket } = useSocket();
 
@@ -56,18 +55,6 @@ export default function WaitingRoom({ user }) {
         questionCount: 3
     };
 
-    useEffect(() => {
-        if (!socket) return;
-
-        const handleStage = (data) => {
-            if (data.stage === 'quiz') {
-                navigate(`/quiz/${id}`);
-            }
-        };
-
-        socket.on('stage:change', handleStage);
-        return () => socket.off('stage:change', handleStage);
-    }, [socket, navigate, id]);
 
     useEffect(() => {
         setTimeout(() => setStatus('Loading Simulator Data...'), 600);
@@ -115,7 +102,7 @@ export default function WaitingRoom({ user }) {
                 ease: 'linear'
             });
         }
-    }, [id]);
+    }, []);
 
     return (
         <div className="relative min-h-[calc(100vh-100px)] w-full overflow-hidden bg-black/40">
@@ -272,9 +259,9 @@ export default function WaitingRoom({ user }) {
                                     <ThemeButton onClick={() => navigate('/dashboard')} variant="secondary" className="w-full sm:w-auto px-8">
                                         Abort
                                     </ThemeButton>
-                                    <ThemeButton onClick={() => navigate(`/quiz/${id}`)} variant="primary" className="w-full sm:w-auto px-12 py-4 text-xl tracking-widest">
+                                    {/* <ThemeButton onClick={() => navigate(`/quiz/${id}`)} variant="primary" className="w-full sm:w-auto px-12 py-4 text-xl tracking-widest">
                                         BEGIN TERMINAL PROTOCOL
-                                    </ThemeButton>
+                                    </ThemeButton> */}
                                 </div>
                             </div>
                         </div>
