@@ -120,21 +120,30 @@ io.on('connection', (socket) => {
 
     // Client submits the entire exam mass payload
     socket.on('client:submit_exam', async (data) => {
-        const { userId, answers } = data; // answers map: { question_id: selected_option_index }
+        const { email, answers } = data; // answers map: { question_id: selected_option_index }
 
-        if (!userId) {
-            console.error('Submit Exam failed: Missing User ID');
+        if (!email) {
+            console.error('Submit Exam failed: Missing User Email');
             return;
         }
 
         try {
-            console.log(`[Grading] Evaluating exam for user: ${userId}`);
+            console.log(`[Grading] Evaluating exam for user email: ${email}`);
+
+            // 1. Resolve Postgres UUID from the synced email
+            const userRes = await pool.query('SELECT id FROM public.users WHERE email = $1 LIMIT 1', [email]);
+            if (userRes.rows.length === 0) {
+                console.error(`User email ${email} not found in Postgres. Was the sync script run?`);
+                return; // Abort if user doesn't exist in the SQL database
+            }
+            const userId = userRes.rows[0].id;
+            console.log(`[Grading] Resolved Postgres UUID: ${userId}`);
 
             // Fetch all answers mapped
             const res = await pool.query('SELECT id, content, marks FROM public.questions');
             const truthMap = res.rows.reduce((acc, row) => {
                 acc[row.id] = {
-                    correctIndex: row.content.correctIndex,
+                    correctIndex: row.content?.correctIndex,
                     marks: row.marks || 10 // default 10 points if undefined
                 };
                 return acc;
@@ -149,6 +158,7 @@ io.on('connection', (socket) => {
                 const truth = truthMap[qId];
                 if (!truth) continue; // safety against deleted questions
 
+                // Guard against null/invalid indices if it's an integer type (though our frontend only sends MCQ right now)
                 const isCorrect = (selectedIndex === truth.correctIndex);
 
                 if (isCorrect) {
@@ -176,7 +186,7 @@ io.on('connection', (socket) => {
                 VALUES ($1, $2, NOW())
             `, [userId, detailedScoreLog]);
 
-            console.log(`[Grading Complete] User: ${userId} | Score: ${totalScoreEarned}`);
+            console.log(`[Grading Complete] SQL User UUID: ${userId} | Score: ${totalScoreEarned}`);
 
             // Broadcast leaderboard refresh to Admin Portal dynamically
             io.emit('leaderboard:update');

@@ -20,8 +20,7 @@ export default function QuizArena({ user }) {
     const [submitted, setSubmitted] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(true);
 
-    // Fetch User ID from Local Storage (mapped during /register)
-    const storedUserId = localStorage.getItem('mathx_postgres_user_id');
+    // We'll use the user's mapped email for PostgreSQL UUID lookup
 
     // Effect to toggle the body class for global background styling
     useEffect(() => {
@@ -84,9 +83,9 @@ export default function QuizArena({ user }) {
         }
 
         // Emit payload heavily mapped to postgres relationships
-        if (socket && storedUserId) {
+        if (socket && user?.email) {
             socket.emit('client:submit_exam', {
-                userId: storedUserId,
+                email: user.email,
                 answers: answers
             });
         }
