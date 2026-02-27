@@ -41,6 +41,11 @@ const io = new Server(server, {
     }
 });
 
+// Root API Health Check
+app.get('/', (req, res) => {
+    res.json({ status: "MathX Backend is active and streaming!" });
+});
+
 // REST API endpoint: Testing Registration Form
 app.post('/api/register', async (req, res) => {
     const { fullName, email, collegeName, password } = req.body;
@@ -99,31 +104,95 @@ io.on('connection', (socket) => {
 
     // Listen for admin stage changes (Absolute routing)
     socket.on('admin:change_stage', async (data) => {
-        const { round, stage } = data; // e.g. { round: 'A', stage: 2 }
-        console.log(`[Admin] Changing Global State to: Round ${round}, Stage ${stage}`);
+        const { round, stage, endTime } = data; // e.g. { round: 'A', stage: 2, endTime: '2026-03-01T10:00:00Z' }
+        console.log(`[Admin] Changing Global State to: Round ${round}, Stage ${stage}. End Time: ${endTime || 'None'}`);
 
         try {
-            // Update the single generic row in PostgreSQL
-            await pool.query(`
+            // Update the single generic row in PostgreSQL (returns exact inserted NOW() to sync to client)
+            const res = await pool.query(`
                 UPDATE public.live_state 
-                SET current_round = $1, current_stage = $2, updated_at = NOW()
-            `, [round || 'A', stage]);
+                SET current_round = $1, current_stage = $2, timer_end = $3, updated_at = NOW()
+                RETURNING current_round, current_stage, timer_end, NOW() as server_time
+            `, [round || 'A', stage, endTime || null]);
 
-            // Broadcast the absolute sync state to ALL connected clients
-            io.emit('server:sync_state', { round: round || 'A', stage });
+            if (res.rows.length > 0) {
+                const updatedState = res.rows[0];
+                // Broadcast the absolute sync state to ALL connected clients
+                io.emit('server:sync_state', {
+                    round: updatedState.current_round,
+                    stage: updatedState.current_stage,
+                    timerEnd: updatedState.timer_end,
+                    serverTime: updatedState.server_time
+                });
+            }
         } catch (err) {
             console.error('Error updating live_state:', err);
+        }
+    });
+
+    // Listen for admin triggering final results calculation
+    socket.on('admin:calculate_results', async () => {
+        console.log('[Admin] Received command to calculate final results.');
+        try {
+            // 1. Update individual scores in public.users based on public.results
+            console.log('  -> Calculating individual scores...');
+            await pool.query(`
+                UPDATE public.users u
+                SET individual_score = (r.total_score#>>'{}')::integer
+                FROM (
+                    -- Fetch the latest submission for each user in case of multiple
+                    SELECT user_id, total_score
+                    FROM (
+                        SELECT user_id, total_score,
+                               ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY submitted_at DESC) as rn
+                        FROM public.results
+                    ) recent_results
+                    WHERE rn = 1
+                ) r
+                WHERE u.id = r.user_id;
+            `);
+            console.log('  -> Individual scores updated.');
+
+            // 2. Aggregate individual scores by team and update public.team
+            console.log('  -> Calculating team scores...');
+            await pool.query(`
+                UPDATE public.team t
+                SET total_score = agg.combined_score
+                FROM (
+                    SELECT team_id, SUM(individual_score) as combined_score
+                    FROM public.users
+                    WHERE team_id IS NOT NULL
+                    GROUP BY team_id
+                ) agg
+                WHERE t.id = agg.team_id;
+            `);
+            console.log('  -> Team scores updated.');
+
+            // Respond success back to the caller
+            socket.emit('server:results_calculated', { success: true });
+
+            // Optionally tell everyone leaderboard changed
+            io.emit('leaderboard:update');
+
+        } catch (err) {
+            console.error('Error calculating final results:', err);
+            socket.emit('server:results_calculated', { success: false, error: err.message });
         }
     });
 
     // Client requests current state (e.g. on page mount or refresh)
     socket.on('client:request_state', async () => {
         try {
-            const res = await pool.query('SELECT current_round, current_stage FROM public.live_state LIMIT 1');
+            const res = await pool.query('SELECT current_round, current_stage, timer_end, NOW() as server_time FROM public.live_state LIMIT 1');
             if (res.rows.length > 0) {
-                const { current_round, current_stage } = res.rows[0];
+                const { current_round, current_stage, timer_end, server_time } = res.rows[0];
                 // Send standard format ONLY to the requesting client
-                socket.emit('server:sync_state', { round: current_round, stage: current_stage });
+                socket.emit('server:sync_state', {
+                    round: current_round,
+                    stage: current_stage,
+                    timerEnd: timer_end,
+                    serverTime: server_time
+                });
             }
         } catch (err) {
             console.error('Error fetching live_state:', err);
@@ -219,7 +288,7 @@ io.on('connection', (socket) => {
             await pool.query(`
                 INSERT INTO public.results (user_id, total_score, submitted_at)
                 VALUES ($1, $2, NOW())
-            `, [userId, detailedScoreLog]);
+            `, [userId, totalScoreEarned]);
 
             console.log(`[Grading Complete] SQL User UUID: ${userId} | Score: ${totalScoreEarned}`);
 

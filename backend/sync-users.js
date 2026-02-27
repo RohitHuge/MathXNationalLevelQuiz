@@ -1,4 +1,4 @@
-import { Client, Users } from 'node-appwrite';
+import { Client, Users, Query } from 'node-appwrite';
 import pkg from 'pg';
 import dotenv from 'dotenv';
 
@@ -44,8 +44,11 @@ async function syncUsers() {
         while (hasMore) {
             console.log(`📡 Fetching users from Appwrite (Offset: ${offset})...`);
 
-            // Note: node-appwrite uses queries, an empty array fetches all. (Limit, Offset)
-            const response = await users.list([], 100, offset);
+            // Note: node-appwrite uses queries
+            const response = await users.list([
+                Query.limit(limit),
+                Query.offset(offset)
+            ]);
             const userList = response.users;
 
             if (userList.length === 0) {

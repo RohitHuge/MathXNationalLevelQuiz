@@ -14,15 +14,27 @@ async function setupLiveState() {
     console.log('🔄 Setting up Global Live State routing table...');
 
     try {
-        // Create table if it doesn't exist
         await pool.query(`
             CREATE TABLE IF NOT EXISTS public.live_state (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 current_round TEXT NOT NULL DEFAULT 'A',
                 current_stage INTEGER NOT NULL DEFAULT 0,
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+                timer_end TIMESTAMP WITH TIME ZONE
             );
         `);
+        console.log('✅ Table `public.live_state` validated.');
+
+        // Attempt to add timer_end if the table already existed before this commit
+        try {
+            await pool.query(`ALTER TABLE public.live_state ADD COLUMN timer_end TIMESTAMP WITH TIME ZONE;`);
+            console.log('✅ Added `timer_end` column to existing `live_state` table.');
+        } catch (err) {
+            // Error code 42701 means column already exists
+            if (err.code !== '42701') {
+                console.error('⚠️ Could not alter live_state:', err.message);
+            }
+        }
         console.log('✅ Table `public.live_state` validated.');
 
         // Check if a row already exists

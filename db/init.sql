@@ -48,7 +48,8 @@ CREATE TABLE live_state (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     current_round TEXT,
     current_stage INTEGER CHECK (current_stage >= 0),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    timer_end TIMESTAMP WITH TIME ZONE
 );
 
 -- =========================

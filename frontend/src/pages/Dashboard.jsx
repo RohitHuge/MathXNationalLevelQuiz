@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../SocketContext";
+import { logout } from "../lib/appwrite";
 
 const MATH_SYMBOLS = [
     "π", "∑", "∫", "√", "∞", "Δ", "θ", "λ", "μ", "σ",
@@ -68,6 +69,15 @@ export default function Dashboard({ user }) {
     const symbolIdRef = useRef(0);
     const [showContent, setShowContent] = useState(false);
     const [time, setTime] = useState(new Date());
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate("/"); // Redirect to auth page or home
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
+    };
 
     const initSymbols = useCallback(() => {
         const count = 60;
@@ -138,6 +148,19 @@ export default function Dashboard({ user }) {
                     "linear-gradient(135deg, #3b0b6d 0%, #180b2b 40%, #031622 70%, #027c96 100%)",
             }}
         >
+            {/* Top Right Controls */}
+            <div className="absolute top-6 right-6 z-50">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all font-medium text-sm backdrop-blur-md shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+                >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                </button>
+            </div>
+
             {/* Animated background symbols */}
             <div className="absolute inset-0 pointer-events-none">
                 {symbols.map((s) => (
