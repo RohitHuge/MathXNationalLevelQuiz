@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-pink: #ff00ff;
+  --color-neon-blue: #0088ff;
+  --color-neon-purple: #9d00ff;
+  --color-neon-cyan: #00ffff;
+  --color-dark-bg: #050510;
+  --color-dark-surface: #121223;
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Fira Code', monospace;
+}
+
+@layer utilities {
+  .glow-pink {
+    box-shadow: 0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(255, 0, 255, 0.3);
+  }
+  .glow-blue {
+    box-shadow: 0 0 10px rgba(0, 136, 255, 0.5), 0 0 20px rgba(0, 136, 255, 0.3);
+  }
+  .glow-purple {
+    box-shadow: 0 0 10px rgba(157, 0, 255, 0.5), 0 0 20px rgba(157, 0, 255, 0.3);
+  }
+  .glow-cyan {
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3);
+  }
+  .text-glow-cyan {
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.8);
+  }
+  .text-glow-pink {
+    text-shadow: 0 0 8px rgba(255, 0, 255, 0.8);
+  }
+}
+
+body {
+  @apply bg-dark-bg text-white font-sans overflow-x-hidden;
+  margin: 0;
+  padding: 0;
+}
