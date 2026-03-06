@@ -11,6 +11,8 @@ import FastFingersDashboard from './round2/FastFingersDashboard';
 import { FastFingersAdmin } from './round2/FastFingersAdmin';
 import { FastFingersClient } from './round2/FastFingersClient';
 import Round2ProtectedRoute from './round2/Round2ProtectedRoute';
+import Round3Dashboard from './round3/Round3Dashboard';
+import Round3Client from './round3/Round3Client';
 import { getCurrentUser, logout } from './lib/appwrite';
 import { SocketProvider, useSocket } from './SocketContext';
 
@@ -55,6 +57,9 @@ function AppContent() {
         if (stageNum === 0) targetPath = '/dashboard'; // Safe fallback
         else if (stageNum === 1) targetPath = '/round2/dashboard'; // FastFingers Branded Dashboard
         else if (stageNum === 2) targetPath = '/round2/client'; // FastFingers Live Radar
+      } else if (roundStr === 'C') { // Round 3 logic
+        if (stageNum === 1) targetPath = '/round3/dashboard';
+        else if (stageNum === 2) targetPath = '/round3/client';
       }
 
       // Prevent looping redirect if already on exactly that path
@@ -96,10 +101,12 @@ function AppContent() {
   };
 
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/round2/dashboard';
+  const isProjector = location.pathname.endsWith('/client');
+  const hideHeader = isDashboard || isProjector;
 
   return (
     <div className="min-h-screen bg-[var(--color-slate-900)] text-[var(--color-gray-200)] font-base selection:bg-[var(--color-blue-500)] selection:text-white flex flex-col">
-      {!isDashboard && (
+      {!hideHeader && (
         <header className="border-b border-gray-800 sticky top-0 z-40 bg-[var(--color-slate-900)]/80 backdrop-blur-md">
           <div className="container mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -124,7 +131,7 @@ function AppContent() {
         </header>
       )}
 
-      <main className={isDashboard ? "relative z-10 w-full flex-grow p-0 m-0" : "container mx-auto px-4 py-8 relative z-10 flex-grow"}>
+      <main className={hideHeader ? "relative z-10 w-full flex-grow p-0 m-0" : "container mx-auto px-4 py-8 relative z-10 flex-grow"}>
         <Routes>
           <Route
             path="/"
@@ -192,6 +199,18 @@ function AppContent() {
               <Round2ProtectedRoute>
                 <FastFingersClient />
               </Round2ProtectedRoute>
+            }
+          />
+          <Route
+            path="/round3/dashboard"
+            element={
+              <Round3Dashboard />
+            }
+          />
+          <Route
+            path="/round3/client"
+            element={
+              <Round3Client />
             }
           />
           <Route path="*" element={<Navigate to="/" />} />

@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { setupRound3Sockets, startRound3Timer } from './round3Controller.js';
 
 let activeRound2Question = null;
 let round2Leaderboard = [];
@@ -336,10 +337,16 @@ const setupSockets = (io) => {
             }
         });
 
+        // --- ROUND 3 INITIALIZATION ---
+        setupRound3Sockets(io, socket);
+
         socket.on('disconnect', () => {
             console.log(`[Socket] User disconnected: ${socket.id}`);
         });
     });
+
+    // Start global Round 3 timer
+    startRound3Timer(io);
 };
 
 export default setupSockets;
