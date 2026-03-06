@@ -176,6 +176,10 @@ export const setupRound3Sockets = (io, socket) => {
 
     // The physical Hardware sends this exact signal
     socket.on('client:round3:buzzer_pressed', (data) => {
+        console.log(`\n!!! ---> [VPS RECEIVED HARDWARE BUZZER EMIT] <--- !!!`);
+        console.log(`Data Payload:`, data);
+        console.log(`Current Lock State: ${gameState.buzzerLocked ? 'LOCKED (Dropping Request)' : 'UNLOCKED (Accepting)'}`);
+
         if (gameState.buzzerLocked) return;
 
         const { teamId, timestamp } = data;

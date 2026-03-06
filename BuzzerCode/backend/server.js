@@ -14,8 +14,8 @@ const __dirname = path.dirname(__filename);
 // Try to load env from parent if local is missing
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const ARDUINO_COM_PORT = "COM8";
-const VPS_SOCKET_URL = "https://api.mathxpccoer.in";
+const ARDUINO_COM_PORT = "COM11";
+const VPS_SOCKET_URL = "http://localhost:3001";
 const LOCAL_PORT = 5000;
 
 const app = express();
@@ -45,6 +45,31 @@ app.get('/test-vps', (req, res) => {
   } else {
     console.log('❌ UI requested VPS connection check: DISCONNECTED');
     res.json({ connected: false, message: 'Not connected to VPS' });
+  }
+});
+
+app.get('/simulate-buzz/:teamId', (req, res) => {
+  const teamId = parseInt(req.params.teamId, 10);
+  if (!isNaN(teamId) && teamId >= 1 && teamId <= 6) {
+    const fakeSignal = `[SIMULATOR] BUTTON_${teamId}`;
+
+    // Broadcast to local dev monitor so it shows up in the UI logs
+    localIo.emit('serialData', fakeSignal);
+
+    if (vpsSocket && vpsSocket.connected) {
+      console.log(`💻 [SIMULATED BUZZ] Team ${teamId} pressed buzzer via UI! Forwarding...`);
+      vpsSocket.emit('client:round3:buzzer_pressed', {
+        teamId: teamId,
+        timestamp: Date.now(),
+        rawSignal: fakeSignal
+      });
+      res.json({ success: true, message: `Simulated buzz for Team ${teamId}` });
+    } else {
+      console.warn(`⚠️ [Offline Drop] Simulated Team ${teamId} buzz, but NOT connected to VPS!`);
+      res.status(503).json({ success: false, message: 'VPS not connected' });
+    }
+  } else {
+    res.status(400).json({ success: false, message: 'Invalid Team ID' });
   }
 });
 

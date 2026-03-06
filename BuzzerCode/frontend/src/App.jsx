@@ -68,6 +68,24 @@ function App() {
             >
               Test VPS Connection
             </button>
+
+            <div className="flex flex-wrap justify-center gap-3 mt-4 border-t border-gray-800 pt-4 w-full">
+              {[1, 2, 3, 4, 5, 6].map((teamId) => (
+                <button
+                  key={teamId}
+                  onClick={async () => {
+                    try {
+                      await fetch(`http://localhost:5000/simulate-buzz/${teamId}`);
+                    } catch (err) {
+                      console.error(`Failed to simulate buzz for Team ${teamId}:`, err);
+                    }
+                  }}
+                  className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/50 border border-purple-500/50 rounded-lg text-purple-300 font-bold transition-all text-sm shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+                >
+                  T{teamId} Buzz
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
