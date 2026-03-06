@@ -14,9 +14,9 @@ const __dirname = path.dirname(__filename);
 // Try to load env from parent if local is missing
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const ARDUINO_COM_PORT = process.env.ARDUINO_COM_PORT || 'COM10';
-const VPS_SOCKET_URL = process.env.VPS_SOCKET_URL || process.env.VPS_URL || 'http://localhost:3001';
-const LOCAL_PORT = process.env.PORT || 5000;
+const ARDUINO_COM_PORT = "COM8";
+const VPS_SOCKET_URL = "https://api.mathxpccoer.in";
+const LOCAL_PORT = 5000;
 
 const app = express();
 app.use(cors());
@@ -103,11 +103,12 @@ try {
     const cleanData = data.trim();
     if (!cleanData) return;
 
-    // Assuming Arduino outputs a direct team number ("1", "2", ... "6") 
-    const teamId = parseInt(cleanData, 10);
-
-    // Broadcast raw input to local dev monitor optionally
+    // Broadcast raw input to local dev monitor optionally  
     localIo.emit('serialData', cleanData);
+
+    // Try to extract any digit from the string (in case it sends "Team 1", "1", "BUTTON_PRESSED 1", etc.)
+    const match = cleanData.match(/\d+/);
+    const teamId = match ? parseInt(match[0], 10) : NaN;
 
     if (vpsSocket.connected) {
       if (!isNaN(teamId) && teamId >= 1 && teamId <= 6) {
@@ -124,10 +125,10 @@ try {
         vpsSocket.emit('fastfingers:buzzer:hit', teamId);
 
       } else {
-        console.log(`[Hardware Debug] Unrecognized signal: ${cleanData}`);
+        console.log(`[Hardware Debug] Ignoring unrecognized hardware signal: "${cleanData}"`);
       }
     } else {
-      console.warn(`⚠️ [Offline Drop] Team ${teamId} buzzed, but we are NOT connected to the VPS!`);
+      console.warn(`⚠️ [Offline Drop] Hardware sent "${cleanData}", but we are NOT connected to the VPS!`);
     }
   });
 
