@@ -34,6 +34,20 @@ app.get('/status', (req, res) => {
   res.json({ status: 'Buzzer backend is running', port: ARDUINO_COM_PORT, vps: VPS_SOCKET_URL });
 });
 
+app.get('/test-vps', (req, res) => {
+  if (vpsSocket && vpsSocket.connected) {
+    vpsSocket.emit('client:round3:test_connection', {
+      message: 'Ping from Local Buzzer Node!',
+      timestamp: Date.now()
+    });
+    console.log('✅ UI requested VPS connection check: CONNECTED & PING SENT');
+    res.json({ connected: true, message: 'Successfully connected to VPS. Ping sent!' });
+  } else {
+    console.log('❌ UI requested VPS connection check: DISCONNECTED');
+    res.json({ connected: false, message: 'Not connected to VPS' });
+  }
+});
+
 localIo.on('connection', (socket) => {
   console.log('⚡ [Local Socket] Client connected to local buzzer server');
   socket.on('disconnect', () => {

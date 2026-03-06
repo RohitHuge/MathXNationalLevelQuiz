@@ -167,6 +167,13 @@ export const setupRound3Sockets = (io, socket) => {
         io.emit('server:round3:state_update', gameState);
     });
 
+    // Test ping from the Local Buzzer Node
+    socket.on('client:round3:test_connection', (data) => {
+        console.log(`\n========================================`);
+        console.log(`📡 [VPS Received Buzzer Ping]: ${data.message}`);
+        console.log(`========================================\n`);
+    });
+
     // The physical Hardware sends this exact signal
     socket.on('client:round3:buzzer_pressed', (data) => {
         if (gameState.buzzerLocked) return;

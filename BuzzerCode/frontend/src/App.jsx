@@ -44,11 +44,30 @@ function App() {
             Arduino Serial Monitor
           </h1>
           <p className="text-gray-400 mb-4">Real-time data streaming from microcontrollers</p>
-          <div className="flex items-center justify-center space-x-2 bg-gray-800/80 px-4 py-2 rounded-full border border-gray-700 shadow-sm backdrop-blur-sm">
-            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]'}`}></div>
-            <span className="text-sm font-medium text-gray-300">
-              {isConnected ? 'Connected to Backend (Port 5000)' : 'Disconnected - Check Backend Server'}
-            </span>
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center justify-center space-x-2 bg-gray-800/80 px-4 py-2 rounded-full border border-gray-700 shadow-sm backdrop-blur-sm">
+              <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]'}`}></div>
+              <span className="text-sm font-medium text-gray-300">
+                {isConnected ? 'Connected to Backend (Port 5000)' : 'Disconnected - Check Backend Server'}
+              </span>
+            </div>
+
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('http://localhost:5000/test-vps');
+                  const data = await res.json();
+                  console.log('VPS Status response:', data);
+                  alert(data.message);
+                } catch (err) {
+                  console.error('Failed to check VPS status:', err);
+                  alert('Error checking VPS status. Is backend running?');
+                }
+              }}
+              className="px-4 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 rounded-lg text-blue-400 font-bold transition-all text-sm shadow-[0_0_10px_rgba(59,130,246,0.2)]"
+            >
+              Test VPS Connection
+            </button>
           </div>
         </header>
 
