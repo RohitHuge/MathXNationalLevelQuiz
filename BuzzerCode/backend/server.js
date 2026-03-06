@@ -14,9 +14,9 @@ const __dirname = path.dirname(__filename);
 // Try to load env from parent if local is missing
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const ARDUINO_COM_PORT = process.env.ARDUINO_COM_PORT || 'COM10';
-const VPS_SOCKET_URL = process.env.VPS_SOCKET_URL || process.env.VPS_URL || 'http://localhost:3001';
-const LOCAL_PORT = process.env.PORT || 5000;
+const ARDUINO_COM_PORT = "COM11";
+const VPS_SOCKET_URL = "http://localhost:3001";
+const LOCAL_PORT = 5000;
 
 const app = express();
 app.use(cors());
@@ -45,6 +45,31 @@ app.get('/test-vps', (req, res) => {
   } else {
     console.log('❌ UI requested VPS connection check: DISCONNECTED');
     res.json({ connected: false, message: 'Not connected to VPS' });
+  }
+});
+
+app.get('/simulate-buzz/:teamId', (req, res) => {
+  const teamId = parseInt(req.params.teamId, 10);
+  if (!isNaN(teamId) && teamId >= 1 && teamId <= 6) {
+    const fakeSignal = `[SIMULATOR] BUTTON_${teamId}`;
+
+    // Broadcast to local dev monitor so it shows up in the UI logs
+    localIo.emit('serialData', fakeSignal);
+
+    if (vpsSocket && vpsSocket.connected) {
+      console.log(`💻 [SIMULATED BUZZ] Team ${teamId} pressed buzzer via UI! Forwarding...`);
+      vpsSocket.emit('client:round3:buzzer_pressed', {
+        teamId: teamId,
+        timestamp: Date.now(),
+        rawSignal: fakeSignal
+      });
+      res.json({ success: true, message: `Simulated buzz for Team ${teamId}` });
+    } else {
+      console.warn(`⚠️ [Offline Drop] Simulated Team ${teamId} buzz, but NOT connected to VPS!`);
+      res.status(503).json({ success: false, message: 'VPS not connected' });
+    }
+  } else {
+    res.status(400).json({ success: false, message: 'Invalid Team ID' });
   }
 });
 
@@ -103,11 +128,12 @@ try {
     const cleanData = data.trim();
     if (!cleanData) return;
 
-    // Assuming Arduino outputs a direct team number ("1", "2", ... "6") 
-    const teamId = parseInt(cleanData, 10);
-
-    // Broadcast raw input to local dev monitor optionally
+    // Broadcast raw input to local dev monitor optionally  
     localIo.emit('serialData', cleanData);
+
+    // Try to extract any digit from the string (in case it sends "Team 1", "1", "BUTTON_PRESSED 1", etc.)
+    const match = cleanData.match(/\d+/);
+    const teamId = match ? parseInt(match[0], 10) : NaN;
 
     if (vpsSocket.connected) {
       if (!isNaN(teamId) && teamId >= 1 && teamId <= 6) {
@@ -124,10 +150,10 @@ try {
         vpsSocket.emit('fastfingers:buzzer:hit', teamId);
 
       } else {
-        console.log(`[Hardware Debug] Unrecognized signal: ${cleanData}`);
+        console.log(`[Hardware Debug] Ignoring unrecognized hardware signal: "${cleanData}"`);
       }
     } else {
-      console.warn(`⚠️ [Offline Drop] Team ${teamId} buzzed, but we are NOT connected to the VPS!`);
+      console.warn(`⚠️ [Offline Drop] Hardware sent "${cleanData}", but we are NOT connected to the VPS!`);
     }
   });
 
