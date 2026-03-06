@@ -2,7 +2,7 @@ import { Client, Users, Query } from 'node-appwrite';
 import pkg from 'pg';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 const { Pool } = pkg;
 
@@ -63,14 +63,14 @@ async function syncUsers() {
 
                 // We use Postgres ON CONFLICT DO NOTHING to avoid duplicate errors
                 const query = `
-                    INSERT INTO public.users (full_name, email)
-                    VALUES ($1, $2)
-                    ON CONFLICT (email) DO NOTHING
+                    INSERT INTO public.users (id, full_name, email)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (id) DO NOTHING
                     RETURNING id;
                 `;
 
                 // Using a transaction/pool query
-                const dbRes = await pool.query(query, [name || 'Unknown User', email]);
+                const dbRes = await pool.query(query, [user.$id, name || 'Unknown User', email]);
 
                 if (dbRes.rowCount > 0) {
                     console.log(`   ➕ Inserted new user: ${email} (ID: ${dbRes.rows[0].id})`);

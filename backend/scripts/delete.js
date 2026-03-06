@@ -1,7 +1,7 @@
 import { Client, Users, Query } from 'node-appwrite';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 // Appwrite Configuration
 const APPWRITE_ENDPOINT = 'https://sgp.cloud.appwrite.io/v1'; // Default, change if custom

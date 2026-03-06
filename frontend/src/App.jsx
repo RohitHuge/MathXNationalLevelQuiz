@@ -6,9 +6,10 @@ import QuizArena from './pages/QuizArena';
 import Admin from './pages/Admin';
 import LoginPage from './pages/LoginPage';
 import RegisterTesting from './pages/RegisterTesting';
-import { FastFingersHome } from './pages/FastFingersHome';
-import { FastFingersAdmin } from './pages/FastFingersAdmin';
-import { FastFingersClient } from './pages/FastFingersClient';
+import { FastFingersHome } from './round2/FastFingersHome';
+import { FastFingersAdmin } from './round2/FastFingersAdmin';
+import { FastFingersClient } from './round2/FastFingersClient';
+import Round2ProtectedRoute from './round2/Round2ProtectedRoute';
 import { getCurrentUser, logout } from './lib/appwrite';
 import { SocketProvider, useSocket } from './SocketContext';
 
@@ -166,15 +167,23 @@ function AppContent() {
           />
           <Route
             path="/round2"
-            element={<FastFingersHome />}
+            element={
+              <Round2ProtectedRoute>
+                <FastFingersHome />
+              </Round2ProtectedRoute>
+            }
           />
           <Route
             path="/round2/admin"
-            element={<FastFingersAdmin />}
+            element={<FastFingersAdmin />} // Note: Admin routes usually have separate admin layer protection if needed
           />
           <Route
             path="/round2/client"
-            element={<FastFingersClient />}
+            element={
+              <Round2ProtectedRoute>
+                <FastFingersClient />
+              </Round2ProtectedRoute>
+            }
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

@@ -1,0 +1,242 @@
+import React, { useState, useEffect } from 'react';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Lock, Timer, Zap } from 'lucide-react';
+import 'katex/dist/katex.min.css';
+import { BlockMath } from 'react-katex';
+import { useSocket, SocketProvider } from '../SocketContext';
+
+const ClientViewInner = () => {
+    const { socket, isConnected } = useSocket();
+    const [numericAnswer, setNumericAnswer] = useState('');
+    const [isLocked, setIsLocked] = useState(false);
+    const [activeQuestion, setActiveQuestion] = useState(null);
+    const [startTime, setStartTime] = useState(null);
+    const [elapsed, setElapsed] = useState('0.00');
+
+    // New Round 2 States
+    const [feedbackMsg, setFeedbackMsg] = useState('');
+    const [winnerDetails, setWinnerDetails] = useState(null);
+    const [liveAttempts, setLiveAttempts] = useState([]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        // Auto-fetch in case of reconnect
+        socket.emit('client:round2:request_state');
+
+        socket.on('question:active', (question) => {
+            setActiveQuestion(question);
+            setIsLocked(false);
+            setNumericAnswer('');
+            setStartTime(Date.now());
+            setElapsed('0.00');
+            setFeedbackMsg('');
+            setWinnerDetails(null);
+            setLiveAttempts([]);
+        });
+
+        // Hiding the question manually by Admin
+        socket.on('server:round2:question_hidden', () => {
+            setActiveQuestion(null);
+            setIsLocked(false);
+            setNumericAnswer('');
+            setFeedbackMsg('');
+            setWinnerDetails(null);
+            setLiveAttempts([]);
+        });
+
+        // Handlers for Submitted Answer Lifecycle
+        socket.on('server:round2:attempt_rejected', (data) => {
+            setIsLocked(false); // UNLOCK so they can retry!
+            setNumericAnswer('');
+            setFeedbackMsg(data.message);
+        });
+
+        // Everyone sees somebody attempted an answer
+        socket.on('server:round2:attempt_logged', (data) => {
+            setLiveAttempts(prev => [data.attempt, ...prev].slice(0, 5)); // Keep last 5
+        });
+
+        // Someone won the round globally
+        socket.on('server:round2:winner_found', (data) => {
+            setIsLocked(true);
+            setWinnerDetails(data);
+        });
+
+        // General Error (e.g., late attempt)
+        socket.on('server:round2:error', (data) => {
+            setFeedbackMsg(data.message);
+            setIsLocked(true); // Usually locked if late
+        });
+
+        return () => {
+            socket.off('question:active');
+            socket.off('server:round2:question_hidden');
+            socket.off('server:round2:attempt_rejected');
+            socket.off('server:round2:attempt_logged');
+            socket.off('server:round2:winner_found');
+            socket.off('server:round2:error');
+        };
+    }, [socket]);
+
+    useEffect(() => {
+        let interval;
+        if (activeQuestion && !isLocked && startTime && !winnerDetails) {
+            interval = setInterval(() => {
+                setElapsed(((Date.now() - startTime) / 1000).toFixed(2));
+            }, 50);
+        }
+        return () => clearInterval(interval);
+    }, [activeQuestion, isLocked, startTime, winnerDetails]);
+
+    const handleLock = () => {
+        if (numericAnswer.trim() !== '' && activeQuestion && !isLocked) {
+            setIsLocked(true);
+            setFeedbackMsg('');
+            socket.emit('client:submit_answer', {
+                questionId: activeQuestion.id,
+                numericAnswer: parseFloat(numericAnswer),
+                timeTaken: parseFloat(elapsed),
+                clientName: socket.clientName || undefined // Note: using default provided natively via Context wrapping
+            });
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-brand-dark text-white font-sans selection:bg-brand-purple relative overflow-hidden flex items-center justify-center p-4 sm:p-8 animate-in fly-in slide-in-from-bottom-5 duration-700">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-brand-cyan/5 rounded-full blur-[150px] pointer-events-none transform translate-x-1/3 -translate-y-1/3"></div>
+            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-brand-purple/5 rounded-full blur-[100px] pointer-events-none transform -translate-x-1/2 translate-y-1/2"></div>
+
+            {/* Live Attempts Feed (Visible unconditionally on right side if populated) */}
+            {liveAttempts.length > 0 && !winnerDetails && (
+                <div className="absolute top-24 right-8 w-64 space-y-2 z-20">
+                    <h3 className="text-sm font-bold text-gray-500 mb-2 uppercase tracking-widest">Live Feed</h3>
+                    {liveAttempts.map((att, i) => (
+                        <div key={i} className="bg-brand-dark/80 backdrop-blur-md border border-brand-panel-border p-3 rounded-lg text-sm animate-in fade-in slide-in-from-right-4">
+                            <span className="text-gray-300 font-bold">{att.client.name}</span> guessed <span className="text-red-400 font-mono line-through">{att.numericAnswer}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div className="relative z-10 w-full max-w-4xl">
+                <Card>
+                    {/* Header Section */}
+                    <div className="flex justify-between items-center mb-8 pb-6 border-b border-brand-panel-border">
+                        <div className="flex items-center gap-3">
+                            <Zap className={isConnected ? "text-brand-cyan animate-pulse" : "text-gray-500"} />
+                            <span className="font-bold text-xl tracking-widest text-brand-cyan">MATHX ROUND 2</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-brand-dark px-4 py-2 rounded-full border border-brand-purple">
+                            <Timer className="text-brand-purple" size={18} />
+                            <span className="font-mono font-bold">{elapsed}s</span>
+                        </div>
+                    </div>
+
+                    {!activeQuestion ? (
+                        <div className="flex flex-col items-center justify-center py-20 space-y-8 animate-in zoom-in duration-500">
+                            <div className="relative w-24 h-24 flex items-center justify-center">
+                                <div className="absolute inset-0 border-4 border-brand-cyan/20 rounded-full"></div>
+                                <div className="absolute inset-0 border-4 border-brand-cyan border-t-transparent rounded-full animate-spin"></div>
+                                <Timer className="text-brand-cyan absolute" size={32} />
+                            </div>
+                            <div className="text-center space-y-2">
+                                <h2 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-brand-cyan to-brand-purple animate-pulse">
+                                    Waiting for question...
+                                </h2>
+                                <p className="text-gray-400 font-medium">Keep your fastest fingers ready!</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {winnerDetails ? (
+                                <div className="text-center py-10 animate-in zoom-in duration-700">
+                                    <div className="inline-block p-6 rounded-full bg-green-500/20 mb-6">
+                                        <Trophy className="text-green-400" size={64} />
+                                    </div>
+                                    <h2 className="text-5xl font-black text-white mb-4">ROUND OVER</h2>
+                                    <p className="text-2xl text-gray-300 mb-8">
+                                        Team <span className="text-green-400 font-bold">{winnerDetails.winnerName}</span> won in {winnerDetails.timeTaken}s!
+                                    </p>
+                                    <div className="p-4 bg-brand-dark/50 rounded-xl border border-brand-panel-border inline-block">
+                                        <p className="text-sm text-gray-400 mb-1">Winning Answer</p>
+                                        <p className="text-4xl font-mono text-brand-cyan">{winnerDetails.winningAnswer}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Question Area */}
+                                    <div className="text-center mb-12 animate-in slide-in-from-bottom-4 duration-500">
+                                        <h2 className="text-2xl text-gray-300 font-medium mb-6">
+                                            {activeQuestion.text}
+                                        </h2>
+                                        <div className="text-4xl sm:text-5xl py-8 px-4 bg-brand-dark/40 rounded-xl border border-brand-blue/30 glow-blue">
+                                            {activeQuestion.mathText && (
+                                                <BlockMath math={activeQuestion.mathText} />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Input Area */}
+                                    <div className="flex flex-col items-center gap-6 mb-10 animate-in slide-in-from-bottom-6 duration-500">
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            placeholder="Enter numerical answer..."
+                                            value={numericAnswer}
+                                            onChange={(e) => !isLocked && setNumericAnswer(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleLock();
+                                            }}
+                                            disabled={isLocked}
+                                            className={`w-full max-w-md text-center text-4xl p-4 rounded-xl border-2 bg-brand-dark/60 outline-none transition-all duration-300 font-mono
+                                            ${isLocked
+                                                    ? 'border-yellow-500 bg-yellow-500/10 text-yellow-500 grayscale'
+                                                    : 'border-brand-panel-border focus:border-brand-cyan focus:shadow-[0_0_15px_rgba(0,255,255,0.2)] text-white'
+                                                }
+                                        `}
+                                        />
+
+                                        {/* Feedback Message */}
+                                        <div className={`h-6 text-lg font-bold ${feedbackMsg.includes('Incorrect') ? 'text-red-400 animate-bounce' : 'text-gray-400'}`}>
+                                            {feedbackMsg}
+                                        </div>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <div className="flex justify-center animate-in slide-in-from-bottom-8 duration-500">
+                                        <Button
+                                            className="w-1/2 max-w-sm py-5 text-xl tracking-widest uppercase font-black"
+                                            variant={isLocked ? 'secondary' : 'glow'}
+                                            onClick={handleLock}
+                                            disabled={numericAnswer.trim() === '' || isLocked}
+                                        >
+                                            {isLocked ? (
+                                                <>
+                                                    <Lock size={24} /> Sending...
+                                                </>
+                                            ) : (
+                                                'Lock Answer'
+                                            )}
+                                        </Button>
+                                    </div>
+                                </>
+                            )}
+                        </>
+                    )}
+
+                </Card>
+            </div>
+        </div>
+    );
+};
+
+export function FastFingersClient() {
+    return (
+        <SocketProvider isAdmin={false} clientName={`Team-${Math.floor(Math.random() * 1000)}`}>
+            <ClientViewInner />
+        </SocketProvider>
+    );
+}

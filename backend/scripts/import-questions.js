@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import pkg from 'pg';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 const { Pool } = pkg;
 
@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Path to the provided JSON dump (adjust path if running from frontend/backend dir)
-const JSON_FILE_PATH = path.join(__dirname, '../dawn-band-50142761_development_neondb_2026-02-26_08-42-54.json');
+const JSON_FILE_PATH = path.join(__dirname, './questions.json');
 
 async function importQuestions() {
     console.log('🔄 Starting Question Import Process...');
