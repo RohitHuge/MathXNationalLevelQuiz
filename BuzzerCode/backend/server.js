@@ -1,14 +1,29 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { SerialPort } from 'serialport';
+import { ReadlineParser } from '@serialport/parser-readline';
+import { io as Client } from 'socket.io-client';
 import cors from 'cors';
-import { SerialPort } from 'serialport'
-import { ReadlineParser } from '@serialport/parser-readline'
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// Try to load env from parent if local is missing
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
+const ARDUINO_COM_PORT = process.env.ARDUINO_COM_PORT || 'COM10';
+const VPS_SOCKET_URL = process.env.VPS_SOCKET_URL || process.env.VPS_URL || 'http://localhost:3001';
+const LOCAL_PORT = process.env.PORT || 5000;
 
 const app = express();
 app.use(cors());
 const server = createServer(app);
-const io = new Server(server, {
+
+// Local Socket.IO Server (for any local frontends connecting directly to the local buzzer PC)
+const localIo = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
@@ -16,43 +31,110 @@ const io = new Server(server, {
 });
 
 app.get('/status', (req, res) => {
-  res.json({ status: 'Backend is running and listening to Serial Port' });
+  res.json({ status: 'Buzzer backend is running', port: ARDUINO_COM_PORT, vps: VPS_SOCKET_URL });
 });
 
-io.on('connection', (socket) => {
-  console.log('⚡ Client connected to Socket.IO');
+app.get('/test-vps', (req, res) => {
+  if (vpsSocket && vpsSocket.connected) {
+    vpsSocket.emit('client:round3:test_connection', {
+      message: 'Ping from Local Buzzer Node!',
+      timestamp: Date.now()
+    });
+    console.log('✅ UI requested VPS connection check: CONNECTED & PING SENT');
+    res.json({ connected: true, message: 'Successfully connected to VPS. Ping sent!' });
+  } else {
+    console.log('❌ UI requested VPS connection check: DISCONNECTED');
+    res.json({ connected: false, message: 'Not connected to VPS' });
+  }
+});
+
+localIo.on('connection', (socket) => {
+  console.log('⚡ [Local Socket] Client connected to local buzzer server');
   socket.on('disconnect', () => {
-    console.log('❌ Client disconnected');
+    console.log('❌ [Local Socket] Client disconnected');
   });
 });
 
-// 🔁 Change this to your Arduino COM port
-const port = new SerialPort({
-  path: 'COM10',     // Windows example
-  baudRate: 9600,
-})
+console.log(`\n================================`);
+console.log(`🚨 MATHX BUZZER EXPRESS SERVICE 🚨`);
+console.log(`================================`);
+console.log(`[1] Targeting VPS URL: ${VPS_SOCKET_URL}`);
+console.log(`[2] Targeting Arduino: ${ARDUINO_COM_PORT}`);
+console.log(`[3] Local Express Port: ${LOCAL_PORT}\n`);
 
-const parser = port.pipe(new ReadlineParser({ delimiter: '\r\n' }))
+// 1. Establish secure outbound WebSocket connection to the Main Backend
+const vpsSocket = Client(VPS_SOCKET_URL, {
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: Infinity
+});
 
-console.log('🚀 Listening to Arduino...')
+vpsSocket.on('connect', () => {
+  console.log('✅ [VPS Socket] Connected successfully to the Main VPS Server!');
+});
 
-parser.on('data', (data) => {
-  const cleanData = data.trim();
-  console.log('Received:', cleanData)
+vpsSocket.on('disconnect', () => {
+  console.log('❌ [VPS Socket] Connection lost. Retrying...');
+});
 
-  // Broadcast terminal output to frontend
-  io.emit('serialData', cleanData);
+// 2. Open Arduino Serial Connection
+let port, parser;
+try {
+  port = new SerialPort({
+    path: ARDUINO_COM_PORT,
+    baudRate: 9600,
+    autoOpen: true
+  });
 
-  if (cleanData === 'BUTTON_PRESSED') {
-    console.log('🔥 Button was pressed!')
-  }
-})
+  parser = port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 
-port.on('error', (err) => {
-  console.error('Serial Port Error:', err.message)
-})
+  port.on('open', () => {
+    console.log(`🚀 [Hardware] Actively listening to Arduino on ${ARDUINO_COM_PORT}...`);
+  });
 
-const PORT = 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Express server listening on port ${PORT}`);
+  port.on('error', (err) => {
+    console.error('\n❌ [Hardware Error] Serial Port failed to open!');
+    console.error(`Please ensure Arduino is plugged into ${ARDUINO_COM_PORT} and no other program (like Arduino IDE) is using it.`);
+    console.error('Error Details:', err.message, '\n');
+  });
+
+  // 3. React instantly to physical buzzer presses
+  parser.on('data', (data) => {
+    const cleanData = data.trim();
+    if (!cleanData) return;
+
+    // Assuming Arduino outputs a direct team number ("1", "2", ... "6") 
+    const teamId = parseInt(cleanData, 10);
+
+    // Broadcast raw input to local dev monitor optionally
+    localIo.emit('serialData', cleanData);
+
+    if (vpsSocket.connected) {
+      if (!isNaN(teamId) && teamId >= 1 && teamId <= 6) {
+        console.log(`🔥 [BUZZ] Team ${teamId} pressed buzzer! Forwarding to VPS...`);
+
+        // Emit the exact physical hit to the Backend's Round 3 Controller
+        vpsSocket.emit('client:round3:buzzer_pressed', {
+          teamId: teamId,
+          timestamp: Date.now(), // High-precision local timestamp
+          rawSignal: cleanData
+        });
+
+        // (Optional) Emit to Round 2 as well if they share the codebase
+        vpsSocket.emit('fastfingers:buzzer:hit', teamId);
+
+      } else {
+        console.log(`[Hardware Debug] Unrecognized signal: ${cleanData}`);
+      }
+    } else {
+      console.warn(`⚠️ [Offline Drop] Team ${teamId} buzzed, but we are NOT connected to the VPS!`);
+    }
+  });
+
+} catch (e) {
+  console.error('[Fatal Error] Serial Port setup failed:', e.message);
+}
+
+server.listen(LOCAL_PORT, () => {
+  console.log(`🚀 [Express] Local server listening on port ${LOCAL_PORT}`);
 });
