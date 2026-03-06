@@ -22,7 +22,7 @@ export function ThemeCard({ children, className, highlighted = false, glowColor 
             {/* Subtle top edge highlight for glass effect */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
-            <div className="relative z-10">
+            <div className="relative z-10 h-full w-full flex flex-col">
                 {children}
             </div>
         </div>

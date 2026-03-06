@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Lock, Timer, Zap } from 'lucide-react';
+import { Lock, Timer, Zap, Trophy, ZoomIn, ZoomOut } from 'lucide-react';
 import 'katex/dist/katex.min.css';
-import { BlockMath } from 'react-katex';
+import Latex from 'react-latex-next';
 import { useSocket, SocketProvider } from '../SocketContext';
 
 const ClientViewInner = () => {
@@ -13,6 +13,7 @@ const ClientViewInner = () => {
     const [activeQuestion, setActiveQuestion] = useState(null);
     const [startTime, setStartTime] = useState(null);
     const [elapsed, setElapsed] = useState('0.00');
+    const [fontScale, setFontScale] = useState(1);
 
     // New Round 2 States
     const [feedbackMsg, setFeedbackMsg] = useState('');
@@ -121,14 +122,26 @@ const ClientViewInner = () => {
                 </div>
             )}
 
-            <div className="relative z-10 w-full max-w-4xl">
+            <div className="relative z-10 w-full max-w-[95vw] lg:max-w-[90vw]">
                 <Card>
                     {/* Header Section */}
                     <div className="flex justify-between items-center mb-8 pb-6 border-b border-brand-panel-border">
                         <div className="flex items-center gap-3">
                             <Zap className={isConnected ? "text-brand-cyan animate-pulse" : "text-gray-500"} />
-                            <span className="font-bold text-xl tracking-widest text-brand-cyan">MATHX ROUND 2</span>
+                            <span className="font-bold text-xl tracking-widest text-brand-cyan hidden sm:inline">MATHX ROUND 2</span>
                         </div>
+
+                        {/* Font Scaling Controls */}
+                        <div className="flex items-center gap-1 bg-brand-dark/50 px-2 py-1 rounded-full border border-gray-700">
+                            <button onClick={() => setFontScale(s => Math.max(0.7, s - 0.1))} className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white" title="Decrease Font Size">
+                                <ZoomOut size={18} />
+                            </button>
+                            <span className="text-xs font-mono text-gray-400 w-8 text-center">{Math.round(fontScale * 100)}%</span>
+                            <button onClick={() => setFontScale(s => Math.min(2.5, s + 0.1))} className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white" title="Increase Font Size">
+                                <ZoomIn size={18} />
+                            </button>
+                        </div>
+
                         <div className="flex items-center gap-2 bg-brand-dark px-4 py-2 rounded-full border border-brand-purple">
                             <Timer className="text-brand-purple" size={18} />
                             <span className="font-mono font-bold">{elapsed}s</span>
@@ -166,63 +179,71 @@ const ClientViewInner = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <>
-                                    {/* Question Area */}
-                                    <div className="text-center mb-12 animate-in slide-in-from-bottom-4 duration-500">
-                                        <h2 className="text-2xl text-gray-300 font-medium mb-6">
-                                            {activeQuestion.text}
-                                        </h2>
-                                        <div className="text-4xl sm:text-5xl py-8 px-4 bg-brand-dark/40 rounded-xl border border-brand-blue/30 glow-blue">
-                                            {activeQuestion.mathText && (
-                                                <BlockMath math={activeQuestion.mathText} />
-                                            )}
+                                <div className="flex flex-col md:flex-row gap-8 lg:gap-12 animate-in slide-in-from-bottom-4 duration-500">
+
+                                    {/* Left Side - Question Area */}
+                                    <div className="flex-none lg:w-[75%] flex flex-col justify-center">
+                                        <div className="text-left mb-6">
+                                            <h2 className="text-lg text-gray-400 font-medium mb-4 uppercase tracking-widest flex items-center gap-2">
+                                                {activeQuestion.text}
+                                            </h2>
+                                            <div
+                                                className="text-2xl sm:text-3xl py-12 px-8 bg-brand-dark/40 rounded-xl border border-brand-blue/30 glow-blue leading-relaxed break-words min-h-[300px] flex items-center justify-center text-center"
+                                                style={{ fontSize: `${fontScale * 1.5}rem`, transition: 'font-size 0.2s ease-out' }}
+                                            >
+                                                {activeQuestion.mathText && (
+                                                    <Latex>{activeQuestion.mathText}</Latex>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Input Area */}
-                                    <div className="flex flex-col items-center gap-6 mb-10 animate-in slide-in-from-bottom-6 duration-500">
-                                        <input
-                                            type="number"
-                                            step="any"
-                                            placeholder="Enter numerical answer..."
-                                            value={numericAnswer}
-                                            onChange={(e) => !isLocked && setNumericAnswer(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') handleLock();
-                                            }}
-                                            disabled={isLocked}
-                                            className={`w-full max-w-md text-center text-4xl p-4 rounded-xl border-2 bg-brand-dark/60 outline-none transition-all duration-300 font-mono
-                                            ${isLocked
-                                                    ? 'border-yellow-500 bg-yellow-500/10 text-yellow-500 grayscale'
-                                                    : 'border-brand-panel-border focus:border-brand-cyan focus:shadow-[0_0_15px_rgba(0,255,255,0.2)] text-white'
-                                                }
-                                        `}
-                                        />
+                                    {/* Right Side - Input Area */}
+                                    <div className="flex-none lg:w-[25%] flex flex-col items-center justify-center bg-brand-dark/20 p-6 rounded-2xl border border-brand-panel-border/50">
+                                        <div className="w-full flex flex-col items-center gap-6 mb-8">
+                                            <input
+                                                type="number"
+                                                step="any"
+                                                placeholder="Enter exact numerical answer"
+                                                value={numericAnswer}
+                                                onChange={(e) => !isLocked && setNumericAnswer(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleLock();
+                                                }}
+                                                disabled={isLocked}
+                                                className={`w-full text-center text-3xl sm:text-4xl p-6 rounded-xl border-2 bg-brand-dark/60 outline-none transition-all duration-300 font-mono shadow-inner
+                                                    ${isLocked
+                                                        ? 'border-yellow-500 bg-yellow-500/10 text-yellow-500 grayscale'
+                                                        : 'border-brand-panel-border focus:border-brand-cyan focus:shadow-[0_0_20px_rgba(0,255,255,0.15)] text-white'
+                                                    }
+                                                `}
+                                            />
 
-                                        {/* Feedback Message */}
-                                        <div className={`h-6 text-lg font-bold ${feedbackMsg.includes('Incorrect') ? 'text-red-400 animate-bounce' : 'text-gray-400'}`}>
-                                            {feedbackMsg}
+                                            {/* Feedback Message */}
+                                            <div className={`h-6 text-lg font-bold ${feedbackMsg.includes('Incorrect') ? 'text-red-400 animate-pulse' : 'text-gray-400'}`}>
+                                                {feedbackMsg}
+                                            </div>
+                                        </div>
+
+                                        {/* Action Button */}
+                                        <div className="w-full flex justify-center">
+                                            <Button
+                                                className="w-full py-6 text-xl sm:text-2xl tracking-widest uppercase font-black"
+                                                variant={isLocked ? 'secondary' : 'glow'}
+                                                onClick={handleLock}
+                                                disabled={numericAnswer.trim() === '' || isLocked}
+                                            >
+                                                {isLocked ? (
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Lock size={24} /> <span>Sending...</span>
+                                                    </div>
+                                                ) : (
+                                                    'Lock Answer'
+                                                )}
+                                            </Button>
                                         </div>
                                     </div>
-
-                                    {/* Action Button */}
-                                    <div className="flex justify-center animate-in slide-in-from-bottom-8 duration-500">
-                                        <Button
-                                            className="w-1/2 max-w-sm py-5 text-xl tracking-widest uppercase font-black"
-                                            variant={isLocked ? 'secondary' : 'glow'}
-                                            onClick={handleLock}
-                                            disabled={numericAnswer.trim() === '' || isLocked}
-                                        >
-                                            {isLocked ? (
-                                                <>
-                                                    <Lock size={24} /> Sending...
-                                                </>
-                                            ) : (
-                                                'Lock Answer'
-                                            )}
-                                        </Button>
-                                    </div>
-                                </>
+                                </div>
                             )}
                         </>
                     )}

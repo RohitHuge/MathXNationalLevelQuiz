@@ -5,6 +5,8 @@ import { useSocket } from '../SocketContext';
 import { getCurrentUser } from '../lib/appwrite';
 import { useNavigate } from 'react-router-dom';
 import { Send, Trophy, Clock, Users, EyeOff, CheckCircle, Zap } from 'lucide-react';
+import Latex from 'react-latex-next';
+import 'katex/dist/katex.min.css';
 
 export default function Admin() {
     const { socket, isConnected } = useSocket();
@@ -201,7 +203,7 @@ export default function Admin() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto mt-10 p-4 animate-in fade-in duration-500">
+        <div className="max-w-[95vw] lg:max-w-[90vw] mx-auto mt-10 p-4 animate-in fade-in duration-500">
             <div className="mb-8 flex justify-between items-end border-b border-gray-800 pb-4">
                 <div>
                     <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
@@ -428,100 +430,150 @@ export default function Admin() {
                     </ThemeCard>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
-                    {/* Left Panel - Question Flow Controls */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <ThemeCard className="border-[var(--color-neon-cyan)]/20 shadow-[0_0_15px_rgba(0,255,255,0.05)] h-full flex flex-col">
-                            <div className="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
-                                <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-                                    <Send className="text-[var(--color-neon-cyan)]" size={20} />
-                                    Question Bank
+                <div className="space-y-8 animate-in fade-in duration-500">
+
+                    {/* Full Width Stage Control */}
+                    <ThemeCard className="border-[var(--color-neon-purple)]/20 shadow-[0_0_15px_rgba(188,19,254,0.05)]">
+                        <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
+                            <div className="flex-1 text-center md:text-left">
+                                <h2 className="text-xl font-bold mb-2 flex items-center justify-center md:justify-start gap-2 text-white">
+                                    <Users className="text-[var(--color-neon-purple)]" size={24} />
+                                    Round 2 Stage Manager
                                 </h2>
-                                {activeQuestionId && (
-                                    <button onClick={handleHideQuestion} className="flex gap-2 items-center text-sm font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30 px-3 py-1.5 rounded hover:bg-amber-500/20 transition-colors">
-                                        <EyeOff size={16} /> Hide All
-                                    </button>
-                                )}
+                                <p className="text-[var(--color-gray-400)] text-sm">
+                                    Manage the participant flow between the Hub and the Live Arena.
+                                </p>
                             </div>
+                            <div className="flex flex-wrap gap-4 justify-center md:justify-end w-full md:w-auto">
+                                <ThemeButton
+                                    variant="primary"
+                                    className="bg-[var(--color-neon-purple)]/20 border-[var(--color-neon-purple)]/50 text-white hover:bg-[var(--color-neon-purple)] flex-1 md:flex-none"
+                                    onClick={() => handleStageChange('B', 1)}
+                                    disabled={!isConnected}
+                                >
+                                    Push to Hub Dashboard
+                                </ThemeButton>
+                                <ThemeButton
+                                    variant="primary"
+                                    className="bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)]/50 text-white hover:bg-[var(--color-neon-cyan)] flex-1 md:flex-none"
+                                    onClick={() => handleStageChange('B', 2)}
+                                    disabled={!isConnected}
+                                >
+                                    Launch Live Arena
+                                </ThemeButton>
+                            </div>
+                        </div>
+                    </ThemeCard>
 
-                            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-[var(--color-neon-cyan)]-scrollbar">
-                                {questions.length === 0 ? (
-                                    <p className="text-gray-500 text-center py-4">No FastFingers questions found (needs round = 2).</p>
-                                ) : (
-                                    questions.map((q, idx) => (
-                                        <div key={q.id} className={`p-4 rounded-lg border transition-all ${activeQuestionId === q.id ? 'bg-[var(--color-neon-cyan)]/10 border-[var(--color-neon-cyan)] shadow-[0_0_15px_rgba(0,255,255,0.1)]' : 'bg-black/40 border-gray-800 hover:border-[var(--color-neon-cyan)]/50'}`}>
-                                            <div className="flex justify-between items-start mb-3">
-                                                <span className="text-sm font-bold text-gray-400">Q{idx + 1}</span>
-                                                <span className="text-xs bg-black px-2 py-1 rounded-full text-[var(--color-neon-cyan)] border border-[var(--color-neon-cyan)]/30">
-                                                    {q.marks || 10} Pts
-                                                </span>
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                        {/* Question Preview & Deploy Panel */}
+                        <div className="xl:col-span-7">
+                            <ThemeCard className="border-[var(--color-neon-cyan)]/20 shadow-[0_0_15px_rgba(0,255,255,0.05)] h-[70vh] flex flex-col overflow-hidden">
+                                <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                                    <h2 className="text-xl font-bold flex items-center gap-3 text-white">
+                                        <Send className="text-[var(--color-neon-cyan)]" size={22} />
+                                        Question Preview & Control
+                                    </h2>
+                                    {activeQuestionId && (
+                                        <button onClick={handleHideQuestion} className="flex gap-2 flex-shrink-0 items-center text-sm font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30 px-4 py-2 rounded hover:bg-amber-500/20 transition-colors uppercase tracking-widest shadow-lg">
+                                            <EyeOff size={18} /> Hide Question
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-4 custom-[var(--color-neon-cyan)]-scrollbar pb-10">
+                                    {questions.length === 0 ? (
+                                        <p className="text-gray-500 text-center py-10 text-lg">No FastFingers questions found.</p>
+                                    ) : (
+                                        questions.map((q, idx) => (
+                                            <div key={q.id} className={`p-6 rounded-xl border transition-all ${activeQuestionId === q.id ? 'bg-[var(--color-neon-cyan)]/10 border-[var(--color-neon-cyan)] shadow-[0_0_20px_rgba(0,255,255,0.15)] ring-1 ring-[var(--color-neon-cyan)]/50' : 'bg-black/40 border-gray-800 hover:border-[var(--color-neon-cyan)]/40'}`}>
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <span className="text-xl font-black text-gray-300">Question {idx + 1}</span>
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="text-sm font-bold bg-black px-4 py-1.5 rounded-full text-[var(--color-neon-cyan)] border border-[var(--color-neon-cyan)]/30 tracking-widest uppercase shadow-inner">
+                                                            {q.marks || 10} Points
+                                                        </span>
+                                                        <ThemeButton
+                                                            variant={activeQuestionId === q.id ? "primary" : "secondary"}
+                                                            className={`px-6 py-2 text-sm font-bold tracking-widest uppercase transition-transform hover:scale-105 ${activeQuestionId === q.id ? 'bg-[var(--color-neon-cyan)]/30 border-[var(--color-neon-cyan)] text-white shadow-[0_0_20px_rgba(0,255,255,0.6)]' : 'border-gray-600 text-gray-300 hover:border-[var(--color-neon-cyan)]'}`}
+                                                            onClick={() => handleSendQuestion(q.id)}
+                                                            disabled={activeQuestionId && activeQuestionId !== q.id}
+                                                        >
+                                                            {activeQuestionId === q.id ? 'Live on Screens' : 'Push Live'}
+                                                        </ThemeButton>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-base leading-relaxed text-gray-200 bg-brand-dark/20 p-5 rounded-xl border border-gray-800/50 break-words font-medium">
+                                                    <p className="mb-4 text-gray-400 font-sans tracking-wide">{q.content?.text}</p>
+                                                    {q.content?.mathText && (
+                                                        <div className="text-lg bg-black/60 p-4 rounded-lg inline-block border border-[var(--color-neon-cyan)]/20 shadow-inner max-w-full overflow-x-auto text-[var(--color-neon-cyan)]">
+                                                            <Latex>{q.content.mathText}</Latex>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <p className="font-mono text-sm mb-4 line-clamp-2 text-gray-200">{q.content?.text}</p>
+                                        ))
+                                    )}
+                                </div>
+                            </ThemeCard>
+                        </div>
 
-                                            <ThemeButton
-                                                variant={activeQuestionId === q.id ? "primary" : "secondary"}
-                                                className={`w-full ${activeQuestionId === q.id ? 'bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)] shadow-[0_0_15px_rgba(0,255,255,0.4)]' : ''}`}
-                                                onClick={() => handleSendQuestion(q.id)}
-                                                disabled={activeQuestionId && activeQuestionId !== q.id}
-                                            >
-                                                {activeQuestionId === q.id ? 'Live / Retry' : 'Push Live'}
-                                            </ThemeButton>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </ThemeCard>
-                    </div>
-
-                    {/* Right Panel - Leaderboard */}
-                    <div className="lg:col-span-2">
-                        <ThemeCard className="h-full border-[var(--color-neon-purple)]/20 shadow-[0_0_15px_rgba(188,19,254,0.05)]">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 border-b border-gray-800 pb-2 text-white">
-                                <Trophy className="text-[var(--color-neon-purple)]" size={20} />
-                                Live Feed & Fastest Responses
-                            </h2>
-
-                            <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
-                                {clients.length === 0 ? (
-                                    <div className="text-center py-20 text-gray-500 font-medium">
-                                        Awaiting participant attempts...
+                        {/* Right Panel - Leaderboard */}
+                        <div className="xl:col-span-5 flex flex-col">
+                            <ThemeCard className="h-[70vh] border-[var(--color-neon-purple)]/20 shadow-[0_0_15px_rgba(188,19,254,0.05)] flex flex-col">
+                                <h2 className="text-xl font-bold mb-6 flex items-center justify-between border-b border-gray-800 pb-4 text-white">
+                                    <div className="flex flex-row items-center gap-3">
+                                        <Trophy className="text-[var(--color-neon-purple)]" size={24} />
+                                        <span>Live Feed & Responses</span>
                                     </div>
-                                ) : (
-                                    clients.map((client, idx) => (
-                                        <div
-                                            key={`${client.id}-${idx}`}
-                                            className={`flex items-center justify-between p-4 rounded-xl border ${client.correct
-                                                ? 'bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)] shadow-[0_0_20px_rgba(0,255,255,0.2)]'
-                                                : 'bg-red-500/5 border-red-500/20'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <span className={`text-2xl font-black ${client.correct ? 'text-[var(--color-neon-cyan)]' : 'text-gray-600'}`}>
-                                                    #{idx + 1}
-                                                </span>
-                                                <span className={`font-bold text-lg ${client.correct ? 'text-white' : 'text-gray-300'}`}>{client.name}</span>
-                                            </div>
+                                    <span className="text-xs tracking-widest uppercase font-bold text-[var(--color-neon-purple)] bg-[var(--color-neon-purple)]/10 px-3 py-1 rounded-full border border-[var(--color-neon-purple)]/30">
+                                        Real-time
+                                    </span>
+                                </h2>
 
-                                            <div className="flex items-center gap-6">
-                                                <div className="text-right">
-                                                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Guessed</p>
-                                                    <p className={`font-mono font-black text-xl ${client.correct ? 'text-white' : 'text-red-400'}`}>
-                                                        {client.answer}
-                                                    </p>
+                                <div className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-3 custom-scrollbar pb-6">
+                                    {clients.length === 0 ? (
+                                        <div className="text-center py-20 text-gray-500 font-medium">
+                                            Awaiting participant attempts...
+                                        </div>
+                                    ) : (
+                                        clients.map((client, idx) => (
+                                            <div
+                                                key={`${client.id}-${idx}`}
+                                                className={`flex items-center justify-between p-4 rounded-xl border ${client.correct
+                                                    ? 'bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)] shadow-[0_0_20px_rgba(0,255,255,0.2)]'
+                                                    : 'bg-red-500/5 border-red-500/20'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <span className={`text-2xl font-black ${client.correct ? 'text-[var(--color-neon-cyan)]' : 'text-gray-600'}`}>
+                                                        #{idx + 1}
+                                                    </span>
+                                                    <span className={`font-bold text-lg ${client.correct ? 'text-white' : 'text-gray-300'}`}>{client.name}</span>
                                                 </div>
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${client.correct ? 'bg-green-500/20 text-green-400' : 'bg-red-500/10 text-red-500'}`}>
-                                                    {client.correct ? 'CORRECT' : 'INCORRECT'}
-                                                </span>
-                                                <div className={`flex items-center gap-2 font-mono text-lg w-24 justify-end ${client.correct ? 'text-[var(--color-neon-cyan)]' : 'text-gray-500'}`}>
-                                                    <Clock size={16} />
-                                                    {client.time}
+
+                                                <div className="flex items-center gap-6">
+                                                    <div className="text-right">
+                                                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Guessed</p>
+                                                        <p className={`font-mono font-black text-xl ${client.correct ? 'text-white' : 'text-red-400'}`}>
+                                                            {client.answer}
+                                                        </p>
+                                                    </div>
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${client.correct ? 'bg-green-500/20 text-green-400' : 'bg-red-500/10 text-red-500'}`}>
+                                                        {client.correct ? 'CORRECT' : 'INCORRECT'}
+                                                    </span>
+                                                    <div className={`flex items-center gap-2 font-mono text-lg w-24 justify-end ${client.correct ? 'text-[var(--color-neon-cyan)]' : 'text-gray-500'}`}>
+                                                        <Clock size={16} />
+                                                        {client.time}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </ThemeCard>
+                                        ))
+                                    )}
+                                </div>
+                            </ThemeCard>
+                        </div>
                     </div>
                 </div>
             )}

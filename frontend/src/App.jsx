@@ -7,6 +7,7 @@ import Admin from './pages/Admin';
 import LoginPage from './pages/LoginPage';
 import RegisterTesting from './pages/RegisterTesting';
 import { FastFingersHome } from './round2/FastFingersHome';
+import FastFingersDashboard from './round2/FastFingersDashboard';
 import { FastFingersAdmin } from './round2/FastFingersAdmin';
 import { FastFingersClient } from './round2/FastFingersClient';
 import Round2ProtectedRoute from './round2/Round2ProtectedRoute';
@@ -51,9 +52,9 @@ function AppContent() {
         else if (stageNum === 2) targetPath = '/quiz';
         else if (stageNum === 3) targetPath = '/leaderboard';
       } else if (roundStr === 'B') { // Round 2 logic
-        if (stageNum === 0) targetPath = '/round2/dashboard'; // Placeholder
-        else if (stageNum === 1) targetPath = '/round2/waiting'; // Placeholder
-        else if (stageNum === 2) targetPath = '/round2/client';
+        if (stageNum === 0) targetPath = '/dashboard'; // Safe fallback
+        else if (stageNum === 1) targetPath = '/round2/dashboard'; // FastFingers Branded Dashboard
+        else if (stageNum === 2) targetPath = '/round2/client'; // FastFingers Live Radar
       }
 
       // Prevent looping redirect if already on exactly that path
@@ -94,7 +95,7 @@ function AppContent() {
     }
   };
 
-  const isDashboard = location.pathname === '/dashboard';
+  const isDashboard = location.pathname === '/dashboard' || location.pathname === '/round2/dashboard';
 
   return (
     <div className="min-h-screen bg-[var(--color-slate-900)] text-[var(--color-gray-200)] font-base selection:bg-[var(--color-blue-500)] selection:text-white flex flex-col">
@@ -164,6 +165,14 @@ function AppContent() {
           <Route
             path="/admin"
             element={<Admin />}
+          />
+          <Route
+            path="/round2/dashboard"
+            element={
+              <Round2ProtectedRoute>
+                <FastFingersDashboard user={user} />
+              </Round2ProtectedRoute>
+            }
           />
           <Route
             path="/round2"
