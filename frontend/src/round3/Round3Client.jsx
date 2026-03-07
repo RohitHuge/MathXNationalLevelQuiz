@@ -71,7 +71,8 @@ export function Round3Client() {
         buzzerLocked,
         teams = [],
         clientFontSize = 60, // This will now be overridden by localFontVh for display
-        allocatedTeamId = null
+        allocatedTeamId = null,
+        hasBaseTeamPassed = false
     } = gameState;
 
     const allocatedTeam = teams.find(t => t.id === allocatedTeamId);
@@ -159,10 +160,13 @@ export function Round3Client() {
                                 </div>
 
                                 {allocatedTeamId && (
-                                    <div className="absolute top-8 right-8 px-6 py-2 bg-[var(--color-neon-pink)]/20 border border-[var(--color-neon-pink)] rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(255,0,255,0.3)] animate-pulse">
-                                        <Zap className="text-[var(--color-neon-pink)]" size={20} />
-                                        <span className="font-bold tracking-widest uppercase text-[var(--color-neon-pink)]">
-                                            Allocated to: {allocatedTeam?.name}
+                                    <div className={`absolute top-8 right-8 px-6 py-2 border rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(255,0,255,0.3)] animate-pulse ${hasBaseTeamPassed ? 'bg-orange-500/20 border-orange-500 text-orange-400' : 'bg-[var(--color-neon-pink)]/20 border-[var(--color-neon-pink)] text-[var(--color-neon-pink)]'}`}>
+                                        <Zap className={hasBaseTeamPassed ? "text-orange-400" : "text-[var(--color-neon-pink)]"} size={20} />
+                                        <span className={`font-bold tracking-widest uppercase ${hasBaseTeamPassed ? "text-orange-400" : "text-[var(--color-neon-pink)]"}`}>
+                                            {activeSubRound === 3
+                                                ? (hasBaseTeamPassed ? `${allocatedTeam?.name} Passed` : `Base: ${allocatedTeam?.name}`)
+                                                : `Allocated: ${allocatedTeam?.name}`
+                                            }
                                         </span>
                                     </div>
                                 )}

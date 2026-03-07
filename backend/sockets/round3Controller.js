@@ -18,6 +18,7 @@ let gameState = {
     buzzerQueue: [], // Array of { teamId, timestamp }
     passCount: 0,
     buzzerLocked: true,
+    hasBaseTeamPassed: false, // Tracks if the allocated team has hit the buzzer to pass it in Sub-Round 3
 
     teams: [
         { id: 1, name: "Team 1", score: 0 },
@@ -103,7 +104,8 @@ export const setupRound3Sockets = (io, socket) => {
                 gameState.buzzerQueue = [];
                 gameState.passCount = 0;
                 gameState.buzzerLocked = true; // Wait for Admin to manually "Start" buzzer
-                gameState.allocatedTeamId = null; // Reset allocation for new questions
+                // gameState.allocatedTeamId = null; // Removed to allow pre-allocation!
+                gameState.hasBaseTeamPassed = false; // Reset pass logic for Sub-round 3
 
                 io.emit('server:round3:state_update', gameState);
             }
@@ -159,6 +161,7 @@ export const setupRound3Sockets = (io, socket) => {
         gameState.buzzerLocked = false;
         gameState.buzzerQueue = [];
         gameState.passCount = 0;
+        // Do NOT reset hasBaseTeamPassed here, since an admin might accidentally lock/unlock mid-question mechanics
         io.emit('server:round3:state_update', gameState);
     });
 
@@ -184,6 +187,31 @@ export const setupRound3Sockets = (io, socket) => {
 
         const { teamId, timestamp } = data;
 
+        // Sub-Round 3: Pass-On Round Mechanics
+        if (gameState.activeSubRound === 3) {
+            // If the Base Team hasn't passed it yet, ONLY the Base Team is allowed to buzz.
+            if (!gameState.hasBaseTeamPassed) {
+                // Use loose equality (==) because teamId from hardware is Number, but allocatedTeamId from React might be String
+                if (teamId == gameState.allocatedTeamId) {
+                    // Base team explicitly hit buzzer to pass
+                    gameState.hasBaseTeamPassed = true;
+                    console.log(`[Round 3 SR3] Base Team ${teamId} has PASSED! Opening buzzers to the remaining 5 teams!`);
+                    io.emit('server:round3:state_update', gameState);
+                } else {
+                    console.log(`[Round 3 SR3] Dropping hit from Team ${teamId} -> Base Team hasn't passed it yet!`);
+                }
+                return; // Do NOT push anyone to the buzzerQueue until the Base Team officially passes!
+            } else {
+                // The Base Team has already passed! The race is on! 
+                // But the Base team who passed cannot immediately buzz back in for it.
+                if (teamId == gameState.allocatedTeamId) {
+                    console.log(`[Round 3 SR3] Dropping hit from Team ${teamId} -> They passed it! They can't answer!`);
+                    return;
+                }
+            }
+        }
+
+        // Standard Queue Entry Mechanics
         // Prevent duplicate hits from the same team in this queue
         if (!gameState.buzzerQueue.find(b => b.teamId === teamId)) {
             gameState.buzzerQueue.push({ teamId, timestamp: timestamp || Date.now() });
