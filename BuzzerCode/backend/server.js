@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const ARDUINO_COM_PORT = "COM11";
-const VPS_SOCKET_URL = "http://localhost:3001";
+const VPS_SOCKET_URL = "https://api.mathxpccoer.in";
 const LOCAL_PORT = 5000;
 
 const app = express();
