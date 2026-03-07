@@ -27,6 +27,10 @@ function App() {
       setLogs((prevLogs) => [...prevLogs, data]);
     });
 
+    socket.on('serialDataSent', (data) => {
+      setLogs((prevLogs) => [...prevLogs, `OUT: ${data}`]);
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -72,7 +76,7 @@ function App() {
             <div className="flex flex-wrap justify-center gap-3 mt-4 border-t border-gray-800 pt-4 w-full">
               {[1, 2, 3, 4, 5, 6].map((teamId) => (
                 <button
-                  key={teamId}
+                  key={`sim-${teamId}`}
                   onClick={async () => {
                     try {
                       await fetch(`http://localhost:5000/simulate-buzz/${teamId}`);
@@ -85,6 +89,46 @@ function App() {
                   T{teamId} Buzz
                 </button>
               ))}
+            </div>
+
+            {/* Light Controls Panel */}
+            <div className="flex flex-col gap-3 mt-4 border-t border-gray-800 pt-4 w-full items-center">
+              <h3 className="text-gray-400 font-semibold text-sm">Light Controls</h3>
+              <div className="flex flex-wrap justify-center gap-4">
+                {[1, 2, 3, 4, 5, 6].map((teamId) => (
+                  <div key={`light-${teamId}`} className="flex items-center space-x-1 sm:space-x-2 bg-gray-800/80 p-2 rounded-lg border border-gray-700">
+                    <span className="text-sm font-bold text-gray-400 px-2">T{teamId}</span>
+                    <button
+                      onClick={async () => fetch(`http://localhost:5000/trigger-light/${teamId}/U`).catch(console.error)}
+                      className="px-2 py-1 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 text-xs rounded transition-colors"
+                      title="Turn On"
+                    >
+                      ON (U)
+                    </button>
+                    <button
+                      onClick={async () => fetch(`http://localhost:5000/trigger-light/${teamId}/B`).catch(console.error)}
+                      className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 text-xs rounded transition-colors"
+                      title="Blink"
+                    >
+                      BLINK (B)
+                    </button>
+                    <button
+                      onClick={async () => fetch(`http://localhost:5000/trigger-light/${teamId}/S`).catch(console.error)}
+                      className="px-2 py-1 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 text-xs rounded transition-colors"
+                      title="Slow Blink"
+                    >
+                      SLOW (S)
+                    </button>
+                    <button
+                      onClick={async () => fetch(`http://localhost:5000/trigger-light/${teamId}/O`).catch(console.error)}
+                      className="px-2 py-1 bg-gray-600/20 hover:bg-gray-600/40 text-gray-400 text-xs rounded transition-colors"
+                      title="Turn Off"
+                    >
+                      OFF (O)
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </header>
@@ -120,7 +164,7 @@ function App() {
                   <span className="text-gray-600 w-12 shrink-0 select-none group-hover:text-gray-500 transition-colors">
                     {(index + 1).toString().padStart(4, '0')}
                   </span>
-                  <span className={`flex-1 break-words ml-2 md:ml-4 drop-shadow-sm ${log.includes('BUTTON_PRESSED') ? 'text-amber-400 font-bold bg-amber-400/10 px-2 rounded -mx-2' : log.includes('Error') ? 'text-rose-400' : 'text-emerald-400 shadow-emerald-500/20'}`}>
+                  <span className={`flex-1 break-words ml-2 md:ml-4 drop-shadow-sm ${log.startsWith('OUT:') ? 'text-blue-400 font-bold bg-blue-400/10 px-2 rounded -mx-2' : log.includes('BUTTON_PRESSED') ? 'text-amber-400 font-bold bg-amber-400/10 px-2 rounded -mx-2' : log.includes('Error') ? 'text-rose-400' : 'text-emerald-400 shadow-emerald-500/20'}`}>
                     {log}
                   </span>
                 </div>
