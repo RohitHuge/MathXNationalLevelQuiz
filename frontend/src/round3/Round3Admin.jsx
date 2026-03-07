@@ -33,7 +33,7 @@ export default function Round3Admin() {
         );
     }
 
-    const { activeQuestion, timerTime, isTimerRunning, buzzerLocked, buzzerQueue, passCount, teams, clientFontSize, allocatedTeamId } = gameState;
+    const { activeQuestion, timerTime, isTimerRunning, buzzerLocked, buzzerQueue, passCount, teams, clientFontSize, allocatedTeamId, hasBaseTeamPassed } = gameState;
 
     const handleSubRoundChange = (round) => {
         setSelectedSubRound(round);
@@ -131,7 +131,18 @@ export default function Round3Admin() {
                 {/* Middle Col: Question Library */}
                 <div className="col-span-12 lg:col-span-4 bg-white/5 p-8 rounded-2xl border border-white/10 flex flex-col h-full relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                    <h2 className="text-white/50 tracking-widest uppercase text-sm font-semibold mb-6 flex items-center gap-2 relative z-10"><List className="w-4 h-4" /> Question Library</h2>
+                    <div className="flex justify-between items-center mb-6 relative z-10 w-full">
+                        <h2 className="text-white/50 tracking-widest uppercase text-sm font-semibold flex items-center gap-2">
+                            <List className="w-4 h-4" /> Question Library
+                        </h2>
+                        {activeQuestion && selectedSubRound === 3 && (
+                            <div className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded border ${allocatedTeamId ? (hasBaseTeamPassed ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' : 'bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] border-[var(--color-neon-cyan)]/50') : 'bg-red-500/20 text-red-400 border-red-500/50'}`}>
+                                {allocatedTeamId
+                                    ? (hasBaseTeamPassed ? `T${allocatedTeamId} Passed -> RACE ACTIVE` : `Base T${allocatedTeamId} (Wait to Pass)`)
+                                    : 'NO TEAM ALLOCATED YET'}
+                            </div>
+                        )}
+                    </div>
 
                     <div className="mb-6 flex-shrink-0 relative z-10">
                         <button

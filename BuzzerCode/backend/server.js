@@ -14,8 +14,8 @@ const __dirname = path.dirname(__filename);
 // Try to load env from parent if local is missing
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const ARDUINO_COM_PORT = "COM11";
-const VPS_SOCKET_URL = "https://api.mathxpccoer.in";
+const ARDUINO_COM_PORT = process.env.ARDUINO_COM_PORT || "COM11";
+const VPS_SOCKET_URL = process.env.VITE_API_URL || "http://localhost:3001"; // Connect to Local Backend instead of Prod Cloud
 const LOCAL_PORT = 5000;
 
 const app = express();
