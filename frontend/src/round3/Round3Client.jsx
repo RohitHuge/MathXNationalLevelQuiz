@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSocket } from '../SocketContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rocket, Trophy, Clock, Zap, Lock, Unlock, AlertTriangle, Minus, Plus } from 'lucide-react';
+import { Rocket, Trophy, Clock, Zap, Lock, Unlock, AlertTriangle, Minus, Plus, Volume2 } from 'lucide-react';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 
@@ -27,10 +27,21 @@ export function Round3Client() {
     const [gameState, setGameState] = useState(null);
     const [localFontVh, setLocalFontVh] = useState(2.5); // Default font size in vh units
 
+    // Buzzer Sound Logic
+    const buzzerSound = React.useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2959/2959-preview.mp3'));
+    const prevQueueLength = React.useRef(0);
+
     useEffect(() => {
         if (!socket) return;
 
         socket.on('server:round3:state_update', (state) => {
+            // Check if queue length increased -> play sound
+            const currentQueue = state.buzzerQueue || [];
+            if (currentQueue.length > prevQueueLength.current) {
+                buzzerSound.current.currentTime = 0; // Reset for overlap
+                buzzerSound.current.play().catch(err => console.error("Sound play failed:", err));
+            }
+            prevQueueLength.current = currentQueue.length;
             setGameState(state);
         });
 
@@ -135,8 +146,8 @@ export function Round3Client() {
                                     <div
                                         key={item.questionNumber}
                                         className={`p-4 rounded-2xl border flex gap-4 items-start ${item.isCorrect
-                                                ? 'bg-green-500/10 border-green-500/40'
-                                                : 'bg-red-500/10 border-red-500/40'
+                                            ? 'bg-green-500/10 border-green-500/40'
+                                            : 'bg-red-500/10 border-red-500/40'
                                             }`}
                                     >
                                         <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-black text-lg ${item.isCorrect ? 'bg-green-500 text-black' : 'bg-red-500 text-white'
@@ -153,10 +164,10 @@ export function Round3Client() {
                                                     <span
                                                         key={idx}
                                                         className={`text-[10px] px-2 py-1 rounded-lg font-bold border ${idx === item.correctIndex
-                                                                ? 'bg-green-500/30 border-green-500/50 text-green-300'
-                                                                : idx === item.selectedOption && !item.isCorrect
-                                                                    ? 'bg-red-500/30 border-red-500/50 text-red-300 line-through'
-                                                                    : 'bg-white/5 border-white/10 text-white/30'
+                                                            ? 'bg-green-500/30 border-green-500/50 text-green-300'
+                                                            : idx === item.selectedOption && !item.isCorrect
+                                                                ? 'bg-red-500/30 border-red-500/50 text-red-300 line-through'
+                                                                : 'bg-white/5 border-white/10 text-white/30'
                                                             }`}
                                                     >
                                                         {String.fromCharCode(65 + idx)}
@@ -184,12 +195,28 @@ export function Round3Client() {
                     </div>
                 </div>
 
-                {/* Local Projector Font Size Controls */}
-                <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-2 px-4">
-                    <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Font (vh)</span>
-                    <button onClick={() => setLocalFontVh(prev => Math.max(2, prev - 0.5))} className="bg-white/10 hover:bg-white/20 text-white rounded p-1"><Minus size={16} /></button>
-                    <span className="text-sm font-mono text-[var(--color-neon-cyan)] font-bold w-12 text-center">{localFontVh.toFixed(1)}</span>
-                    <button onClick={() => setLocalFontVh(prev => Math.min(15, prev + 0.5))} className="bg-white/10 hover:bg-white/20 text-white rounded p-1"><Plus size={16} /></button>
+                {/* Local Projector Font Size & Audio Controls */}
+                <div className="flex items-center gap-6 bg-white/5 border border-white/10 rounded-xl p-2 px-4">
+                    <div className="flex items-center gap-3 border-r border-white/10 pr-6">
+                        <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Audio</span>
+                        <button
+                            onClick={() => {
+                                buzzerSound.current.currentTime = 0;
+                                buzzerSound.current.play().catch(console.error);
+                            }}
+                            className="bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 p-2 rounded-lg transition-colors border border-emerald-500/30"
+                            title="Test Buzzer Sound"
+                        >
+                            <Volume2 size={18} />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Font (vh)</span>
+                        <button onClick={() => setLocalFontVh(prev => Math.max(2, prev - 0.5))} className="bg-white/10 hover:bg-white/20 text-white rounded p-1"><Minus size={16} /></button>
+                        <span className="text-sm font-mono text-[var(--color-neon-cyan)] font-bold w-12 text-center">{localFontVh.toFixed(1)}</span>
+                        <button onClick={() => setLocalFontVh(prev => Math.min(15, prev + 0.5))} className="bg-white/10 hover:bg-white/20 text-white rounded p-1"><Plus size={16} /></button>
+                    </div>
                 </div>
 
                 {activeSubRound > 0 && (
