@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../SocketContext';
-import { Play, Pause, RotateCcw, MonitorUp, Trophy, Settings2, Eye, Plus, Minus, List, Clock, Zap, Lock, Unlock, Send } from 'lucide-react';
+import { Play, Pause, RotateCcw, MonitorUp, Trophy, Settings2, Eye, EyeOff, Plus, Minus, List, Clock, Zap, Lock, Unlock, Send } from 'lucide-react';
 import Latex from 'react-latex-next';
 
 export default function Round3Admin() {
@@ -33,7 +33,7 @@ export default function Round3Admin() {
         );
     }
 
-    const { activeQuestion, timerTime, isTimerRunning, buzzerLocked, buzzerQueue, passCount, teams, clientFontSize, allocatedTeamId, hasBaseTeamPassed } = gameState;
+    const { activeQuestion, timerTime, isTimerRunning, buzzerLocked, buzzerQueue, passCount, teams, clientFontSize, allocatedTeamId, showTimer } = gameState;
 
     const handleSubRoundChange = (round) => {
         setSelectedSubRound(round);
@@ -42,6 +42,10 @@ export default function Round3Admin() {
 
     const handleStageChange = (stageNum) => {
         socket.emit('admin:change_stage', { round: 'C', stage: stageNum });
+        if (stageNum === 2) {
+            // Automatically start timer on Launch Projector
+            socket.emit('admin:round3:start_timer');
+        }
     };
 
     const handleSetTimer = () => {
@@ -89,7 +93,16 @@ export default function Round3Admin() {
                     {/* Timer Card */}
                     <div className="bg-white/5 p-8 rounded-2xl border border-white/10 flex flex-col items-center flex-shrink-0 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-neon-cyan)]/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                        <h2 className="text-white/50 tracking-widest uppercase text-sm font-semibold mb-6 flex items-center gap-2 relative z-10"><Clock className="w-4 h-4" /> Master Timer</h2>
+                        <h2 className="text-white/50 tracking-widest uppercase text-sm font-semibold mb-6 flex items-center justify-between w-full relative z-10 px-4">
+                            <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> Master Timer</div>
+                            <button
+                                onClick={() => socket.emit('admin:round3:toggle_timer_visibility')}
+                                title={showTimer !== false ? "Hide Timer on Screen" : "Show Timer on Screen"}
+                                className={`p-1.5 rounded-lg transition-colors border ${showTimer !== false ? 'bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] border-[var(--color-neon-cyan)]/50' : 'bg-red-500/20 text-red-400 border-red-500/50'}`}
+                            >
+                                {showTimer !== false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                            </button>
+                        </h2>
                         <div className={`text-7xl font-mono font-black mb-8 relative z-10 transition-colors ${timerTime <= 10 ? 'text-[var(--color-neon-pink)] drop-shadow-[0_0_15px_rgba(255,0,255,0.8)]' : 'text-[var(--color-neon-cyan)] drop-shadow-[0_0_15px_rgba(0,255,255,0.8)]'}`}>
                             {timerTime}
                         </div>
@@ -136,10 +149,10 @@ export default function Round3Admin() {
                             <List className="w-4 h-4" /> Question Library
                         </h2>
                         {activeQuestion && selectedSubRound === 3 && (
-                            <div className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded border ${allocatedTeamId ? (hasBaseTeamPassed ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' : 'bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] border-[var(--color-neon-cyan)]/50') : 'bg-red-500/20 text-red-400 border-red-500/50'}`}>
+                            <div className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded border ${allocatedTeamId ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' : 'bg-red-500/20 text-red-400 border-red-500/50'}`}>
                                 {allocatedTeamId
-                                    ? (hasBaseTeamPassed ? `T${allocatedTeamId} Passed -> RACE ACTIVE` : `Base T${allocatedTeamId} (Wait to Pass)`)
-                                    : 'NO TEAM ALLOCATED YET'}
+                                    ? `Base T${allocatedTeamId} (Blocked from Buzzer)`
+                                    : 'NO TEAM ALLOCATED'}
                             </div>
                         )}
                     </div>

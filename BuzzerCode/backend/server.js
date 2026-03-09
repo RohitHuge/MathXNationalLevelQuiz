@@ -15,7 +15,8 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const ARDUINO_COM_PORT = process.env.ARDUINO_COM_PORT || "COM11";
-const VPS_SOCKET_URL = process.env.VITE_API_URL || "http://localhost:3001"; // Connect to Local Backend instead of Prod Cloud
+// const VPS_SOCKET_URL = process.env.VITE_API_URL || "https; // Connect to Local Backend instead of Prod Cloud
+const VPS_SOCKET_URL = "http://localhost:3001";
 const LOCAL_PORT = 5000;
 
 const app = express();
@@ -70,6 +71,35 @@ app.get('/simulate-buzz/:teamId', (req, res) => {
     }
   } else {
     res.status(400).json({ success: false, message: 'Invalid Team ID' });
+  }
+});
+
+app.get('/trigger-light/:teamId/:mode', (req, res) => {
+  const teamId = parseInt(req.params.teamId, 10);
+  const mode = req.params.mode.toUpperCase();
+  const validModes = ['U', 'S', 'B', 'O'];
+
+  if (!isNaN(teamId) && teamId >= 1 && teamId <= 6 && validModes.includes(mode)) {
+    if (port && port.isOpen) {
+      const command = `${teamId}${mode}\n`;
+      port.write(command, (err) => {
+        if (err) {
+          console.error(`[Serial Error] Failed to write to port:`, err);
+          return res.status(500).json({ success: false, message: 'Failed to write to serial port' });
+        }
+        console.log(`💡 [LIGHT COMMAND] Sent ${teamId}${mode} to Arduino`);
+        localIo.emit('serialDataSent', command.trim());
+        res.json({ success: true, message: `Sent ${teamId}${mode} to Arduino` });
+      });
+    } else {
+      console.warn(`⚠️ [Serial Offline] Cannot send ${teamId}${mode}, port is not open or configured.`);
+      // Just simulate for logging if no arduino is connected
+      console.log(`💡 [SIMULATED LIGHT COMMAND] Sent ${teamId}${mode} to Arduino`);
+      localIo.emit('serialDataSent', `${teamId}${mode}`);
+      res.json({ success: true, message: `Simulated sending ${teamId}${mode} (Port offline)` });
+    }
+  } else {
+    res.status(400).json({ success: false, message: 'Invalid Team ID or Mode' });
   }
 });
 
@@ -148,6 +178,13 @@ try {
 
         // (Optional) Emit to Round 2 as well if they share the codebase
         vpsSocket.emit('fastfingers:buzzer:hit', teamId);
+
+        // Instantly turn on the local light for that Team
+        if (port && port.isOpen) {
+          const command = `${teamId}U\n`;
+          port.write(command);
+          localIo.emit('serialDataSent', command.trim());
+        }
 
       } else {
         console.log(`[Hardware Debug] Ignoring unrecognized hardware signal: "${cleanData}"`);
