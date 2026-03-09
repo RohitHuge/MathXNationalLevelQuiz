@@ -10,18 +10,25 @@ export default function Round3Admin() {
     const [selectedSubRound, setSelectedSubRound] = useState(1);
     const [customTimer, setCustomTimer] = useState('');
 
+    // Rapid Fire state
+    const [rfSets, setRfSets] = useState([]);
+    const [rfSelectedSet, setRfSelectedSet] = useState(null); // set object
+    const [rfSelectedTeamId, setRfSelectedTeamId] = useState(null);
+
     useEffect(() => {
         if (!socket) return;
         socket.on('server:round3:state_update', setGameState);
         socket.on('server:round3:questions_list', setQuestions);
         socket.on('server:round3:timer_tick', (t) => setGameState(prev => prev ? { ...prev, timerTime: t } : prev));
+        socket.on('server:round3:rf_sets_loaded', setRfSets);
         socket.emit('admin:round3:fetch_questions', 1);
-        socket.emit('admin:round3:request_state'); // Force state fetch if missed initial broadcast
+        socket.emit('admin:round3:request_state');
 
         return () => {
             socket.off('server:round3:state_update');
             socket.off('server:round3:questions_list');
             socket.off('server:round3:timer_tick');
+            socket.off('server:round3:rf_sets_loaded');
         };
     }, [socket]);
 
@@ -37,7 +44,11 @@ export default function Round3Admin() {
 
     const handleSubRoundChange = (round) => {
         setSelectedSubRound(round);
-        socket.emit('admin:round3:fetch_questions', round);
+        if (round === 5) {
+            socket.emit('admin:round3:rf_load_sets');
+        } else {
+            socket.emit('admin:round3:fetch_questions', round);
+        }
     };
 
     const handleStageChange = (stageNum) => {
@@ -141,76 +152,211 @@ export default function Round3Admin() {
                     </div>
                 </div>
 
-                {/* Middle Col: Question Library */}
+                {/* Middle Col: Question Library OR Rapid Fire Panel */}
                 <div className="col-span-12 lg:col-span-4 bg-white/5 p-8 rounded-2xl border border-white/10 flex flex-col h-full relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                    <div className="flex justify-between items-center mb-6 relative z-10 w-full">
-                        <h2 className="text-white/50 tracking-widest uppercase text-sm font-semibold flex items-center gap-2">
-                            <List className="w-4 h-4" /> Question Library
-                        </h2>
-                        {activeQuestion && selectedSubRound === 3 && (
-                            <div className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded border ${allocatedTeamId ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' : 'bg-red-500/20 text-red-400 border-red-500/50'}`}>
-                                {allocatedTeamId
-                                    ? `Base T${allocatedTeamId} (Blocked from Buzzer)`
-                                    : 'NO TEAM ALLOCATED'}
-                            </div>
-                        )}
-                    </div>
 
-                    <div className="mb-6 flex-shrink-0 relative z-10">
-                        <button
-                            onClick={() => socket.emit('admin:round3:reveal_answer')}
-                            disabled={!activeQuestion}
-                            className="w-full bg-white/10 text-white font-bold py-4 rounded-xl border border-white/20 hover:bg-white/20 disabled:opacity-50 transition-colors flex justify-center items-center gap-2 uppercase tracking-wide cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            <Eye className="w-5 h-5" /> {activeQuestion ? "Reveal Answer on Screen" : "Push a Question First"}
-                        </button>
-                        <button
-                            onClick={() => socket.emit('admin:round3:hide_question')}
-                            className="mt-3 w-full bg-red-500/10 text-red-400 font-bold py-2 rounded-xl border border-red-500/30 hover:bg-red-500/20 transition-colors text-sm uppercase tracking-wider flex justify-center items-center cursor-pointer"
-                        >
-                            Clear Screen
-                        </button>
+                    {selectedSubRound === 5 ? (
+                        /* RAPID FIRE PANEL */
+                        <div className="flex flex-col gap-4 h-full overflow-y-auto pr-1 custom-scrollbar relative z-10">
+                            <h2 className="text-white/50 tracking-widest uppercase text-sm font-semibold flex items-center gap-2 mb-2">
+                                <Zap className="w-4 h-4 text-yellow-400" /> Rapid Fire Control
+                            </h2>
 
-                        {/* FONT SIZE CONTROLS */}
-                        <div className="mt-4 flex items-center justify-between bg-black/40 border border-white/10 rounded-xl p-2 px-4 shadow-inner">
-                            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Font Size</span>
-                            <div className="flex items-center gap-3">
-                                <button onClick={() => socket.emit('admin:round3:set_font_size', -4)} className="bg-white/10 hover:bg-white/20 text-white rounded p-1"><Minus size={16} /></button>
-                                <span className="text-sm font-mono text-[var(--color-neon-cyan)] font-bold w-8 text-center">{clientFontSize}</span>
-                                <button onClick={() => socket.emit('admin:round3:set_font_size', 4)} className="bg-white/10 hover:bg-white/20 text-white rounded p-1"><Plus size={16} /></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-2 custom-scrollbar relative z-10">
-                        {questions.length === 0 ? (
-                            <div className="p-8 text-center border-2 border-dashed border-gray-700 rounded-xl text-gray-500 h-full flex items-center justify-center">
-                                No questions found for Sub-Round {selectedSubRound}.
-                            </div>
-                        ) : (
-                            questions.map((q) => {
-                                const isActive = activeQuestion?.id === q.id;
-                                return (
-                                    <div key={q.id} className={`p-4 rounded-xl border flex flex-col gap-3 transition-colors ${isActive ? 'bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)] shadow-[0_0_15px_rgba(0,255,255,0.1)]' : 'bg-black/40 border-white/5 hover:border-white/20'}`}>
-                                        <div className="text-white/80 line-clamp-3 text-sm leading-relaxed">
-                                            <Latex>{q.content?.mathText || q.content?.text}</Latex>
-                                        </div>
-                                        <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-3">
-                                            <span className="text-xs font-mono font-bold text-[var(--color-neon-cyan)]">Q.{q.id} ({q.marks} pts)</span>
-                                            <button
-                                                onClick={() => socket.emit('admin:round3:push_question', { id: q.id, subRoundNum: selectedSubRound })}
-                                                disabled={isActive}
-                                                className={`py-1.5 px-3 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-all border ${isActive ? 'bg-[var(--color-neon-cyan)] text-black border-[var(--color-neon-cyan)] cursor-not-allowed shadow-[0_0_10px_rgba(0,255,255,0.5)]' : 'bg-white/5 text-white/70 hover:bg-white/20 hover:text-white border-white/10 cursor-pointer flex items-center gap-2'}`}
-                                            >
-                                                {isActive ? 'Active on Screen' : <><Send size={12} /> Send to Screen</>}
-                                            </button>
+                            {/* If RF not active yet — show setup */}
+                            {!gameState?.rapidFire?.active ? (
+                                <>
+                                    {/* Set Selection */}
+                                    <div>
+                                        <p className="text-xs text-white/40 uppercase tracking-widest mb-2">Select Set</p>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {rfSets.length === 0 ? (
+                                                <div className="col-span-3 text-center text-white/30 text-sm py-4 border border-dashed border-white/10 rounded-xl">
+                                                    No SR5 questions found in DB
+                                                </div>
+                                            ) : rfSets.map(s => (
+                                                <button
+                                                    key={s.setNumber}
+                                                    onClick={() => setRfSelectedSet(s)}
+                                                    className={`py-3 rounded-xl font-bold text-sm border transition-all ${rfSelectedSet?.setNumber === s.setNumber
+                                                            ? 'bg-yellow-400/20 border-yellow-400 text-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.3)]'
+                                                            : 'bg-black/40 border-white/10 text-white/70 hover:border-white/30'
+                                                        }`}
+                                                >
+                                                    Set {s.setNumber}<br />
+                                                    <span className="text-[10px] font-normal text-white/40">{s.count} Qs</span>
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
-                                )
-                            })
-                        )}
-                    </div>
+
+                                    {/* Team Selection */}
+                                    <div>
+                                        <p className="text-xs text-white/40 uppercase tracking-widest mb-2">Allocate Team</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {gameState?.teams?.map(team => (
+                                                <button
+                                                    key={team.id}
+                                                    onClick={() => setRfSelectedTeamId(team.id)}
+                                                    className={`py-2 rounded-xl font-bold text-xs border transition-all ${rfSelectedTeamId === team.id
+                                                            ? 'bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)] text-[var(--color-neon-cyan)]'
+                                                            : 'bg-black/30 border-white/10 text-white/60 hover:border-white/30'
+                                                        }`}
+                                                >
+                                                    {team.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Start Button */}
+                                    <button
+                                        disabled={!rfSelectedSet || !rfSelectedTeamId}
+                                        onClick={() => {
+                                            socket.emit('admin:round3:rf_start', {
+                                                setNumber: rfSelectedSet.setNumber,
+                                                teamId: rfSelectedTeamId,
+                                                questions: rfSelectedSet.questions
+                                            });
+                                        }}
+                                        className="w-full py-4 rounded-xl font-black uppercase tracking-wider bg-yellow-500 text-black hover:bg-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm mt-2"
+                                    >
+                                        🚀 Start Rapid Fire
+                                    </button>
+                                </>
+                            ) : (
+                                /* RF ACTIVE — Answer Input */
+                                <>
+                                    {/* Progress Bar */}
+                                    <div>
+                                        <div className="flex justify-between text-xs text-white/40 uppercase tracking-wider mb-1">
+                                            <span>Question {Math.min(gameState.rapidFire.questionIndex + 1, gameState.rapidFire.questions.length)} of {gameState.rapidFire.questions.length}</span>
+                                            <span>Set {gameState.rapidFire.setNumber} • {gameState.teams?.find(t => t.id === gameState.rapidFire.teamId)?.name}</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-yellow-400 rounded-full transition-all duration-300"
+                                                style={{ width: `${(gameState.rapidFire.questionIndex / gameState.rapidFire.questions.length) * 100}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {gameState.rapidFire.questionIndex < gameState.rapidFire.questions.length ? (
+                                        <>
+                                            {/* Current Question Preview */}
+                                            <div className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white/80 leading-relaxed">
+                                                <div className="text-[10px] text-yellow-400 uppercase tracking-widest mb-2 font-bold">Q{gameState.rapidFire.questionIndex + 1}</div>
+                                                <Latex>{gameState.rapidFire.questions[gameState.rapidFire.questionIndex]?.content?.mathText || gameState.rapidFire.questions[gameState.rapidFire.questionIndex]?.content?.text || ''}</Latex>
+                                            </div>
+
+                                            {/* MCQ Option Buttons */}
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {(gameState.rapidFire.questions[gameState.rapidFire.questionIndex]?.content?.options || []).map((opt, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => socket.emit('admin:round3:rf_answer', { selectedOption: idx })}
+                                                        className="py-3 px-3 rounded-xl font-bold text-xs border border-white/20 bg-white/5 hover:bg-[var(--color-neon-cyan)]/20 hover:border-[var(--color-neon-cyan)] text-white transition-all flex items-center gap-2"
+                                                    >
+                                                        <span className="w-6 h-6 shrink-0 flex items-center justify-center rounded-lg bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] font-black text-[10px]">{String.fromCharCode(65 + idx)}</span>
+                                                        <span className="text-left line-clamp-2"><Latex>{opt}</Latex></span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="text-center text-green-400 font-bold py-4">All questions answered!</div>
+                                    )}
+
+                                    {/* Calculate & Reset */}
+                                    <div className="flex gap-2 mt-auto pt-2">
+                                        <button
+                                            onClick={() => socket.emit('admin:round3:rf_calculate')}
+                                            className="flex-1 py-3 rounded-xl font-black text-sm uppercase tracking-wider bg-green-500 text-black hover:bg-green-400 transition-all"
+                                        >
+                                            🏆 Calculate Results
+                                        </button>
+                                        <button
+                                            onClick={() => socket.emit('admin:round3:rf_reset')}
+                                            className="py-3 px-4 rounded-xl font-bold text-xs bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all"
+                                        >
+                                            Reset
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        /* STANDARD QUESTION LIBRARY */
+                        <>
+                            <div className="flex justify-between items-center mb-6 relative z-10 w-full">
+                                <h2 className="text-white/50 tracking-widest uppercase text-sm font-semibold flex items-center gap-2">
+                                    <List className="w-4 h-4" /> Question Library
+                                </h2>
+                                {activeQuestion && selectedSubRound === 3 && (
+                                    <div className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded border ${allocatedTeamId ? 'bg-orange-500/20 text-orange-400 border-orange-500/50' : 'bg-red-500/20 text-red-400 border-red-500/50'}`}>
+                                        {allocatedTeamId
+                                            ? `Base T${allocatedTeamId} (Blocked from Buzzer)`
+                                            : 'NO TEAM ALLOCATED'}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mb-6 flex-shrink-0 relative z-10">
+                                <button
+                                    onClick={() => socket.emit('admin:round3:reveal_answer')}
+                                    disabled={!activeQuestion}
+                                    className="w-full bg-white/10 text-white font-bold py-4 rounded-xl border border-white/20 hover:bg-white/20 disabled:opacity-50 transition-colors flex justify-center items-center gap-2 uppercase tracking-wide cursor-pointer disabled:cursor-not-allowed"
+                                >
+                                    <Eye className="w-5 h-5" /> {activeQuestion ? "Reveal Answer on Screen" : "Push a Question First"}
+                                </button>
+                                <button
+                                    onClick={() => socket.emit('admin:round3:hide_question')}
+                                    className="mt-3 w-full bg-red-500/10 text-red-400 font-bold py-2 rounded-xl border border-red-500/30 hover:bg-red-500/20 transition-colors text-sm uppercase tracking-wider flex justify-center items-center cursor-pointer"
+                                >
+                                    Clear Screen
+                                </button>
+
+                                {/* FONT SIZE CONTROLS */}
+                                <div className="mt-4 flex items-center justify-between bg-black/40 border border-white/10 rounded-xl p-2 px-4 shadow-inner">
+                                    <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Font Size</span>
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => socket.emit('admin:round3:set_font_size', -4)} className="bg-white/10 hover:bg-white/20 text-white rounded p-1"><Minus size={16} /></button>
+                                        <span className="text-sm font-mono text-[var(--color-neon-cyan)] font-bold w-8 text-center">{clientFontSize}</span>
+                                        <button onClick={() => socket.emit('admin:round3:set_font_size', 4)} className="bg-white/10 hover:bg-white/20 text-white rounded p-1"><Plus size={16} /></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-2 custom-scrollbar relative z-10">
+                                {questions.length === 0 ? (
+                                    <div className="p-8 text-center border-2 border-dashed border-gray-700 rounded-xl text-gray-500 h-full flex items-center justify-center">
+                                        No questions found for Sub-Round {selectedSubRound}.
+                                    </div>
+                                ) : (
+                                    questions.map((q) => {
+                                        const isActive = activeQuestion?.id === q.id;
+                                        return (
+                                            <div key={q.id} className={`p-4 rounded-xl border flex flex-col gap-3 transition-colors ${isActive ? 'bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)] shadow-[0_0_15px_rgba(0,255,255,0.1)]' : 'bg-black/40 border-white/5 hover:border-white/20'}`}>
+                                                <div className="text-white/80 line-clamp-3 text-sm leading-relaxed">
+                                                    <Latex>{q.content?.mathText || q.content?.text}</Latex>
+                                                </div>
+                                                <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-3">
+                                                    <span className="text-xs font-mono font-bold text-[var(--color-neon-cyan)]">Q.{q.id} ({q.marks} pts)</span>
+                                                    <button
+                                                        onClick={() => socket.emit('admin:round3:push_question', { id: q.id, subRoundNum: selectedSubRound })}
+                                                        disabled={isActive}
+                                                        className={`py-1.5 px-3 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-all border ${isActive ? 'bg-[var(--color-neon-cyan)] text-black border-[var(--color-neon-cyan)] cursor-not-allowed shadow-[0_0_10px_rgba(0,255,255,0.5)]' : 'bg-white/5 text-white/70 hover:bg-white/20 hover:text-white border-white/10 cursor-pointer flex items-center gap-2'}`}
+                                                    >
+                                                        {isActive ? 'Active on Screen' : <><Send size={12} /> Send to Screen</>}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )
+                                    })
+                                )}
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Right Col: Teams & Hardware Queue Scoring */}

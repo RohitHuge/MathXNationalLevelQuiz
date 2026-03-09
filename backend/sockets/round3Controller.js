@@ -20,6 +20,18 @@ let gameState = {
     passCount: 0,
     buzzerLocked: true,
 
+    // Sub-Round 5: Rapid Fire
+    rapidFire: {
+        active: false,
+        setNumber: -1,        // Which set (1-6) is active
+        questionIndex: 0,     // Current question within the set (0-9)
+        questions: [],        // Full 10 questions (including correctIndex — server only)
+        teamId: null,         // Which team is playing
+        adminAnswers: [],     // Array of selectedOption per question index
+        showResults: false,   // Whether to show the results modal on client
+        results: null         // Calculated results payload for client
+    },
+
     teams: [
         { id: 1, name: "Team 1", score: 0 },
         { id: 2, name: "Team 2", score: 0 },
@@ -233,6 +245,148 @@ export const setupRound3Sockets = (io, socket) => {
             team.score += parseInt(points, 10);
             io.emit('server:round3:state_update', gameState);
         }
+    });
+
+    // --------------------------------------------------------
+    // SUB-ROUND 5: RAPID FIRE
+    // --------------------------------------------------------
+
+    // Admin loads all SR5 questions grouped into sets
+    socket.on('admin:round3:rf_load_sets', async () => {
+        try {
+            const res = await pool.query(
+                `SELECT id, content, marks FROM public.questions 
+                 WHERE round = 3 AND sub_round = 5 
+                 ORDER BY (content->>'set')::int ASC, created_at ASC`
+            );
+            // Group by set number
+            const grouped = {};
+            for (const row of res.rows) {
+                const setNum = row.content?.set || 1;
+                if (!grouped[setNum]) grouped[setNum] = [];
+                grouped[setNum].push(row);
+            }
+            // Build set summaries for admin (include full content for admin use)
+            const sets = Object.entries(grouped).map(([setNum, qs]) => ({
+                setNumber: parseInt(setNum, 10),
+                count: qs.length,
+                questions: qs // full — admin only
+            }));
+            socket.emit('server:round3:rf_sets_loaded', sets);
+        } catch (err) {
+            console.error('[Rapid Fire] Error loading sets:', err);
+        }
+    });
+
+    // Admin starts rapid fire for a specific set and team
+    socket.on('admin:round3:rf_start', ({ setNumber, teamId, questions }) => {
+        gameState.rapidFire = {
+            active: true,
+            setNumber,
+            questionIndex: 0,
+            questions,           // Full question data with correctIndex (server holds it)
+            teamId,
+            adminAnswers: [],
+            showResults: false,
+            results: null
+        };
+        gameState.activeSubRound = 5;
+
+        // Build sanitized current question for clients (no correctIndex)
+        const currentQ = questions[0];
+        const { correctIndex, ...safeContent } = currentQ.content;
+        gameState.activeQuestion = {
+            id: currentQ.id,
+            text: currentQ.content?.text,
+            mathText: currentQ.content?.mathText || '',
+            options: currentQ.content?.options || [],
+            imageUrl: currentQ.content?.imageUrl || null
+        };
+
+        io.emit('server:round3:state_update', gameState);
+        console.log(`[Rapid Fire] Started Set ${setNumber} for Team ${teamId}`);
+    });
+
+    // Admin logs an answer for the current rapid fire question and auto-advances
+    socket.on('admin:round3:rf_answer', ({ selectedOption }) => {
+        const rf = gameState.rapidFire;
+        if (!rf.active) return;
+
+        // Record the answer
+        rf.adminAnswers[rf.questionIndex] = selectedOption;
+
+        const nextIndex = rf.questionIndex + 1;
+
+        if (nextIndex < rf.questions.length) {
+            // Move to next question
+            rf.questionIndex = nextIndex;
+            const currentQ = rf.questions[nextIndex];
+            gameState.activeQuestion = {
+                id: currentQ.id,
+                text: currentQ.content?.text,
+                mathText: currentQ.content?.mathText || '',
+                options: currentQ.content?.options || [],
+                imageUrl: currentQ.content?.imageUrl || null
+            };
+        } else {
+            // All questions answered — clear active question, wait for calculate
+            rf.questionIndex = nextIndex;
+            gameState.activeQuestion = null;
+        }
+
+        io.emit('server:round3:state_update', gameState);
+    });
+
+    // Admin calculates and broadcasts results
+    socket.on('admin:round3:rf_calculate', () => {
+        const rf = gameState.rapidFire;
+        if (!rf.active || rf.questions.length === 0) return;
+
+        const breakdown = rf.questions.map((q, i) => {
+            const correctIndex = q.content?.correctIndex;
+            const selectedOption = rf.adminAnswers[i] ?? null;
+            const isCorrect = selectedOption !== null && selectedOption === correctIndex;
+            return {
+                questionNumber: i + 1,
+                text: q.content?.mathText || q.content?.text || '',
+                options: q.content?.options || [],
+                correctIndex,
+                selectedOption,
+                isCorrect
+            };
+        });
+
+        const correctCount = breakdown.filter(b => b.isCorrect).length;
+        const team = gameState.teams.find(t => t.id === rf.teamId);
+
+        rf.results = {
+            teamName: team?.name || `Team ${rf.teamId}`,
+            setNumber: rf.setNumber,
+            total: rf.questions.length,
+            correctCount,
+            breakdown
+        };
+        rf.showResults = true;
+        gameState.activeQuestion = null;
+
+        io.emit('server:round3:state_update', gameState);
+        console.log(`[Rapid Fire] Results calculated: ${correctCount}/${rf.questions.length} for Team ${rf.teamId}`);
+    });
+
+    // Admin resets rapid fire
+    socket.on('admin:round3:rf_reset', () => {
+        gameState.rapidFire = {
+            active: false,
+            setNumber: -1,
+            questionIndex: 0,
+            questions: [],
+            teamId: null,
+            adminAnswers: [],
+            showResults: false,
+            results: null
+        };
+        gameState.activeQuestion = null;
+        io.emit('server:round3:state_update', gameState);
     });
 };
 

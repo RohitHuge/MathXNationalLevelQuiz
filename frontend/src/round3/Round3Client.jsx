@@ -70,12 +70,14 @@ export function Round3Client() {
         passCount = 0,
         buzzerLocked,
         teams = [],
-        clientFontSize = 60, // This will now be overridden by localFontVh for display
+        clientFontSize = 60,
         allocatedTeamId = null,
-        showTimer = true
+        showTimer = true,
+        rapidFire = {}
     } = gameState;
 
     const allocatedTeam = teams.find(t => t.id === allocatedTeamId);
+    const rfTeam = teams.find(t => t.id === rapidFire?.teamId);
 
     const isWaiting = !activeQuestion;
 
@@ -93,6 +95,82 @@ export function Round3Client() {
             {/* Background Decor */}
             <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[var(--color-neon-purple)]/10 rounded-full blur-[150px] pointer-events-none"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[var(--color-neon-cyan)]/10 rounded-full blur-[150px] pointer-events-none"></div>
+
+            {/* RAPID FIRE RESULTS MODAL */}
+            <AnimatePresence>
+                {rapidFire?.showResults && rapidFire?.results && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-8 overflow-y-auto"
+                    >
+                        <div className="w-full max-w-4xl">
+                            {/* Header */}
+                            <div className="text-center mb-8">
+                                <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 font-bold uppercase tracking-widest text-sm mb-4">
+                                    <Zap size={16} /> Rapid Fire Results — Set {rapidFire.results.setNumber}
+                                </div>
+                                <h2 className="text-5xl font-black text-white mb-2">{rapidFire.results.teamName}</h2>
+                                <div className="flex items-center justify-center gap-6 mt-4">
+                                    <div className="text-center">
+                                        <div className="text-6xl font-black text-green-400">{rapidFire.results.correctCount}</div>
+                                        <div className="text-xs text-white/40 uppercase tracking-widest mt-1">Correct</div>
+                                    </div>
+                                    <div className="text-4xl text-white/20 font-thin">/</div>
+                                    <div className="text-center">
+                                        <div className="text-6xl font-black text-white/60">{rapidFire.results.total}</div>
+                                        <div className="text-xs text-white/40 uppercase tracking-widest mt-1">Total</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-6xl font-black text-red-400">{rapidFire.results.total - rapidFire.results.correctCount}</div>
+                                        <div className="text-xs text-white/40 uppercase tracking-widest mt-1">Wrong</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Per-question breakdown */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {rapidFire.results.breakdown.map((item) => (
+                                    <div
+                                        key={item.questionNumber}
+                                        className={`p-4 rounded-2xl border flex gap-4 items-start ${item.isCorrect
+                                                ? 'bg-green-500/10 border-green-500/40'
+                                                : 'bg-red-500/10 border-red-500/40'
+                                            }`}
+                                    >
+                                        <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center font-black text-lg ${item.isCorrect ? 'bg-green-500 text-black' : 'bg-red-500 text-white'
+                                            }`}>
+                                            {item.isCorrect ? '✓' : '✗'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Q{item.questionNumber}</div>
+                                            <div className="text-sm text-white/80 line-clamp-2 mb-2">
+                                                <Latex>{item.text}</Latex>
+                                            </div>
+                                            <div className="flex gap-2 flex-wrap">
+                                                {item.options.map((opt, idx) => (
+                                                    <span
+                                                        key={idx}
+                                                        className={`text-[10px] px-2 py-1 rounded-lg font-bold border ${idx === item.correctIndex
+                                                                ? 'bg-green-500/30 border-green-500/50 text-green-300'
+                                                                : idx === item.selectedOption && !item.isCorrect
+                                                                    ? 'bg-red-500/30 border-red-500/50 text-red-300 line-through'
+                                                                    : 'bg-white/5 border-white/10 text-white/30'
+                                                            }`}
+                                                    >
+                                                        {String.fromCharCode(65 + idx)}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Header / Brand */}
             <header className="flex justify-between items-center px-10 py-6 border-b border-white/10 relative z-10 glassmorphism bg-black/40">
@@ -236,8 +314,39 @@ export function Round3Client() {
                     )}
                 </div>
 
-                {/* Right Panel: Sub-round specific HUD / Scoreboard (Takes ~25% width) */}
+                {/* Right Panel: Sub-round specific HUD */}
                 <div className="flex-1 flex flex-col gap-6 h-full">
+
+                    {/* RAPID FIRE PROGRESS HUD (Sub-Round 5) */}
+                    {activeSubRound === 5 && rapidFire?.active && (
+                        <div className="bg-black/60 border border-yellow-400/30 shadow-[0_0_20px_rgba(250,204,21,0.1)] rounded-3xl p-6 flex flex-col gap-4">
+                            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                                <h3 className="text-lg font-bold uppercase tracking-widest text-yellow-400 flex items-center gap-3">
+                                    <Zap size={20} /> Rapid Fire
+                                </h3>
+                                <span className="text-sm font-bold text-white/60">Set {rapidFire.setNumber}</span>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-5xl font-black text-white mb-1">
+                                    {Math.min(rapidFire.questionIndex + 1, rapidFire.questions?.length || 10)}
+                                    <span className="text-white/30 text-2xl"> / {rapidFire.questions?.length || 10}</span>
+                                </div>
+                                <div className="text-xs text-white/40 uppercase tracking-widest">Question</div>
+                            </div>
+                            <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                                <motion.div
+                                    className="h-full bg-yellow-400 rounded-full"
+                                    animate={{ width: `${((rapidFire.questionIndex || 0) / (rapidFire.questions?.length || 10)) * 100}%` }}
+                                    transition={{ duration: 0.3 }}
+                                />
+                            </div>
+                            {rfTeam && (
+                                <div className="text-center text-sm font-bold text-[var(--color-neon-cyan)] uppercase tracking-widest">
+                                    {rfTeam.name}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* BUZZER QUEUE HUD (Active in Subround 3 & 4) */}
                     {(activeSubRound === 3 || activeSubRound === 4) && (
