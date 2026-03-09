@@ -25,7 +25,7 @@ const HorizontalTimer = ({ time, maxTime = 60 }) => {
 export function Round3Client() {
     const { socket, isConnected } = useSocket();
     const [gameState, setGameState] = useState(null);
-    const [localFontVh, setLocalFontVh] = useState(5.5); // Default font size in vh units
+    const [localFontVh, setLocalFontVh] = useState(2.5); // Default font size in vh units
 
     useEffect(() => {
         if (!socket) return;
@@ -72,7 +72,7 @@ export function Round3Client() {
         teams = [],
         clientFontSize = 60, // This will now be overridden by localFontVh for display
         allocatedTeamId = null,
-        hasBaseTeamPassed = false
+        showTimer = true
     } = gameState;
 
     const allocatedTeam = teams.find(t => t.id === allocatedTeamId);
@@ -140,13 +140,15 @@ export function Round3Client() {
                         <div className="flex flex-col h-full gap-6">
 
                             {/* Horizontal Progress Timer above question */}
-                            <div className="flex items-center gap-6 bg-black/40 p-6 rounded-3xl border border-white/10 backdrop-blur-sm">
-                                <Clock className="w-8 h-8 shrink-0 text-[var(--color-neon-cyan)]" />
-                                <div className="flex-1 mt-6">
-                                    <HorizontalTimer time={timerTime} maxTime={60} />
+                            {showTimer && (
+                                <div className="flex items-center gap-6 bg-black/40 p-6 rounded-3xl border border-white/10 backdrop-blur-sm">
+                                    <Clock className="w-8 h-8 shrink-0 text-[var(--color-neon-cyan)]" />
+                                    <div className="flex-1 mt-6">
+                                        <HorizontalTimer time={timerTime} maxTime={60} />
+                                    </div>
+                                    <span className={`text-5xl font-black font-mono tracking-tighter w-24 text-right ${timerTime <= 10 ? 'text-[var(--color-neon-pink)] animate-pulse' : 'text-white'}`}>{timerTime}s</span>
                                 </div>
-                                <span className={`text-5xl font-black font-mono tracking-tighter w-24 text-right ${timerTime <= 10 ? 'text-[var(--color-neon-pink)] animate-pulse' : 'text-white'}`}>{timerTime}s</span>
-                            </div>
+                            )}
 
                             {/* Massive Question Box - STRICTLY NO SCROLL */}
                             <motion.div
@@ -160,11 +162,11 @@ export function Round3Client() {
                                 </div>
 
                                 {allocatedTeamId && (
-                                    <div className={`absolute top-8 right-8 px-6 py-2 border rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(255,0,255,0.3)] animate-pulse ${hasBaseTeamPassed ? 'bg-orange-500/20 border-orange-500 text-orange-400' : 'bg-[var(--color-neon-pink)]/20 border-[var(--color-neon-pink)] text-[var(--color-neon-pink)]'}`}>
-                                        <Zap className={hasBaseTeamPassed ? "text-orange-400" : "text-[var(--color-neon-pink)]"} size={20} />
-                                        <span className={`font-bold tracking-widest uppercase ${hasBaseTeamPassed ? "text-orange-400" : "text-[var(--color-neon-pink)]"}`}>
+                                    <div className={`absolute top-8 right-8 px-6 py-2 border rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(255,0,255,0.3)] animate-pulse bg-[var(--color-neon-pink)]/20 border-[var(--color-neon-pink)] text-[var(--color-neon-pink)]`}>
+                                        <Zap className="text-[var(--color-neon-pink)]" size={20} />
+                                        <span className={`font-bold tracking-widest uppercase text-[var(--color-neon-pink)]`}>
                                             {activeSubRound === 3
-                                                ? (hasBaseTeamPassed ? `${allocatedTeam?.name} Passed` : `Base: ${allocatedTeam?.name}`)
+                                                ? `Base: ${allocatedTeam?.name} (Blocked)`
                                                 : `Allocated: ${allocatedTeam?.name}`
                                             }
                                         </span>

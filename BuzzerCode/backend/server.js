@@ -16,7 +16,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const ARDUINO_COM_PORT = process.env.ARDUINO_COM_PORT || "COM11";
 // const VPS_SOCKET_URL = process.env.VITE_API_URL || "https; // Connect to Local Backend instead of Prod Cloud
-const VPS_SOCKET_URL = "https://api.mathxpccoer.in";
+const VPS_SOCKET_URL = "http://localhost:3001";
 const LOCAL_PORT = 5000;
 
 const app = express();
