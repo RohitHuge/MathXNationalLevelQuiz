@@ -74,6 +74,15 @@ app.get('/simulate-buzz/:teamId', (req, res) => {
   }
 });
 
+app.get('/reset-lights', (req, res) => {
+  console.log('🧹 [RESET] Clearing all lights via UI request');
+  for (let i = 1; i <= 6; i++) {
+    sendLightCommand(i, 'O');
+    currentLights[i] = 'O';
+  }
+  res.json({ success: true, message: 'All lights turned off' });
+});
+
 app.get('/trigger-light/:teamId/:mode', (req, res) => {
   const teamId = parseInt(req.params.teamId, 10);
   const mode = req.params.mode.toUpperCase();
@@ -134,6 +143,64 @@ vpsSocket.on('disconnect', () => {
 
 // 2. Open Arduino Serial Connection
 let port, parser;
+let currentLights = {}; // Track current state of each team's light
+let lastState = null;   // Cache last known VPS state
+
+function sendLightCommand(teamId, mode) {
+  if (port && port.isOpen) {
+    const command = `${teamId}${mode}\n`;
+    port.write(command);
+    console.log(`💡 [AUTO LIGHT] Sent ${command.trim()} to Arduino`);
+    localIo.emit('serialDataSent', command.trim());
+  } else {
+    // Simulation / Port Offline logging
+    localIo.emit('serialDataSent', `${teamId}${mode} (Port Offline)`);
+  }
+}
+
+function updateArduinoLights(state) {
+  if (!state) return;
+
+  // Default all teams to Off
+  const nextLights = { 1: 'O', 2: 'O', 3: 'O', 4: 'O', 5: 'O', 6: 'O' };
+  const { activeSubRound, allocatedTeamId, buzzerQueue, passCount } = state;
+
+  // Rule Logic per Sub-Round
+  if (activeSubRound === 1 || activeSubRound === 2 || activeSubRound === 5) {
+    if (allocatedTeamId) nextLights[allocatedTeamId] = 'U';
+  }
+  else if (activeSubRound === 3) {
+    if (allocatedTeamId) nextLights[allocatedTeamId] = 'U';
+    if (buzzerQueue && buzzerQueue.length > 0) {
+      const firstBuzzer = buzzerQueue[0].teamId;
+      nextLights[firstBuzzer] = 'B';
+    }
+  }
+  else if (activeSubRound === 4) {
+    if (buzzerQueue && buzzerQueue.length > 0) {
+      const answeringTeam = buzzerQueue[passCount]?.teamId;
+      const nextTeam = buzzerQueue[passCount + 1]?.teamId;
+
+      if (answeringTeam) nextLights[answeringTeam] = 'U';
+      if (nextTeam) nextLights[nextTeam] = 'B';
+    }
+  }
+
+  // Send updates only for changed states to minimize serial traffic
+  for (let teamId = 1; teamId <= 6; teamId++) {
+    const mode = nextLights[teamId];
+    if (currentLights[teamId] !== mode) {
+      sendLightCommand(teamId, mode);
+      currentLights[teamId] = mode;
+    }
+  }
+}
+
+vpsSocket.on('server:round3:state_update', (state) => {
+  console.log('🔄 [VPS State Update] Received new state, updating lights...');
+  lastState = state;
+  updateArduinoLights(state);
+});
 try {
   port = new SerialPort({
     path: ARDUINO_COM_PORT,
@@ -169,6 +236,15 @@ try {
       if (!isNaN(teamId) && teamId >= 1 && teamId <= 6) {
         console.log(`🔥 [BUZZ] Team ${teamId} pressed buzzer! Forwarding to VPS...`);
 
+        // Momentary Glow: Turn ON instantly for 1.5 seconds so hardware acknowledges the press
+        sendLightCommand(teamId, 'U');
+
+        setTimeout(() => {
+          console.log(`⏳ [Glow End] Reverting Team ${teamId} to round-specific state`);
+          // Re-sync with the global game state to restore correct U/B/O mode
+          updateArduinoLights(lastState);
+        }, 1500);
+
         // Emit the exact physical hit to the Backend's Round 3 Controller
         vpsSocket.emit('client:round3:buzzer_pressed', {
           teamId: teamId,
@@ -179,13 +255,7 @@ try {
         // (Optional) Emit to Round 2 as well if they share the codebase
         vpsSocket.emit('fastfingers:buzzer:hit', teamId);
 
-        // Instantly turn on the local light for that Team
-        if (port && port.isOpen) {
-          const command = `${teamId}U\n`;
-          port.write(command);
-          localIo.emit('serialDataSent', command.trim());
-        }
-
+        // Light is now managed by the VPS state update for consistency across rounds
       } else {
         console.log(`[Hardware Debug] Ignoring unrecognized hardware signal: "${cleanData}"`);
       }
