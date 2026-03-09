@@ -16,6 +16,7 @@ export default function QuizArena({ user }) {
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState({});
+    const [localSelection, setLocalSelection] = useState(null); // stores what the user clicked before pressing save
     const [markedForReview, setMarkedForReview] = useState({}); // Stores boolean flag per index
 
     // Timer synchronization variables
@@ -23,6 +24,7 @@ export default function QuizArena({ user }) {
     const [timerRef, setTimerRef] = useState(null);
 
     const [submitted, setSubmitted] = useState(false);
+    const [attemptedCount, setAttemptedCount] = useState(0); // number of attempted questions if submitted early
     const [isDarkMode, setIsDarkMode] = useState(true);
 
     const {
@@ -96,11 +98,46 @@ export default function QuizArena({ user }) {
         // Explicitly request time state so the timer renders
         socket.emit('client:request_state');
 
+        if (user?.email) {
+            socket.emit('client:start_quiz', { email: user.email });
+            socket.emit('client:load_answers', { email: user.email });
+        }
+
+        socket.on('server:answers_loaded', (loadedAnswers) => {
+            const validAnswers = {};
+            for (const [qId, opt] of Object.entries(loadedAnswers)) {
+                if (opt >= 0) validAnswers[qId] = opt;
+            }
+            setAnswers(validAnswers);
+
+            // On a successful save & next, if the server replied with answers, we can advance
+            // But we actually only want to advance explicitly if they clicked the button.
+            // We'll handle navigation inside the Save & Next function, but here we can at least clear the local selection.
+            setLocalSelection(null);
+        });
+
+        socket.on('server:session_status', ({ status, attemptedCount }) => {
+            if (status === 'submitted') {
+                setAttemptedCount(attemptedCount || 0);
+                setSubmitted(true);
+            }
+        });
+
+        socket.on('server:answer_saved', () => {
+            // Once the server confirms the single answer was saved, fetch the full truth again
+            if (user?.email) {
+                socket.emit('client:load_answers', { email: user.email });
+            }
+        });
+
         return () => {
             socket.off('server:all_questions');
             socket.off('server:sync_state');
+            socket.off('server:answers_loaded');
+            socket.off('server:session_status');
+            socket.off('server:answer_saved');
         };
-    }, [socket]);
+    }, [socket, user]);
 
     useEffect(() => {
         if (loading || submitted || !timerRef) return;
@@ -133,11 +170,28 @@ export default function QuizArena({ user }) {
         return () => clearInterval(timer);
     }, [loading, submitted, timerRef]);
 
+    // Only update local UI state immediately
     const handleSelect = (optionIndex) => {
-        setAnswers(prev => ({
-            ...prev,
-            [questions[currentIndex].id]: optionIndex
-        }));
+        setLocalSelection(optionIndex);
+    };
+
+    // New Function: Actually save to DB and move forward
+    const handleSaveAndNext = () => {
+        const currentQ = questions[currentIndex];
+
+        // If they chose something locally that isn't saved yet
+        if (localSelection !== null && socket && user?.email) {
+            socket.emit('client:save_answer', {
+                email: user.email,
+                questionId: currentQ.id,
+                selectedOption: localSelection
+            });
+        }
+
+        // Move to the next question visually immediately (the answers from DB will load slightly later)
+        if (currentIndex < questions.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+        }
     };
 
     const toggleReview = () => {
@@ -147,12 +201,16 @@ export default function QuizArena({ user }) {
         }));
     };
 
+    // When clear is pressed, emit immediately since it's an explicit action
     const handleClear = () => {
-        setAnswers(prev => {
-            const next = { ...prev };
-            delete next[questions[currentIndex].id];
-            return next;
-        });
+        setLocalSelection(null);
+        if (socket && user?.email) {
+            socket.emit('client:save_answer', {
+                email: user.email,
+                questionId: questions[currentIndex].id,
+                selectedOption: -1 // Evaluates to incorrect on backend
+            });
+        }
     };
 
     const handleSubmit = async (forceSubmit = false) => {
@@ -163,10 +221,13 @@ export default function QuizArena({ user }) {
         // Emit payload heavily mapped to postgres relationships
         if (socket && user?.email) {
             socket.emit('client:submit_exam', {
-                email: user.email,
-                answers: answers
+                email: user.email
             });
         }
+
+        // Count how many they attempted locally before final submit
+        const localAttempted = Object.keys(answers).length;
+        setAttemptedCount(localAttempted);
 
         setSubmitted(true);
         if (document.fullscreenElement) {
@@ -202,13 +263,10 @@ export default function QuizArena({ user }) {
                     <p className="text-slate-400 mb-10">Your results have been successfully recorded.</p>
 
                     <div className="bg-slate-800/50 rounded-2xl p-8 mb-10 border border-slate-700/50 inline-block">
-                        <div className="text-xl text-slate-400 font-medium mb-2 uppercase tracking-wider">Please observe the Admin Leaderboard for grading.</div>
-                    </div>
-
-                    <div>
-                        <button onClick={() => navigate('/dashboard')} className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-colors">
-                            Return to Dashboard
-                        </button>
+                        <div className="text-3xl font-bold text-white mb-2">{attemptedCount}</div>
+                        <div className="text-sm text-slate-400 font-medium uppercase tracking-wider">Questions Attempted</div>
+                        <div className="border-t border-slate-700 my-4"></div>
+                        <div className="text-xl text-slate-400 font-medium mb-2 uppercase tracking-wider mt-4">Please observe the Admin Leaderboard for grading.</div>
                     </div>
                 </div>
             </div>
@@ -335,7 +393,11 @@ export default function QuizArena({ user }) {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pb-4 shrink-0">
                                 {currentQ?.content?.options?.map((opt, i) => {
-                                    const isSelected = answers[currentQ.id] === i;
+                                    // It is selected if it is locally clicked OR if it's the truth from DB and we haven't clicked anything else
+                                    const isSelectedReal = answers[currentQ.id] === i;
+                                    const isSelectedLocal = localSelection === i;
+
+                                    const isSelected = isSelectedLocal || (localSelection === null && isSelectedReal);
 
                                     let buttonClass = 'bg-white border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-900';
                                     let iconClass = 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-700';
@@ -375,7 +437,10 @@ export default function QuizArena({ user }) {
                     <div className={`shrink-0 flex justify-between items-center p-4 rounded-b-xl border flex-wrap gap-4 ${isDarkMode ? 'bg-slate-900 border-slate-800 border-t-slate-800/50' : 'bg-gray-50 border-gray-200 border-t-transparent'
                         }`}>
                         <button
-                            onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
+                            onClick={() => {
+                                setLocalSelection(null);
+                                setCurrentIndex(prev => Math.max(0, prev - 1));
+                            }}
                             disabled={currentIndex === 0}
                             className={`px-6 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed border ${isDarkMode
                                 ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
@@ -386,14 +451,14 @@ export default function QuizArena({ user }) {
                         </button>
 
                         <button
-                            onClick={() => setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))}
+                            onClick={handleSaveAndNext}
                             disabled={currentIndex === questions.length - 1}
                             className={`px-8 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed border ${currentIndex === questions.length - 1
                                 ? (isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-gray-100 text-gray-400 border-gray-200')
                                 : (isDarkMode ? 'bg-cyan-600 hover:bg-cyan-500 text-white border-cyan-600' : 'bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-700 shadow-sm')
                                 }`}
                         >
-                            Next Question
+                            Save & Next
                         </button>
                     </div>
                 </div>
@@ -428,7 +493,9 @@ export default function QuizArena({ user }) {
                         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-2 overflow-y-auto custom-scrollbar content-start pr-1 pb-2 flex-grow">
                             {questions.map((q, idx) => {
                                 const isCurrent = currentIndex === idx;
-                                const isAnswered = answers[q.id] !== undefined;
+                                const isAnsweredDB = answers[q.id] !== undefined;
+                                const isAnsweredLocal = isCurrent && localSelection !== null;
+                                const isAnswered = isAnsweredDB || isAnsweredLocal;
                                 const isMarked = markedForReview[idx];
 
                                 let styling = isDarkMode
