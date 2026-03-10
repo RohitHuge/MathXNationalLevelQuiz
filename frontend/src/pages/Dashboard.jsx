@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../SocketContext";
 import { logout } from "../lib/appwrite";
+// import { useAuth } from "../AuthContext";
 
 const MATH_SYMBOLS = [
     "π", "∑", "∫", "√", "∞", "Δ", "θ", "λ", "μ", "σ",
@@ -73,7 +74,7 @@ export default function Dashboard({ user, showProfile = true }) {
     const handleLogout = async () => {
         try {
             await logout();
-            navigate("/"); // Redirect to auth page or home
+            navigate("/login"); // Redirect to auth page or home
         } catch (error) {
             console.error("Logout failed", error);
         }
@@ -100,6 +101,9 @@ export default function Dashboard({ user, showProfile = true }) {
         const timer = setInterval(() => setTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
+
+    // useEffect(() => )
+
 
     useEffect(() => {
         const animate = (timestamp) => {

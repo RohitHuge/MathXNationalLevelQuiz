@@ -122,7 +122,7 @@ export function Round3Client() {
                                 <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 font-bold uppercase tracking-widest text-sm mb-4">
                                     <Zap size={16} /> Rapid Fire Results — Set {rapidFire.results.setNumber}
                                 </div>
-                                <h2 className="text-5xl font-black text-white mb-2">{rapidFire.results.teamName}</h2>
+                                <h2 className="text-5xl font-black text-white mb-2">{rapidFire.results.teamId}. {rapidFire.results.teamName}</h2>
                                 <div className="flex items-center justify-center gap-6 mt-4">
                                     <div className="text-center">
                                         <div className="text-6xl font-black text-green-400">{rapidFire.results.correctCount}</div>
@@ -271,8 +271,8 @@ export function Round3Client() {
                                         <Zap className="text-[var(--color-neon-pink)]" size={20} />
                                         <span className={`font-bold tracking-widest uppercase text-[var(--color-neon-pink)]`}>
                                             {activeSubRound === 3
-                                                ? `Base: ${allocatedTeam?.name} (Blocked)`
-                                                : `Allocated: ${allocatedTeam?.name}`
+                                                ? `Base: ${allocatedTeam?.id}. ${allocatedTeam?.name} (Blocked)`
+                                                : `Allocated: ${allocatedTeam?.id}. ${allocatedTeam?.name}`
                                             }
                                         </span>
                                     </div>
@@ -369,7 +369,7 @@ export function Round3Client() {
                             </div>
                             {rfTeam && (
                                 <div className="text-center text-sm font-bold text-[var(--color-neon-cyan)] uppercase tracking-widest">
-                                    {rfTeam.name}
+                                    {rfTeam.id}. {rfTeam.name}
                                 </div>
                             )}
                         </div>
@@ -423,7 +423,7 @@ export function Round3Client() {
                                                         {i + 1}
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold text-lg">{teamInfo?.name || `Team ${buzz.teamId}`}</div>
+                                                        <div className="font-bold text-lg">{teamInfo?.id}. {teamInfo?.name || `Team ${buzz.teamId}`}</div>
                                                         {isActiveTurn && <div className="text-xs uppercase tracking-widest text-[var(--color-neon-cyan)] font-bold">Answering Now</div>}
                                                         {isPassed && <div className="text-xs uppercase tracking-widest text-red-500 font-bold">Passed / Invalid</div>}
                                                     </div>
@@ -450,7 +450,7 @@ export function Round3Client() {
                                     <div key={team.id} className="flex justify-between items-center bg-black/40 p-4 rounded-xl border border-white/5 hover:border-white/20 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="text-white/30 font-black text-xl w-6">{index + 1}</div>
-                                            <div className="font-bold text-lg">{team.name}</div>
+                                            <div className="font-bold text-lg">{team.id}. {team.name}</div>
                                         </div>
                                         <div className="font-black text-2xl text-[var(--color-neon-cyan)] bg-[var(--color-neon-cyan)]/10 px-4 py-1 rounded-lg">
                                             {team.score}

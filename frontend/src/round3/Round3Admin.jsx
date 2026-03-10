@@ -9,6 +9,8 @@ export default function Round3Admin() {
     const [questions, setQuestions] = useState([]);
     const [selectedSubRound, setSelectedSubRound] = useState(1);
     const [customTimer, setCustomTimer] = useState('');
+    const [showTeamEdit, setShowTeamEdit] = useState(false);
+    const [tempTeamNames, setTempTeamNames] = useState({});
 
     // Rapid Fire state
     const [rfSets, setRfSets] = useState([]);
@@ -64,6 +66,20 @@ export default function Round3Admin() {
         setCustomTimer('');
     };
 
+    const handleApplyTeamNames = () => {
+        socket.emit('admin:round3:update_team_names', tempTeamNames);
+        setShowTeamEdit(false);
+    };
+
+    const initTeamEdit = () => {
+        const names = {};
+        gameState.teams.forEach(t => {
+            names[t.id] = t.name;
+        });
+        setTempTeamNames(names);
+        setShowTeamEdit(true);
+    };
+
     return (
         <div className="font-sans space-y-8 animate-in fade-in duration-500">
             {/* Header Controls */}
@@ -95,8 +111,43 @@ export default function Round3Admin() {
                     <button onClick={() => handleStageChange(2)} className="bg-[var(--color-neon-blue)] hover:bg-[var(--color-neon-blue)]/80 text-white px-6 py-2 rounded-xl font-bold shadow-[0_0_15px_rgba(0,136,255,0.4)] transition-colors flex-1 md:flex-none">
                         Launch Projector
                     </button>
+                    <button onClick={initTeamEdit} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold border border-white/20 transition-colors flex items-center gap-2">
+                        <Settings2 size={16} /> Team Names
+                    </button>
                 </div>
             </header>
+
+            {/* Team Name Edit Modal/Overlay */}
+            {showTeamEdit && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-[#1a1a2e] border border-white/10 p-8 rounded-3xl w-full max-w-lg shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-black text-white uppercase tracking-widest flex items-center gap-3">
+                                <Trophy className="text-[var(--color-neon-cyan)]" /> Register Team Names
+                            </h2>
+                            <button onClick={() => setShowTeamEdit(false)} className="text-white/50 hover:text-white">&times;</button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 mb-8">
+                            {[1, 2, 3, 4, 5, 6].map(id => (
+                                <div key={id} className="flex items-center gap-4 bg-white/5 p-3 rounded-xl border border-white/10">
+                                    <span className="font-mono font-bold text-[var(--color-neon-cyan)] w-6">{id}.</span>
+                                    <input
+                                        type="text"
+                                        value={tempTeamNames[id] || ''}
+                                        onChange={e => setTempTeamNames(prev => ({ ...prev, [id]: e.target.value }))}
+                                        placeholder={`Team ${id} Name`}
+                                        className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white w-full focus:outline-none focus:border-[var(--color-neon-cyan)]"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex gap-4">
+                            <button onClick={() => setShowTeamEdit(false)} className="flex-1 py-3 rounded-xl font-bold bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white transition-all">Cancel</button>
+                            <button onClick={handleApplyTeamNames} className="flex-[2] py-3 rounded-xl font-black uppercase tracking-wider bg-[var(--color-neon-cyan)] text-black shadow-[0_0_20px_rgba(0,255,255,0.4)] hover:bg-[var(--color-neon-cyan)]/80 transition-all">Apply Names</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-12 gap-8 h-[calc(100vh-[280px])] min-h-[600px]">
                 {/* Left Col: Timer & Hardware Control */}
@@ -179,8 +230,8 @@ export default function Round3Admin() {
                                                     key={s.setNumber}
                                                     onClick={() => setRfSelectedSet(s)}
                                                     className={`py-3 rounded-xl font-bold text-sm border transition-all ${rfSelectedSet?.setNumber === s.setNumber
-                                                            ? 'bg-yellow-400/20 border-yellow-400 text-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.3)]'
-                                                            : 'bg-black/40 border-white/10 text-white/70 hover:border-white/30'
+                                                        ? 'bg-yellow-400/20 border-yellow-400 text-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.3)]'
+                                                        : 'bg-black/40 border-white/10 text-white/70 hover:border-white/30'
                                                         }`}
                                                 >
                                                     Set {s.setNumber}<br />
@@ -199,8 +250,8 @@ export default function Round3Admin() {
                                                     key={team.id}
                                                     onClick={() => setRfSelectedTeamId(team.id)}
                                                     className={`py-2 rounded-xl font-bold text-xs border transition-all ${rfSelectedTeamId === team.id
-                                                            ? 'bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)] text-[var(--color-neon-cyan)]'
-                                                            : 'bg-black/30 border-white/10 text-white/60 hover:border-white/30'
+                                                        ? 'bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)] text-[var(--color-neon-cyan)]'
+                                                        : 'bg-black/30 border-white/10 text-white/60 hover:border-white/30'
                                                         }`}
                                                 >
                                                     {team.name}
@@ -396,7 +447,7 @@ export default function Round3Admin() {
                                     <div className="flex justify-between items-start">
                                         <div className="flex flex-col">
                                             <span className="text-xl font-bold text-white flex items-center gap-2">
-                                                {team.name}
+                                                {team.id}. {team.name}
                                                 {hasBuzzed && (
                                                     <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-black ${isPassed ? 'bg-red-500 text-white' : 'bg-[var(--color-neon-pink)] text-white'}`}>
                                                         #{buzzIndex + 1}
