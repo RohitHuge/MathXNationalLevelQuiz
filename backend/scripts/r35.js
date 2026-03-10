@@ -1,4 +1,5 @@
 import fs from "fs";
+import pool from "../config/db.js";
 
 // load questions JSON
 const questions = JSON.parse(fs.readFileSync("questions.json", "utf8"));
@@ -14,45 +15,78 @@ const LETTER_TO_INDEX = {
   d: 3
 };
 
-let sql = `INSERT INTO questions (id, content, marks, created_at, round, sub_round)\nVALUES\n`;
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
 
-questions.forEach((q, i) => {
-  const content = JSON.parse(q.content);
+const importQuestions = async () => {
+  try {
 
-  const text = content.body?.latex || "";
-  const imageUrl = content.body?.image || null;
+    console.log(`[Import] Loaded ${questions.length} questions`);
 
-  const options = content.options.map(o => o.latex || "");
+    // randomize question order first
+    shuffle(questions);
 
-  const correctIndex = LETTER_TO_INDEX[content.answer?.value];
+    let success = 0;
 
-  const set = (i % 6) + 1;
+    for (let i = 0; i < questions.length; i++) {
 
-  const formattedContent = {
-    text,
-    type: "mcq",
-    options,
-    imageUrl,
-    correctIndex,
-    set
-  };
+      const q = questions[i];
+      const content = JSON.parse(q.content);
 
-  const row = `(
-'${q.id}',
-'${JSON.stringify(formattedContent).replace(/'/g, "''")}',
-10,
-NOW(),
-3,
-${set}
-)`;
+      const text = content.body?.latex || "";
+      const imageUrl = content.body?.image || null;
+      const options = content.options.map(o => o.latex || "");
 
-  sql += row;
+      const correctIndex = LETTER_TO_INDEX[content.answer?.value];
 
-  if (i !== questions.length - 1) sql += ",\n";
-});
+      // balanced set distribution
+      const set = (i % 6) + 1;
 
-sql += ";";
+      const formattedContent = {
+        set,
+        text,
+        type: "mcq",
+        options,
+        imageUrl,
+        correctIndex
+      };
 
-fs.writeFileSync("insert_questions.sql", sql);
+      const query = `
+        INSERT INTO questions
+        (id, content, marks, created_at, round, sub_round)
+        VALUES ($1,$2,$3,NOW(),$4,$5)
+        ON CONFLICT (id) DO UPDATE
+        SET content = EXCLUDED.content,
+            marks = EXCLUDED.marks,
+            round = EXCLUDED.round,
+            sub_round = EXCLUDED.sub_round
+      `;
 
-console.log("✅ SQL file generated: insert_questions.sql");
+      const values = [
+        q.id,
+        formattedContent,
+        10,
+        3, // round
+        5  // sub_round FIXED
+      ];
+
+      await pool.query(query, values);
+
+      success++;
+    }
+
+    console.log(`✅ Successfully inserted ${success} Round 3 SubRound 5 questions`);
+
+    process.exit(0);
+
+  } catch (err) {
+    console.error("❌ Import failed:", err);
+    process.exit(1);
+  }
+};
+
+importQuestions();
