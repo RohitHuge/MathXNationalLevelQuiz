@@ -32,7 +32,19 @@ export default function QuizArena({ user }) {
         showWarningModal,
         reEnterFullScreen,
         remainingWarnings
-    } = useFullScreenEnforcement(!loading && !submitted, () => handleSubmit(true));
+    } = useFullScreenEnforcement(
+        !loading && !submitted,
+        () => handleSubmit(true),
+        (violation) => {
+            if (socket && user) {
+                socket.emit('client:cheat_detected', {
+                    teamName: user.team_name || user.name || 'Unknown',
+                    type: violation.type,
+                    warningCount: violation.currentWarning
+                });
+            }
+        }
+    );
 
     // We'll use the user's mapped email for PostgreSQL UUID lookup
 

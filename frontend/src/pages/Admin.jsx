@@ -4,7 +4,7 @@ import { ThemeButton } from '../components/ui/ThemeButton';
 import { useSocket } from '../SocketContext';
 import { getCurrentUser } from '../lib/appwrite';
 import { useNavigate } from 'react-router-dom';
-import { Send, Trophy, Clock, Users, EyeOff, CheckCircle, Zap } from 'lucide-react';
+import { Send, Trophy, Clock, Users, EyeOff, CheckCircle, Zap, Lock } from 'lucide-react';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 import Round3Admin from '../round3/Round3Admin';
@@ -34,6 +34,7 @@ export default function Admin() {
     const [winnerFound, setWinnerFound] = useState(false);
 
     const [showProfile, setShowProfile] = useState(true);
+    const [cheatAlerts, setCheatAlerts] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -47,6 +48,11 @@ export default function Admin() {
                 } else {
                     alert('Error calculating results: ' + response.error);
                 }
+            });
+
+            // Listen for anti-cheat alerts
+            socket.on('server:cheat_alert', (data) => {
+                setCheatAlerts(prev => [data, ...prev].slice(0, 10)); // Keep last 10
             });
 
             // Sync global state including visibility
@@ -91,6 +97,7 @@ export default function Admin() {
                 socket.off('leaderboard:update');
                 socket.off('server:round2:winner_found');
                 socket.off('server:sync_state');
+                socket.off('server:cheat_alert');
             }
         };
     }, [socket]);
@@ -312,6 +319,38 @@ export default function Admin() {
                     Round 3 (Buzzer)
                 </button>
             </div>
+
+            {/* Real-time Cheat Alerts */}
+            {cheatAlerts.length > 0 && (
+                <div className="mb-8 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center justify-between mb-4 pb-2 border-b border-red-500/20">
+                        <h3 className="text-red-500 font-bold flex items-center gap-2">
+                            <Lock size={18} /> LIVE ANTI-CHEAT MONITOR
+                        </h3>
+                        <button
+                            onClick={() => setCheatAlerts([])}
+                            className="text-xs text-red-500/50 hover:text-red-500 font-bold uppercase tracking-widest"
+                        >
+                            Clear All
+                        </button>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                        {cheatAlerts.map((alert, i) => (
+                            <div key={i} className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-red-500/10 animate-in fade-in slide-in-from-left-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                    <span className="text-white font-black">{alert.teamName}</span>
+                                    <span className="text-red-400/80 text-sm">violation: {alert.type}</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-500 text-[10px] font-bold uppercase">Warning #{alert.warningCount}</span>
+                                    <span className="text-gray-500 text-xs font-mono">{alert.timestamp}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Master Kill switch ALWAYS available */}
             <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">

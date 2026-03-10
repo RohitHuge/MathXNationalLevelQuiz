@@ -168,6 +168,21 @@ const setupSockets = (io) => {
             }
         });
 
+        // Anti-Cheat Reporting
+        socket.on('client:cheat_detected', (data) => {
+            const { teamName, type, warningCount } = data;
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[Anti-Cheat] Violation from ${teamName}: ${type} (Warning #${warningCount}) at ${timestamp}`);
+
+            // Broadcast to all admins
+            io.emit('server:cheat_alert', {
+                teamName,
+                type,
+                warningCount,
+                timestamp
+            });
+        });
+
         // Toggle Profile Visibility on Dashboard
         socket.on('admin:toggle_profile_visibility', async (data) => {
             const { showProfile } = data;

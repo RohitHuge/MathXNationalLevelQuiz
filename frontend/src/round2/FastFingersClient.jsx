@@ -6,6 +6,8 @@ import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 import { useSocket, SocketProvider } from '../SocketContext';
 
+import { useFullScreenEnforcement } from '../hooks/useFullScreenEnforcement';
+
 const ClientViewInner = ({ user }) => {
     const { socket, isConnected } = useSocket();
     const [numericAnswer, setNumericAnswer] = useState('');
@@ -19,6 +21,34 @@ const ClientViewInner = ({ user }) => {
     const [feedbackMsg, setFeedbackMsg] = useState('');
     const [winnerDetails, setWinnerDetails] = useState(null);
     const [liveAttempts, setLiveAttempts] = useState([]);
+
+    // Anti-Cheat implementation
+    const {
+        warnings,
+        showWarningModal,
+        reEnterFullScreen,
+        remainingWarnings
+    } = useFullScreenEnforcement(
+        !!activeQuestion && !winnerDetails && !isLocked,
+        () => handleForceSubmit(),
+        (violation) => {
+            if (socket && isConnected && user) {
+                socket.emit('client:cheat_detected', {
+                    teamName: user.team_name || user.name || 'Unknown',
+                    type: violation.type,
+                    warningCount: violation.currentWarning
+                });
+            }
+        }
+    );
+
+    const handleForceSubmit = () => {
+        setIsLocked(true);
+        setFeedbackMsg('Access Revoked: Anti-cheat violation limit reached.');
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(err => console.error(err));
+        }
+    };
 
     useEffect(() => {
         if (!socket) return;
@@ -106,6 +136,32 @@ const ClientViewInner = ({ user }) => {
 
     return (
         <div className="min-h-screen bg-brand-dark text-white font-sans selection:bg-brand-purple relative overflow-hidden flex items-center justify-center p-4 sm:p-8 animate-in fly-in slide-in-from-bottom-5 duration-700">
+            {/* Warning Modal */}
+            {showWarningModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="bg-brand-dark border border-red-500 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
+                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Lock className="text-red-500" size={32} />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-2">Anti-Cheat Alert!</h3>
+                        <p className="text-gray-300 mb-6">
+                            You have violated the test rules (escaped full-screen or switched tabs).
+                            <br /><br />
+                            <span className="font-semibold text-red-500">
+                                Remaining Warnings: {remainingWarnings}
+                            </span>
+                            <br />
+                            <span className="text-xs text-gray-400">The round will be locked for you if warnings are depleted.</span>
+                        </p>
+                        <button
+                            onClick={reEnterFullScreen}
+                            className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all"
+                        >
+                            Return to Round
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-brand-cyan/5 rounded-full blur-[150px] pointer-events-none transform translate-x-1/3 -translate-y-1/3"></div>
             <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-brand-purple/5 rounded-full blur-[100px] pointer-events-none transform -translate-x-1/2 translate-y-1/2"></div>
