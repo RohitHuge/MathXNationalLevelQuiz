@@ -117,6 +117,7 @@ function AppContent() {
 
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/round2/dashboard';
   const isProjector = location.pathname.endsWith('/client');
+  const isAdminRoute = location.pathname.includes('/admin');
   const hideHeader = isDashboard || isProjector;
 
   return (
@@ -146,7 +147,13 @@ function AppContent() {
         </header>
       )}
 
-      <main className={hideHeader ? "relative z-10 w-full flex-grow p-0 m-0" : "container mx-auto px-4 py-8 relative z-10 flex-grow"}>
+      <main className={
+        hideHeader
+          ? "relative z-10 w-full flex-grow p-0 m-0"
+          : isAdminRoute
+            ? "relative z-10 w-full flex-grow overflow-hidden px-2 py-2 md:px-3 md:py-3"
+            : "container mx-auto px-4 py-8 relative z-10 flex-grow"
+      }>
         <Routes>
           <Route
             path="/"
