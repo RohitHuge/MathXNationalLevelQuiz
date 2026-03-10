@@ -8,6 +8,8 @@ import { Send, Trophy, Clock, Users, EyeOff, CheckCircle, Zap } from 'lucide-rea
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 import Round3Admin from '../round3/Round3Admin';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function Admin() {
     const { socket, isConnected } = useSocket();
@@ -125,14 +127,55 @@ export default function Admin() {
                 body: JSON.stringify({ n: parseInt(topNTeams) })
             });
             const data = await res.json();
-            if (res.ok) alert(data.message);
-            else alert('Error: ' + data.error);
+            if (res.ok) {
+                alert(data.message);
+                if (data.qualifiedTeams && data.qualifiedTeams.length > 0) {
+                    generateQualifiedTeamsPDF(data.qualifiedTeams);
+                }
+            } else alert('Error: ' + data.error);
         } catch (error) {
             console.error(error);
             alert('Failed to connect to qualification server.');
         } finally {
             setIsQualifying(false);
         }
+    };
+
+    const generateQualifiedTeamsPDF = (qualifiedTeams) => {
+        const doc = new jsPDF();
+
+        // Title
+        doc.setFontSize(20);
+        doc.text('Qualified Teams - Round 1 to Round 2', 14, 22);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+        // Prepare table data
+        const tableColumn = ["#", "Team Name", "Member Name", "Email ID", "Total Score"];
+        const tableRows = [];
+
+        qualifiedTeams.forEach((team, index) => {
+            const teamData = [
+                index + 1,
+                team.team_name,
+                team.full_name,
+                team.email,
+                team.total_score || 0
+            ];
+            tableRows.push(teamData);
+        });
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 35,
+            theme: 'striped',
+            headStyles: { fillColor: [188, 19, 254] }, // Neon Purple color match
+            styles: { fontSize: 9 }
+        });
+
+        doc.save(`Qualified_Teams_Round2_${new Date().getTime()}.pdf`);
     };
 
     const handleRevokeAll = async () => {

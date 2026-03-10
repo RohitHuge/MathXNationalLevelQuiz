@@ -65,9 +65,20 @@ export const qualifyTopNTeams = async (req, res) => {
             }
         }
 
+        // 4. Fetch the qualified teams details for reporting
+        const detailsQuery = `
+            SELECT t.team_name, u.full_name, u.email, t.total_score
+            FROM public.team t
+            JOIN public.users u ON t.id = u.team_id
+            WHERE t.id = ANY($1::uuid[])
+            ORDER BY t.total_score DESC NULLS LAST, t.team_name, u.full_name;
+        `;
+        const qualifiedDetailsRes = await pool.query(detailsQuery, [teamIds]);
+
         return res.status(200).json({
             success: true,
-            message: `Successfully qualified ${successCount} users from the top ${n} teams. (${failCount} failed)`
+            message: `Successfully qualified ${successCount} users from the top ${n} teams. (${failCount} failed)`,
+            qualifiedTeams: qualifiedDetailsRes.rows
         });
 
     } catch (error) {
