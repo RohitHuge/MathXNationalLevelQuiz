@@ -6,7 +6,7 @@ import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 import { useSocket, SocketProvider } from '../SocketContext';
 
-const ClientViewInner = () => {
+const ClientViewInner = ({ user }) => {
     const { socket, isConnected } = useSocket();
     const [numericAnswer, setNumericAnswer] = useState('');
     const [isLocked, setIsLocked] = useState(false);
@@ -99,7 +99,7 @@ const ClientViewInner = () => {
                 questionId: activeQuestion.id,
                 numericAnswer: parseFloat(numericAnswer),
                 timeTaken: parseFloat(elapsed),
-                clientName: socket.clientName || undefined // Note: using default provided natively via Context wrapping
+                clientName: user?.team_name || user?.name || `Team-${socket.id.substring(0, 4)}`
             });
         }
     };
@@ -144,7 +144,7 @@ const ClientViewInner = () => {
 
                         <div className="flex items-center gap-2 bg-brand-dark px-4 py-2 rounded-full border border-brand-purple">
                             <Timer className="text-brand-purple" size={18} />
-                            <span className="font-mono font-bold">{elapsed}s</span>
+                            <span className="font-mono font-bold text-xl">{elapsed}s</span>
                         </div>
                     </div>
 
@@ -165,17 +165,17 @@ const ClientViewInner = () => {
                     ) : (
                         <>
                             {winnerDetails ? (
-                                <div className="text-center py-10 animate-in zoom-in duration-700">
-                                    <div className="inline-block p-6 rounded-full bg-green-500/20 mb-6">
+                                <div className="text-center py-10 animate-in zoom-in duration-700 bg-green-500/5 rounded-2xl border border-green-500/10">
+                                    <div className="inline-block p-6 rounded-full bg-green-500/20 mb-6 flex-center">
                                         <Trophy className="text-green-400" size={64} />
                                     </div>
                                     <h2 className="text-5xl font-black text-white mb-4">ROUND OVER</h2>
                                     <p className="text-2xl text-gray-300 mb-8">
-                                        Team <span className="text-green-400 font-bold">{winnerDetails.winnerName}</span> won in {winnerDetails.timeTaken}s!
+                                        Team <span className="text-green-400 font-black">{winnerDetails.winnerName}</span> won in {winnerDetails.timeTaken}s!
                                     </p>
-                                    <div className="p-4 bg-brand-dark/50 rounded-xl border border-brand-panel-border inline-block">
-                                        <p className="text-sm text-gray-400 mb-1">Winning Answer</p>
-                                        <p className="text-4xl font-mono text-brand-cyan">{winnerDetails.winningAnswer}</p>
+                                    <div className="p-6 bg-brand-dark/80 rounded-2xl border border-green-500/30 inline-block shadow-lg shadow-green-500/10">
+                                        <p className="text-xs text-green-400/70 font-bold uppercase tracking-widest mb-2">Winning Answer</p>
+                                        <p className="text-5xl font-mono text-white font-black">{winnerDetails.winningAnswer}</p>
                                     </div>
                                 </div>
                             ) : (
@@ -254,10 +254,8 @@ const ClientViewInner = () => {
     );
 };
 
-export function FastFingersClient() {
+export function FastFingersClient({ user }) {
     return (
-        <SocketProvider isAdmin={false} clientName={`Team-${Math.floor(Math.random() * 1000)}`}>
-            <ClientViewInner />
-        </SocketProvider>
+        <ClientViewInner user={user} />
     );
 }

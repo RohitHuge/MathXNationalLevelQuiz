@@ -60,7 +60,7 @@ function PulsingDot() {
     );
 }
 
-export default function Dashboard({ user }) {
+export default function Dashboard({ user, showProfile = true }) {
     const navigate = useNavigate();
     const { socket } = useSocket();
     const [symbols, setSymbols] = useState([]);
@@ -258,11 +258,32 @@ export default function Dashboard({ user }) {
                 </h2>
 
                 {/* Year badge */}
-                <div className="mt-4 mb-8 px-6 py-2 rounded-full border border-[#a855f7]/50 bg-gradient-to-r from-[#1f2937]/80 via-[#1f2937]/60 to-[#0f172a]/80 backdrop-blur-sm shadow-[0_0_25px_rgba(34,211,238,0.25)]">
+                <div className="mt-4 mb-4 px-6 py-2 rounded-full border border-[#a855f7]/50 bg-gradient-to-r from-[#1f2937]/80 via-[#1f2937]/60 to-[#0f172a]/80 backdrop-blur-sm shadow-[0_0_25px_rgba(34,211,238,0.25)]">
                     <span className="text-sm sm:text-base tracking-[0.3em] uppercase font-medium text-white/80">
                         Season 2026
                     </span>
                 </div>
+
+                {/* User & Team Info */}
+                {showProfile && (
+                    <div className="mb-8 flex flex-col items-center gap-2 animate-pulse-slow">
+                        <div className="px-5 py-1.5 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3">
+                            <div className="flex flex-col items-center">
+                                <span className="text-[10px] uppercase tracking-[0.2em] text-[#22d3ee]/70 font-bold">Participant</span>
+                                <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                                    {user?.full_name || user?.name || "Participant"}
+                                </span>
+                            </div>
+                            <div className="w-[1px] h-8 bg-white/10 mx-2" />
+                            <div className="flex flex-col items-center">
+                                <span className="text-[10px] uppercase tracking-[0.2em] text-[#a855f7]/70 font-bold">Team</span>
+                                <span className="text-xl md:text-2xl font-black text-white tracking-tight">
+                                    {user?.team_name || "Independent"}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Bottom decorative line */}
                 <div className="mb-10 flex items-center gap-4">

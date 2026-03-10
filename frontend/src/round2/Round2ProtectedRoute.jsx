@@ -5,12 +5,18 @@ import { ThemeCard } from '../components/ui/ThemeCard';
 import { ThemeButton } from '../components/ui/ThemeButton';
 import { useNavigate } from 'react-router-dom';
 
-const Round2ProtectedRoute = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+const Round2ProtectedRoute = ({ children, user: propUser, loading: propLoading }) => {
+    const [user, setUser] = useState(propUser || null);
+    const [loading, setLoading] = useState(propUser ? false : propLoading !== undefined ? propLoading : true);
     const navigate = useNavigate();
 
     useEffect(() => {
+        if (propUser) {
+            setUser(propUser);
+            setLoading(false);
+            return;
+        }
+
         const checkAccess = async () => {
             try {
                 const session = await getCurrentUser();
@@ -24,7 +30,7 @@ const Round2ProtectedRoute = ({ children }) => {
         };
 
         checkAccess();
-    }, []);
+    }, [propUser]);
 
     if (loading) {
         return (

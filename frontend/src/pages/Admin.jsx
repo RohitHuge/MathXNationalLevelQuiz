@@ -33,6 +33,7 @@ export default function Admin() {
     const [clients, setClients] = useState([]);
     const [winnerFound, setWinnerFound] = useState(false);
 
+    const [showProfile, setShowProfile] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -47,6 +48,16 @@ export default function Admin() {
                     alert('Error calculating results: ' + response.error);
                 }
             });
+
+            // Sync global state including visibility
+            socket.on('server:sync_state', (state) => {
+                if (state.showProfile !== undefined) {
+                    setShowProfile(state.showProfile);
+                }
+            });
+
+            // Initial state request
+            socket.emit('client:request_state');
 
             // Fetch Round 2 questions implicitly (they can be fetched regardless of tab)
             socket.emit('admin:round2:fetch_questions');
@@ -79,6 +90,7 @@ export default function Admin() {
                 socket.off('server:round2:questions_list');
                 socket.off('leaderboard:update');
                 socket.off('server:round2:winner_found');
+                socket.off('server:sync_state');
             }
         };
     }, [socket]);
@@ -213,6 +225,13 @@ export default function Admin() {
         }
     };
 
+    const handleVisibilityToggle = () => {
+        if (socket && isConnected) {
+            const newState = !showProfile;
+            socket.emit('admin:toggle_profile_visibility', { showProfile: newState });
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-48">
@@ -295,7 +314,7 @@ export default function Admin() {
             </div>
 
             {/* Master Kill switch ALWAYS available */}
-            <div className="mb-8">
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <ThemeCard className="flex flex-col h-full border-blue-500/20 hover:border-blue-500/50 transition-colors relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
                     <div className="relative z-10 flex gap-4 w-full flex-wrap md:flex-nowrap items-center justify-between">
@@ -312,6 +331,27 @@ export default function Admin() {
                             disabled={!isConnected}
                         >
                             Return All to Dashboard
+                        </ThemeButton>
+                    </div>
+                </ThemeCard>
+
+                <ThemeCard className="flex flex-col h-full border-purple-500/20 hover:border-purple-500/50 transition-colors relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="relative z-10 flex gap-4 w-full flex-wrap md:flex-nowrap items-center justify-between">
+                        <div className="flex-1">
+                            <h3 className="text-xl font-black text-white mb-1">Profile Visibility</h3>
+                            <p className="text-[var(--color-gray-400)] text-sm">
+                                Toggle visibility of User & Team names on the participant dashboard.
+                            </p>
+                        </div>
+                        <ThemeButton
+                            variant={showProfile ? "primary" : "secondary"}
+                            className={`w-full md:w-auto shrink-0 px-8 flex items-center gap-2 ${showProfile ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-red-500/20 border-red-500/50 text-red-400'}`}
+                            onClick={handleVisibilityToggle}
+                            disabled={!isConnected}
+                        >
+                            {showProfile ? <CheckCircle size={18} /> : <EyeOff size={18} />}
+                            {showProfile ? 'Showing' : 'Hidden'}
                         </ThemeButton>
                     </div>
                 </ThemeCard>

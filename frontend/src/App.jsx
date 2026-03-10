@@ -34,6 +34,7 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { socket } = useSocket();
+  const [showProfile, setShowProfile] = useState(true);
 
   // Unified Global Routing Watchdog
   useEffect(() => {
@@ -62,6 +63,11 @@ function AppContent() {
         else if (stageNum === 2) targetPath = '/round3/client';
       }
 
+      // Sync Profile Visibility
+      if (state.showProfile !== undefined) {
+        setShowProfile(state.showProfile);
+      }
+
       // Prevent looping redirect if already on exactly that path
       if (location.pathname !== targetPath) {
         navigate(targetPath);
@@ -83,7 +89,16 @@ function AppContent() {
   const checkUser = async () => {
     try {
       const session = await getCurrentUser();
-      setUser(session);
+
+      // Post-Authentication: Fetch PostgreSQL Profile (Team Name, Full Name, etc.)
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/profile/${session.$id}`);
+      if (response.ok) {
+        const profile = await response.json();
+        // Merge Appwrite session with PostgreSQL profile data
+        setUser({ ...session, ...profile });
+      } else {
+        setUser(session);
+      }
     } catch (error) {
       setUser(null);
     } finally {
@@ -149,7 +164,7 @@ function AppContent() {
             path="/dashboard"
             element={
               <ProtectedRoute user={user} loading={loading}>
-                <Dashboard user={user} />
+                <Dashboard user={user} showProfile={showProfile} />
               </ProtectedRoute>
             }
           />
@@ -196,8 +211,8 @@ function AppContent() {
           <Route
             path="/round2/client"
             element={
-              <Round2ProtectedRoute>
-                <FastFingersClient />
+              <Round2ProtectedRoute user={user} loading={loading}>
+                <FastFingersClient user={user} />
               </Round2ProtectedRoute>
             }
           />
