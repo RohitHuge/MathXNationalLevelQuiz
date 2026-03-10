@@ -87,3 +87,4 @@ CREATE TABLE team_results (
     total_score JSONB,
     submitted_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now()
 );
+-- Adding somthing to commit
