@@ -32,7 +32,19 @@ export default function QuizArena({ user }) {
         showWarningModal,
         reEnterFullScreen,
         remainingWarnings
-    } = useFullScreenEnforcement(!loading && !submitted, () => handleSubmit(true));
+    } = useFullScreenEnforcement(
+        !loading && !submitted,
+        () => handleSubmit(true),
+        (violation) => {
+            if (socket && user) {
+                socket.emit('client:cheat_detected', {
+                    teamName: user.team_name || user.name || 'Unknown',
+                    type: violation.type,
+                    warningCount: violation.currentWarning
+                });
+            }
+        }
+    );
 
     // We'll use the user's mapped email for PostgreSQL UUID lookup
 
@@ -452,13 +464,12 @@ export default function QuizArena({ user }) {
 
                         <button
                             onClick={handleSaveAndNext}
-                            disabled={currentIndex === questions.length - 1}
-                            className={`px-8 py-2.5 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed border ${currentIndex === questions.length - 1
-                                ? (isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-gray-100 text-gray-400 border-gray-200')
-                                : (isDarkMode ? 'bg-cyan-600 hover:bg-cyan-500 text-white border-cyan-600' : 'bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-700 shadow-sm')
+                            className={`px-8 py-2.5 rounded-lg font-semibold transition-colors border ${isDarkMode
+                                ? 'bg-cyan-600 hover:bg-cyan-500 text-white border-cyan-600'
+                                : 'bg-cyan-600 hover:bg-cyan-700 text-white border-cyan-700 shadow-sm'
                                 }`}
                         >
-                            Save & Next
+                            {currentIndex === questions.length - 1 ? 'Save' : 'Save & Next'}
                         </button>
                     </div>
                 </div>

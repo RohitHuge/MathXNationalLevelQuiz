@@ -1,322 +1,346 @@
 INSERT INTO questions (id, content, marks, created_at, round, sub_round)
 VALUES
 (
-'d68fbc43-ae67-44cb-aeb9-7a9e9997485c',
-'{"text":"An alkyl halide having molecular formula $C_{4} H_{9} \\mathrm{Br}$ on reaction with Na metal in presence of ether gives 2,5 -dimethylhexane. The alkyl halide is","type":"mcq","options":["sec-butyl bromide","iso-butyl bromide","n-butyl bromide","tert-butyl bromide"],"imageUrl":null,"correctIndex":1,"set":1}',
+'ac776b73-9f4a-4be8-9dfc-ebc664fb1565',
+'{"text":"Let the eccentricity of the hyperbola $H:\\;\\dfrac{x^{2}}{a^{2}}-\\dfrac{y^{2}}{b^{2}}=1$ be $\\dfrac{\\sqrt{5}}{2}$ and length of its latus rectum be $6\\sqrt{2}$. If $y=2x+c$ is a tangent to the hyperbola $H$, then the value of $c^{2}$ is equal to","type":"mcq","options":["$18$","$20$","$24$","$32$"],"imageUrl":null,"correctIndex":1,"set":1}',
 10,
 NOW(),
 3,
 1
 ),
 (
-'6aafe021-3652-43ee-9cf1-d51e28933bdb',
-'{"text":"Nicol''s prism is made of","type":"mcq","options":["$\\mathrm{CaSO}_{4}$","$\\mathrm{CaSiO}_{3}$","$\\mathrm{CaCO}_{3}$","$\\mathrm{Ca}_{3}\\left(\\mathrm{PO}_{4}\\right)_{2}$"],"imageUrl":null,"correctIndex":2,"set":2}',
+'8d9549f6-4837-4210-bc42-95c4151fcb94',
+'{"text":"Let $P(a,b)$ be a point on the parabola $y^{2}=8x$ such that the tangent at $P$ passes through the centre of the circle $x^{2}+y^{2}-10x-14y+65=0$. Let $A$ be the product of all possible values of $a$ and $B$ be the product of all possible values of $b$. Then the value of $A+B$ is equal to","type":"mcq","options":["$0$","$25$","$40$","$65$"],"imageUrl":null,"correctIndex":3,"set":2}',
 10,
 NOW(),
 3,
 2
 ),
 (
-'6bf8de89-f36d-4b3c-ab8d-be21bad2f7a7',
-'{"text":"Which reaction is useful in exchange of halogen in alkyl chloride by iodide?","type":"mcq","options":["Reimer-Tiemann reaction","Finkelstein r?action","Williamson synthesis","Wurtz reaction"],"imageUrl":null,"correctIndex":2,"set":3}',
+'b59c91a8-91f4-4d98-8cd8-0d9dfd2222cc',
+'{"text":"Let $x=2t,\\;y=\\dfrac{t^{2}}{3}$ be a conic. Let $S$ be the focus and $B$ be the point on the axis of the conic such that $SA\\perp BA$, where $A$ is any point on the conic. If $k$ is the ordinate of the centroid of the triangle $SAB$, then $\\lim_{t\\to 1}k$ is equal to","type":"mcq","options":["$\\dfrac{17}{18}$","$\\dfrac{19}{18}$","$\\dfrac{11}{18}$","$\\dfrac{13}{18}$"],"imageUrl":null,"correctIndex":3,"set":3}',
 10,
 NOW(),
 3,
 3
 ),
 (
-'52eb6bed-67e3-46d4-98d4-8c96c96e7bc0',
-'{"text":"Which among the following compounds is formed as a product in Fittig reaction?","type":"mcq","options":["$\\mathrm{Ar}-\\mathrm{Ar}^{\\prime}$","$R-R^{\\prime}$","$\\mathrm{R}-\\mathrm{Ar}$","$\\mathrm{R}-\\mathrm{Mg}-\\mathrm{X}$"],"imageUrl":null,"correctIndex":0,"set":4}',
+'dd0bc5e9-2e10-47d9-a063-71339b079384',
+'{"text":"If the line $y=4+kx,\\;k>0$, is the tangent to the parabola $y=x-x^{2}$ at the point $P$ and $V$ is the vertex of the parabola, then the slope of the line through $P$ and $V$ is","type":"mcq","options":["$\\dfrac{3}{2}$","$\\dfrac{26}{9}$","$\\dfrac{5}{2}$","$\\dfrac{23}{6}$"],"imageUrl":null,"correctIndex":2,"set":4}',
 10,
 NOW(),
 3,
 4
 ),
 (
-'6d10d32a-7eb2-411b-a8bd-1bac0358082c',
-'{"text":"Which from following properties is not similar for enantiomers?","type":"mcq","options":["Refractive index","Sign of optical rotation","Density","Melting points"],"imageUrl":null,"correctIndex":1,"set":5}',
+'32a408bb-1fec-4fb6-b979-aa9af0a3b939',
+'{"text":"Let the normal at the point $P$ on the parabola $y^{2}=6x$ pass through the point $(5,-8)$. If the tangent at $P$ to the parabola intersects its directrix at the point $Q$, then the ordinate of the point $Q$ is:","type":"mcq","options":["$-3$","$-\\dfrac{9}{4}$","$-\\dfrac{5}{2}$","$-2$"],"imageUrl":null,"correctIndex":1,"set":5}',
 10,
 NOW(),
 3,
 5
 ),
 (
-'de8bb11d-c1d8-49dc-9419-facd7bb394a2',
-'{"text":"Identify the reagent $A$ in the following conversion. Alkyl halide $\\xrightarrow{\\text { A }}$ Alkyl nitrite [MHT-CET 2023]","type":"mcq","options":["$\\mathrm{NaNO}_{3}$","$\\mathrm{KNO}_{3}$","$\\mathrm{KNO}_{2}$","$\\mathrm{AgNO}_{2}$"],"imageUrl":null,"correctIndex":2,"set":6}',
+'b7b45758-b452-49c6-a852-3804946938f9',
+'{"text":"A point $P$ moves so that the sum of squares of its distances from the points $(1,2)$ and $(-2,1)$ is $14$. Let $f(x,y)=0$ be the locus of $P$, which intersects the $x$-axis at the points $A,B$ and the $y$-axis at the points $C,D$. Then the area of the quadrilateral $ACBD$ is equal to","type":"mcq","options":["$\\dfrac{9}{2}$","$\\dfrac{3\\sqrt{17}}{2}$","$\\dfrac{3\\sqrt{17}}{4}$","$9$"],"imageUrl":null,"correctIndex":0,"set":6}',
 10,
 NOW(),
 3,
 6
 ),
 (
-'ba67dbf1-e47d-4881-a022-3b208d1d3d73',
-'{"text":"Which following statement is true about enantiomers? [MHT-CET 2023 ]","type":"mcq","options":["Enantiomers differ in their chemical properties.","Enantiomers have equal and opposite optical rotation.","Enantiomers have different densities.","Enantiomers have superimposable mirror image relationship."],"imageUrl":null,"correctIndex":1,"set":1}',
+'b9b2bf7f-d243-42d0-ba40-2c8b4a2c6aae',
+'{"text":"For $t\\in(0,2\\pi)$, if $ABC$ is an equilateral triangle with vertices $A(\\sin t,-\\cos t)$, $B(\\cos t,\\sin t)$ and $C(a,b)$ such that its orthocentre lies on a circle with centre $\\left(1,\\tfrac{1}{3}\\right)$ then $(a^{2}-b^{2})$ is equal to","type":"mcq","options":["$\\dfrac{8}{3}$","$8$","$\\dfrac{77}{9}$","$\\dfrac{80}{9}$"],"imageUrl":null,"correctIndex":1,"set":1}',
 10,
 NOW(),
 3,
 1
 ),
 (
-'20ee3ed4-9507-439b-8ee9-dcd8e02910fc',
-'{"text":"Which among the following is haloalkyne?","type":"mcq","options":["4-Chloropent-2-yne","3-Chlorobut-1-yne","Chloroethyne","1-Chloropent-2-yne"],"imageUrl":null,"correctIndex":2,"set":2}',
+'d273c9ca-a939-484e-baa2-4a86375dc1c0',
+'{"text":"Let $C$ be the centre of the circle $x^{2} + y^{2} - x + 2y = \\dfrac{11}{4}$ and $P$ be a point on the circle. A line passes through the point $C$, makes an angle of $\\tfrac{\\pi}{4}$ with the line $CP$ and intersects the circle at the points $Q$ and $R$. Then the area of the triangle $PQR$ (in unit$^{2}$) is :","type":"mcq","options":["$2$","$2\\sqrt{2}$","$8\\sin\\left(\\dfrac{\\pi}{8}\\right)$","$8\\cos\\left(\\dfrac{\\pi}{8}\\right)$"],"imageUrl":null,"correctIndex":1,"set":2}',
 10,
 NOW(),
 3,
 2
 ),
 (
-'8f7137e4-ebed-44dc-9d6f-1581f8b2bdf9',
-'{"text":"The reaction of aryl halide with alkyl halide and sodium metal in dry ether to form substituted aromatic compounds is known as","type":"mcq","options":["Fittig reaction","Wurtz Fittig reaction","Wurtz reaction","Friedel Craft''s reaction"],"imageUrl":null,"correctIndex":1,"set":3}',
+'97100842-8d27-4aa1-b300-c4eddd615216',
+'{"text":"Let the tangents at two points $A$ and $B$ on the circle $x^{2} + y^{2} - 4x + 3 = 0$ meet at origin $O(0,0)$. Then the area of the triangle $OAB$ is :","type":"mcq","options":["$\\dfrac{3\\sqrt{3}}{2}$","$\\dfrac{3\\sqrt{3}}{4}$","$\\dfrac{3}{2\\sqrt{3}}$","$\\dfrac{3}{4\\sqrt{3}}$"],"imageUrl":null,"correctIndex":1,"set":3}',
 10,
 NOW(),
 3,
 3
 ),
 (
-'69f3edb9-1e85-4e94-8b6d-a96e12420024',
-'{"text":"Identify the major product in the following reaction.","type":"mcq","options":["Benzene hexachloride","1,4-Dichlorobenzene","1,3,5-Trichlorobenzene","1,2Dichlorobenzene"],"imageUrl":null,"correctIndex":1,"set":4}',
+'592a9e66-52b8-4af5-84ed-af1a6a1a7b15',
+'{"text":"Let a line $L$ pass through the point of intersection of the lines $b x + 10y - 8 = 0$ and $2x - 3y = 0$, $b\\in\\mathbb{R}-\\{\\tfrac{4}{3}\\}$. If the line $L$ also passes through the point $(1,1)$ and touches the circle $17(x^{2} + y^{2}) = 16$, then the eccentricity of the ellipse $\\dfrac{x^{2}}{5} + \\dfrac{y^{2}}{b^{2}} = 1$ is :","type":"mcq","options":["$\\dfrac{2}{\\sqrt{5}}$","$\\sqrt{\\dfrac{3}{5}}$","$\\dfrac{1}{\\sqrt{5}}$","$\\sqrt{\\dfrac{2}{5}}$"],"imageUrl":null,"correctIndex":1,"set":4}',
 10,
 NOW(),
 3,
 4
 ),
 (
-'3f638e83-7263-4dd2-85e0-f20c6f588f8c',
-'{"text":"Which from following is called freon-12?","type":"mcq","options":["Chlorodifluoromethane","Chlorofluoromethane","Dichlorodifluoromethane","Trichlorofluoromethane"],"imageUrl":null,"correctIndex":2,"set":5}',
+'0a66c445-f55e-471d-9d46-356e742b7270',
+'{"text":"Let a circle $C$ touch the lines $L_{1}: 4x - 3y + K_{1} = 0$ and $L_{2}: 4x - 3y + K_{2} = 0$, $K_{1},K_{2}\\in\\mathbb{R}$. If a line passing through the centre of the circle $C$ intersects $L_{1}$ at $(-1,2)$ and $L_{2}$ at $(3,-6)$, then the equation of the circle $C$ is","type":"mcq","options":["$(x-1)^{2} + (y-2)^{2} = 4$","$(x+1)^{2} + (y-2)^{2} = 4$","$(x-1)^{2} + (y+2)^{2} = 16$","$(x-1)^{2} + (y-2)^{2} = 16$"],"imageUrl":null,"correctIndex":2,"set":5}',
 10,
 NOW(),
 3,
 5
 ),
 (
-'a86f8653-8ce4-4e29-8519-0366de687359',
-'{"text":"Which of the following is general representation of Grignard reagent?","type":"mcq","options":["$\\mathrm{R}-\\mathrm{COO}-\\mathrm{Ag}$","$\\mathrm{R}-\\mathrm{O}-\\mathrm{Na}$","$\\mathrm{R}-\\mathrm{Mg}-\\mathrm{X}$","$\\mathrm{R}-\\mathrm{COOK}$"],"imageUrl":null,"correctIndex":2,"set":6}',
+'373c366d-e215-4485-aef8-17fe3833a1a7',
+'{"text":"A circle touches both the $y$-axis and the line $x + y = 0$. Then the locus of its center","type":"mcq","options":["$y = \\sqrt{2}\\,x$","$x = \\sqrt{2}\\,y$","$y^{2} - x^{2} = 2xy$","$x^{2} - y^{2} = 2xy$"],"imageUrl":null,"correctIndex":3,"set":6}',
 10,
 NOW(),
 3,
 6
 ),
 (
-'ca8a4b49-7e4a-4c3b-850c-303f6b284eea',
-'{"text":"Which of the following compounds converts alkyl halide into alkyl isocyanide?","type":"mcq","options":["alc. HCN","$alc. \\mathrm{NH}_{3}$","alc. KCN","alc. AgCN"],"imageUrl":null,"correctIndex":3,"set":1}',
+'4ca87bff-115b-4e80-8985-7c77d5aee76c',
+'{"text":"If the tangents drawn at the points $O(0,0)$ and $P(1+\\sqrt{5},\\;2)$ on the circle $x^{2}+y^{2}-2x-4y=0$ intersect at the point $Q$, then the area of the triangle $OPQ$ is equal to","type":"mcq","options":["$\\dfrac{3+\\sqrt{5}}{2}$","$\\dfrac{4+2\\sqrt{5}}{2}$","$\\dfrac{5+3\\sqrt{5}}{2}$","$\\dfrac{7+3\\sqrt{5}}{2}$"],"imageUrl":null,"correctIndex":2,"set":1}',
 10,
 NOW(),
 3,
 1
 ),
 (
-'b4a54a6a-09bb-45f4-aa5f-21ebc6167564',
-'{"text":"Which of the following is NOT formed when a mixture of methyl chloride and n-propyl chloride is treated with sodium metal in dry ether?","type":"mcq","options":["Ethane","Hexane","Butane","Propane"],"imageUrl":null,"correctIndex":3,"set":2}',
+'135b1f07-8458-4e96-bc8d-3efa8a4c82b1',
+'{"text":"Let the tangent to the circle $C_{1}:\\;x^{2}+y^{2}=2$ at the point $M(-1,1)$ intersect the circle $C_{2}:\\;(x-3)^{2}+(y-2)^{2}=5$ at two distinct points $A$ and $B$. If the tangents to $C_{2}$ at the points $A$ and $B$ intersect at $N$, then the area of the triangle $ANB$ is equal to:","type":"mcq","options":["$\\dfrac{1}{2}$","$\\dfrac{2}{3}$","$\\dfrac{1}{6}$","$\\dfrac{5}{3}$"],"imageUrl":null,"correctIndex":2,"set":2}',
 10,
 NOW(),
 3,
 2
 ),
 (
-'2552c92d-864f-4ceb-98e2-d2f14a7de7da',
-'{"text":"Identify compound Y in the following reaction. $C_{2} H_{5} \\mathrm{Cl}+Y \\xrightarrow{\\Delta} C_{2} H_{5} \\mathrm{CN}$ [MHT-CET 2023]","type":"mcq","options":["$\\mathrm{AgCN}_{\\text {(alc) }}$","$\\mathrm{NH}_{3}$","$\\mathrm{KCN}_{\\text {(alc) }}$","$\\mathrm{HNO}_{3}$"],"imageUrl":null,"correctIndex":2,"set":3}',
+'e909ef88-8a79-4c6b-b7fb-8748562f3412',
+'{"text":"Let a triangle $ABC$ be inscribed in the circle $x^{2}-\\sqrt{2}(x+y)+y^{2}=0$ such that $\\angle BAC=\\dfrac{\\pi}{2}$. If the length of side $AB$ is $\\sqrt{2}$, then the area of the $\\triangle ABC$ is equal to:","type":"mcq","options":["$\\dfrac{\\sqrt{2}+\\sqrt{6}}{3}$","$\\dfrac{\\sqrt{6}+\\sqrt{3}}{2}$","$\\dfrac{3+\\sqrt{3}}{4}$","$\\dfrac{\\sqrt{6}+2\\sqrt{3}}{4}$"],"imageUrl":null,"set":3}',
 10,
 NOW(),
 3,
 3
 ),
 (
-'8f023b3b-93c6-4bb4-8f22-10742d2689cb',
-'{"text":"Which product is obtained when ethyl chloride is boiled with alcoholic KOH ? [MHT-CET 2023 ]","type":"mcq","options":["Ethene","Ethane","Ethanal","Ethanol"],"imageUrl":null,"correctIndex":0,"set":4}',
+'b9bbf1b5-1aa7-4407-acc1-fc724edb5b4b',
+'{"text":"If the ellipse $\\dfrac{x^{2}}{a^{2}}+\\dfrac{y^{2}}{b^{2}}=1$ meets the line $\\dfrac{x}{7}+\\dfrac{y}{2\\sqrt{6}}=1$ on the $x$-axis and the line $\\dfrac{x}{7}-\\dfrac{y}{2\\sqrt{6}}=1$ on the $y$-axis, then the eccentricity of the ellipse is","type":"mcq","options":["$\\dfrac{5}{7}$","$\\dfrac{2\\sqrt{6}}{7}$","$\\dfrac{3}{7}$","$\\dfrac{2\\sqrt{5}}{7}$"],"imageUrl":null,"correctIndex":0,"set":4}',
 10,
 NOW(),
 3,
 4
 ),
 (
-'045fb3c3-a374-4f99-964f-a1080f2b6e88',
-'{"text":"Which among the following is Benzylic halide?","type":"mcq","options":["$\\mathrm{C}_{6} \\mathrm{H}_{5}-\\mathrm{CH}_{2}-\\mathrm{X}$","$\\mathrm{C}_{6} \\mathrm{H}_{5}-\\mathrm{X}$","$\\mathrm{C}_{6} \\mathrm{H}_{5}-\\mathrm{CH}={\\mathrm{CH}}-{\\mathrm{X}}$","$\\mathrm{C}_{6} \\mathrm{H}_{5}-\\mathrm{CH}_{2}-\\mathrm{CH}_{2}-\\mathrm{X}$"],"imageUrl":null,"correctIndex":0,"set":5}',
+'3998c918-5ea8-415c-b6f0-981389f9fa67',
+'{"text":"The acute angle between the pair of tangents drawn to the ellipse $2x^{2}+3y^{2}=5$ from the point $(1,3)$ is","type":"mcq","options":["$\\tan^{-1}\\left(\\dfrac{16}{7\\sqrt{5}}\\right)$","$\\tan^{-1}\\left(\\dfrac{24}{7\\sqrt{5}}\\right)$","$\\tan^{-1}\\left(\\dfrac{32}{7\\sqrt{5}}\\right)$","$\\tan^{-1}\\left(\\dfrac{3+8\\sqrt{5}}{35}\\right)$"],"imageUrl":null,"correctIndex":1,"set":5}',
 10,
 NOW(),
 3,
 5
 ),
 (
-'a51e53f0-5188-4d69-ba1a-0f2a815eeca5',
-'{"text":"Identify the product '' $P$ '' in following reaction.$$ R-\\mathrm{CH}_{2}-\\mathrm{OH} + \\mathrm{HCl} \\underset{\\mathrm{ZnCl}_{2}}{\\stackrel{\\text { anydros }}{\\overrightarrow{\\mathrm{HCl}}_{2}}} P + H_{2} O$$","type":"mcq","options":["Alkyne","Aldehyde","Alkene","$\\mathrm{R}-\\mathrm{CH}_{2} \\mathrm{Cl}$"],"imageUrl":null,"correctIndex":3,"set":6}',
+'48e75794-4a92-4c0c-96fe-d7d80b88b93a',
+'{"text":"The line $y=x+1$ meets the ellipse $\\dfrac{x^{2}}{4}+\\dfrac{y^{2}}{2}=1$ at two points $P$ and $Q$. If $r$ is the radius of the circle with $PQ$ as diameter then $(3r)^{2}$ is equal to","type":"mcq","options":["$20$","$12$","$11$","$8$"],"imageUrl":null,"correctIndex":0,"set":6}',
 10,
 NOW(),
 3,
 6
 ),
 (
-'4c9e4771-0899-48d1-ba06-8e5460a484c6',
-'{"text":"Identify the name of reaction for aryl halide with alkyl halide and sodium metal in dry ether to give substituted aromatic compounds.","type":"mcq","options":["Fittig reaction","Wurtz reaction","Finkelstein reaction","Wurtz-Fittig reaction"],"imageUrl":null,"correctIndex":3,"set":1}',
+'ef9cc598-6403-4e2a-863b-e1aba49ee346',
+'{"text":"If $m$ is the slope of a common tangent to the curves $\\dfrac{x^{2}}{16}+\\dfrac{y^{2}}{9}=1$ and $x^{2}+y^{2}=12$, then $12m^{2}$ is equal to:","type":"mcq","options":["$6$","$y$","$10$","$12$"],"imageUrl":null,"correctIndex":1,"set":1}',
 10,
 NOW(),
 3,
 1
 ),
 (
-'c442150b-6dfd-494b-8717-4c608c54b961',
-'{"text":"Which of the following reactions is used for the preparation of alkyl fluorides?","type":"mcq","options":["Swartz reaction","Sandmeyer''s reaction","Saytzeff''s reaction","Finkelstein reaction"],"imageUrl":null,"correctIndex":0,"set":2}',
+'97c44117-a16a-4116-a130-9ad89a1b5ec5',
+'{"text":"Let the eccentricity of an ellipse $\\dfrac{x^{2}}{a^{2}}+\\dfrac{y^{2}}{b^{2}}=1$, $a>b$, be $\\dfrac{1}{4}$. If this ellipse passes through the point $(-1\\sqrt{2/5},\\;3)$, then $a^{2}+b^{2}$ is equal to:","type":"mcq","options":["$29$","$31$","$32$","$34$"],"imageUrl":null,"correctIndex":1,"set":2}',
 10,
 NOW(),
 3,
 2
 ),
 (
-'86989c32-df7d-445f-a344-8fcbe1d5cb48',
-'{"text":"Identify the order of bond breaking and bond formation in $ S_{N} 2 $ reaction mechanism.","type":"mcq","options":["Bond formation is followed by bond breaking.","Bond breaking is followed by bond formation.","Bond breaking and bond formation has no order.","Bond breaking and formation occur simultaneously."],"imageUrl":null,"correctIndex":3,"set":3}',
+'ad571a63-3abe-48e7-baf7-3b0da2f9ce83',
+'{"text":"In an isosceles triangle $ABC$, the vertex $A$ is $(6,1)$ and the equation of the base $BC$ is $2x+y=4$. Let the point $B$ lie on the line $x+3y=7$. If $(\\alpha,\\beta)$ is the centroid of $\\triangle ABC$, then $15(\\alpha+\\beta)$ is equal to","type":"mcq","options":["$39$","$41$","$51$","$63$"],"imageUrl":null,"correctIndex":2,"set":3}',
 10,
 NOW(),
 3,
 3
 ),
 (
-'ccd49649-a191-441d-8313-b5b21254e37d',
-'{"text":"Identify correct decreasing order of boiling point of alkyl halide. [MHT-CET 2023]","type":"mcq","options":["$\\mathrm{CH}_{3} \\mathrm{Cl}>\\mathrm{CH}_{3} \\mathrm{~F}>\\mathrm{CH}_{3} \\mathrm{Br}>\\mathrm{CH}_{3} \\mathrm{I}$","$\\mathrm{CH}_{3} \\mathrm{~F}>\\mathrm{CH}_{3} \\mathrm{Cl}>\\mathrm{CH}_{3} \\mathrm{Br}>\\mathrm{CH}_{3} \\mathrm{I}$","$\\mathrm{CH}_{3} \\mathrm{I}>\\mathrm{CH}_{3} \\mathrm{Br}>\\mathrm{CH}_{3} \\mathrm{Cl}>\\mathrm{CH}_{3} \\mathrm{~F}$","$\\mathrm{CH}_{3} \\mathrm{~F}>\\mathrm{CH}_{3} \\mathrm{I}>\\mathrm{CH}_{3} \\mathrm{Br}>\\mathrm{CH}_{3} \\mathrm{Cl}$"],"imageUrl":null,"correctIndex":2,"set":4}',
+'93d0411d-30c7-4399-b77e-0b271c33be42',
+'{"text":"Two sides of a parallelogram are along the lines $4x+5y=0$ and $7x+2y=0$. If the equation of one of the diagonals of the parallelogram is $11x+7y=9$, then the other diagonal passes through the point","type":"mcq","options":["$(2,2)$","$(1,3)$","$(1,2)$","$(2,1)$"],"imageUrl":null,"correctIndex":0,"set":4}',
 10,
 NOW(),
 3,
 4
 ),
 (
-'cb5e68d7-d8c3-4638-a7fa-b2d42df49b55',
-'{"text":"Which of the following reactions is used for the conversion of alkyl chloride to alkyl iodide? [MHT-CET 2023 ]","type":"mcq","options":["Friedel Crafts reaction","Swartz reaction","Fittig reaction","Finkelstein reaction"],"imageUrl":null,"correctIndex":3,"set":5}',
+'a09d69ec-b80b-49dd-bdef-26b3cdd62199',
+'{"text":"Let $\\lambda x-2y=\\mu$ be a tangent to the hyperbola $a^{2}x^{2}-y^{2}=b^{2}$. Then $\\left(\\dfrac{\\lambda}{a}\\right)^{2}-\\left(\\dfrac{\\mu}{b}\\right)^{2}$ is equal to","type":"mcq","options":["$-2$","$-4$","$2$","$4$"],"imageUrl":null,"correctIndex":3,"set":5}',
 10,
 NOW(),
 3,
 5
 ),
 (
-'42ca3d9c-a7cf-4c97-9be3-3f1e0e0c94a7',
-'{"text":"If the lines $\\frac{x+1}{-10}=\\frac{y+k}{-1}=\\frac{z-4}{1}$ and $\\frac{x+10}{-1}=\\frac{y+1}{-3}=\\frac{z-1}{4}$ intersect each other, then the value of $k$ is[MHTCET 2024]","type":"mcq","options":["-3","4","3","2"],"imageUrl":null,"set":6}',
+'a4ee05fb-9dfb-4fb0-acd5-e1c09d5340ba',
+'{"text":"If the equation of the parabola, whose vertex is at $(5,4)$ and the directrix is $3x + y - 29 = 0$, is $x^{2} + a y^{2} + b x y + c x + d y + k = 0$, then $a + b + c + d + k$ is equal to","type":"mcq","options":["$575$","$-575$","$576$","$-576$"],"imageUrl":null,"correctIndex":3,"set":6}',
 10,
 NOW(),
 3,
 6
 ),
 (
-'d25816b5-ffab-487a-8ecb-961aa07423ba',
-'{"text":"The perpendicular distance from the origin to the plane containing the two lines $ \\frac{x+2}{3}=\\frac{y-2}{5}=\\frac{z+5}{7} \\& \\frac{x-1}{1}=\\frac{y-4}{4}=\\frac{z+4}{7} $","type":"mcq","options":["$6 \\sqrt{11}$","$11 \\sqrt{6}$","11","$\\frac{11}{\\sqrt{6}}$"],"imageUrl":null,"correctIndex":3,"set":1}',
+'54a32ab9-9caf-487a-8b44-0fed9e446307',
+'{"text":"If vertex of a parabola is $(2,-1)$ and the equation of its directrix is $4x - 3y = 21$, then the length of its latus rectum is","type":"mcq","options":["$2$","$8$","$12$","$16$"],"imageUrl":null,"correctIndex":1,"set":1}',
 10,
 NOW(),
 3,
 1
 ),
 (
-'9d6256f3-b02f-43b2-9158-2da068693346',
-'{"text":"Let P be a plane passing through the points ( $2,1,0),(4,1,1)$ and $(5,0,1)$ and R be the point $(2,1,6)$. Then image of $R$ in the plane $P$ is","type":"mcq","options":["$(3,4,-2)$","$(6,5,-2)$","(4,3,2)","$(6,5,2)$"],"imageUrl":null,"correctIndex":1,"set":2}',
+'3009addc-d5e3-4f29-a268-6c16844a3200',
+'{"text":"Let $P: y^{2} = 4 a x$, $a>0$ be a parabola with focus $S$. Let the tangents to the parabola $P$ which make an angle of $\\tfrac{\\pi}{4}$ with the line $y = 3x + 5$ touch the parabola $P$ at $A$ and $B$. Then the value of $a$ for which $A,B$ and $S$ are collinear is","type":"mcq","options":["$8$ only","$2$ only","$\\tfrac{1}{4}$ only","any $a>0$"],"imageUrl":null,"correctIndex":3,"set":2}',
 10,
 NOW(),
 3,
 2
 ),
 (
-'1a08fc34-471c-400e-ba9c-8da9d9317515',
-'{"text":"The perpendicular distance of the origin from the plane $2 x+y-2 z-18=0$ is[MHT-CET 2024]","type":"mcq","options":["6 units","4 units","18 units","9 units"],"imageUrl":null,"correctIndex":0,"set":3}',
+'12b78957-e858-43b3-a90f-a8f053367409',
+'{"text":"A circle $C_{1}$ passes through the origin $O$ and has diameter $4$ on the positive $x$-axis. The line $y = 2x$ gives a chord $OA$ of the circle $C_{1}$. Let $C_{2}$ be the circle with $OA$ as a diameter. If the tangent to $C_{2}$ at the point $A$ meets the $x$-axis at $P$ and $y$-axis at $Q$, then $QA:AP$ is equal to","type":"mcq","options":["$1:4$","$1:5$","$2:5$","$1:3$"],"imageUrl":null,"correctIndex":0,"set":3}',
 10,
 NOW(),
 3,
 3
 ),
 (
-'0710d268-c37d-47c6-be66-c7f839c9143a',
-'{"text":"Equation of the plane containing the straight line $\\frac{x}{3}=\\frac{y}{2}=\\frac{z}{4}$ and perpendicular to the plane containing the straight lines $\\frac{x}{4}=\\frac{y}{3}=\\frac{z}{2}$ and $\\frac{x}{2}=\\frac{y}{-4}=\\frac{z}{3}$ is[MHT-CET 2024]","type":"mcq","options":["$6 x+67 y+29 z=0$","$6 x-67 y+29 z=0$","$6 x-67 y-29 z=0$","$6 x+67 y-29 z=0$"],"imageUrl":null,"correctIndex":1,"set":4}',
+'0f0582af-19e7-4def-aa20-859f615dfee0',
+'{"text":"Let the point $P(\\alpha,\\beta)$ be at a unit distance from each of the two lines $L_{1}:\\;3x-4y+12=0$, and $L_{2}:\\;8x+6y+11=0$. If $P$ lies below $L_{1}$ and above $L_{2}$, then $100(\\alpha+\\beta)$ is equal to","type":"mcq","options":["$-14$","$42$","$-22$","$14$"],"imageUrl":null,"correctIndex":3,"set":4}',
 10,
 NOW(),
 3,
 4
 ),
 (
-'2dc94686-0709-4540-8510-f2a45cfb3f35',
-'{"text":"The co-ordinates of the point where the line through $A(3,4,1)$ and $B(5,1,6)$ crosses the $x y$-plane are[MHT-CET 2024]","type":"mcq","options":["$\\left(-\\frac{13}{5}, \\frac{23}{5}, 0\\right)$","$\\left(\\frac{13}{5}, \\frac{23}{5}, 0\\right)$","$\\left(\\frac{13}{5},-\\frac{23}{5}, 0\\right)$","$\\left(-\\frac{13}{5},-\\frac{23}{5}, 0\\right)$"],"imageUrl":null,"correctIndex":1,"set":5}',
+'6172edb1-a560-41f4-9709-9817f1375fd9',
+'{"text":"Let $A(1,1),\\;B(-4,3),\\;C(-2,-5)$ be vertices of a triangle $ABC$, $P$ be a point on side $BC$, and $\\Delta_{1}$ and $\\Delta_{2}$ be the areas of triangles $APB$ and $ABC$, respectively. If $\\Delta_{1}:\\Delta_{2}=4:7$, then the area enclosed by the lines $AP$, $AC$ and the $x$-axis is","type":"mcq","options":["$\\dfrac{1}{4}$","$\\dfrac{3}{4}$","$\\dfrac{1}{2}$","$1$"],"imageUrl":null,"correctIndex":2,"set":5}',
 10,
 NOW(),
 3,
 5
 ),
 (
-'73ec0baf-70d5-4fb4-b428-3d6943b7fc29',
-'{"text":"The equation of the line, through $A(1,2,3)$ and perpendicular to the vectors $2 \\hat{i}+\\hat{j}-\\hat{k}$ and $\\hat{i}+3 \\hat{j}+2 \\hat{k}$ is[MHT-CET 2024]","type":"mcq","options":["$\\bar{r}=(\\hat{i}+2 \\hat{j}+3 \\hat{k})+\\lambda (\\hat{i}+\\hat{j}+\\hat{k})$","$\\bar{r}=(\\hat{i}+2 \\hat{j}+3 \\hat{k})+\\lambda (\\hat{i}-\\hat{j}-\\hat{k})$","$\\bar{r}=(\\hat{i}+2 \\hat{j}+3 \\hat{k})+\\lambda (\\hat{i}-\\hat{j}+\\hat{k})","$\\bar{r}=(\\hat{i}+2 \\hat{j}+3 \\hat{k})+\\lambda (\\hat{i}+\\hat{j}-\\hat{k})$"],"imageUrl":null,"correctIndex":2,"set":6}',
+'61a5d996-10f1-46d4-96b4-5150e5b320bc',
+'{"text":"Let $R$ be the point $(3,7)$ and let $P$ and $Q$ be two points on the line $x+y=5$ such that $\\triangle PQR$ is an equilateral triangle. Then the area of $\\triangle PQR$ is :","type":"mcq","options":["$\\dfrac{25\\sqrt{3}}{4}$","$\\dfrac{25\\sqrt{3}}{2}$","$\\dfrac{25}{\\sqrt{3}}$","$\\dfrac{25}{2\\sqrt{3}}$"],"imageUrl":null,"correctIndex":3,"set":6}',
 10,
 NOW(),
 3,
 6
 ),
 (
-'96d40f05-e45d-4211-8af2-3640983ccfaf',
-'{"text":"The equation of the line passing through the point $(3,1,2)$ and perpendicular to the lines $\\frac{x-1}{1}=\\frac{y-2}{2}=\\frac{z-3}{3}$ and $\\frac{x}{-3}=\\frac{y}{2}=\\frac{z}{5}$ is[MHT-CET 2024]","type":"mcq","options":["$\\frac{x+3}{2}=\\frac{y+1}{7}=\\frac{z+2}{4}$","$\\frac{x-3}{2}=\\frac{y-1}{5}=\\frac{z-2}{4}$","$\\frac{x-3}{-2}=\\frac{y-1}{7}=\\frac{z-2}{4}$","$\\frac{x-3}{2}=\\frac{y-1}{-7}=\\frac{z-2}{4}$"],"imageUrl":null,"correctIndex":3,"set":1}',
+'d4040041-8035-47bd-a740-42d8d2799dc5',
+'{"text":"Let $m_1, m_2$ be the slopes of two adjacent sides of a square of side $a$ such that $a^2 + 11a + 3\\left(m_1^2 + m_2^2\\right) = 220$. If one vertex of the square is $\\left(10(\\cos\\alpha - \\sin\\alpha),\\;10(\\sin\\alpha + \\cos\\alpha)\\right)$, where $\\alpha\\in\\left(0,\\frac{\\pi}{2}\\right)$ and the equation of one diagonal is $(\\cos\\alpha - \\sin\\alpha)x + (\\sin\\alpha + \\cos\\alpha)y = 10$, then $72(\\sin^4\\alpha + \\cos^4\\alpha) + a^2 - 3a + 13$ is equal to:","type":"mcq","options":["$119$","$128$","$145$","$155$"],"imageUrl":null,"correctIndex":1,"set":1}',
 10,
 NOW(),
 3,
 1
 ),
 (
-'8018a7a4-1449-4ad7-8310-8958f8cf67e5',
-'{"text":"If the line $\\frac{x-2}{3}=\\frac{y-1}{-5}=\\frac{z+2}{2}$ lies in the plane $x+3 y-\\alpha z+\\beta=0$, then $(\\alpha, \\beta)=$ [MHT-CET 2024]","type":"mcq","options":["$(-5,15)$","$(5,-15)$","$(-6,7)$","$(6,-7)$"],"imageUrl":null,"set":2}',
+'6a1acfed-a5fb-4b96-aa4d-7078f54855f5',
+'{"text":"The point $P(a,b)$ undergoes the following three transformations successively: (A) reflection about the line $y=x$. (B) translation through $2$ units along the positive direction of $x$-axis. (C) rotation through angle $\\frac{\\pi}{4}$ about the origin in the anti-clockwise direction. If the co-ordinates of the final position of the point $P$ are $\\left(-\\frac{1}{\\sqrt{2}},\\ \\frac{7}{\\sqrt{2}}\\right)$, then the value of $2a+b$ is equal to","type":"mcq","options":["$5$","$13$","$7$","$9$"],"imageUrl":null,"correctIndex":3,"set":2}',
 10,
 NOW(),
 3,
 2
 ),
 (
-'47db5ef6-9ba5-4899-a55f-6b05b97d100f',
-'{"text":"The equation of a line passing through the point $(2,-1,1)$ and parallel to the line joining the points $\\hat{i}+2 \\hat{j}+2 \\hat{k}$ and $-\\hat{i}+4 \\hat{j}+\\hat{k}$ is[MHT-CET 2024]","type":"mcq","options":["$\\bar{r}=(2 \\hat{i}-\\hat{j}+\\hat{k})+\\lambda (2 \\hat{i}-6 j-3 \\hat{k})$","$\\bar{r}=(2 \\hat{i}-\\hat{j}+\\hat{k})+\\lambda (2 \\hat{i}+6 \\hat{j}+3 \\hat{k})$","$\\bar{r}=(2 \\hat{i}-\\hat{j}+\\hat{k})+\\lambda (2 \\hat{i}-2 \\hat{j}-\\hat{k})$","(D) \\bar{r}=(2 \\hat{i}-\\hat{j}+\\hat{k})+\\lambda (-2 \\hat{i}+2 \\hat{j}-\\hat{k})"],"imageUrl":null,"set":3}',
+'3e45a893-7795-4733-924a-99f32e385bd1',
+'{"text":"For the four circles $M,N,O$ and $P$, following four equations are given : Circle $M$: $x^{2}+y^{2}=1$; Circle $N$: $x^{2}+y^{2}-2x=0$; Circle $O$: $x^{2}+y^{2}-2x-2y+1=0$; Circle $P$: $x^{2}+y^{2}-2y=0$. If the centre of circle $M$ is joined with centre of the circle $N$, further centre of circle $N$ is joined with centre of the circle $O$, centre of circle $O$ is joined with the centre of circle $P$ and lastly, centre of circle $P$ is joined with centre of circle $M$, then these lines form the sides of a","type":"mcq","options":["Rectangle","Square","Rhombus","Parallelogram"],"imageUrl":null,"correctIndex":1,"set":3}',
 10,
 NOW(),
 3,
 3
 ),
 (
-'3adb21c9-6e6a-45b6-a075-c9a553fef40b',
-'{"text":"Let $a, b \\in I R$. If the mirror image of the point $(a, 6,9)$ w.r.t. line $\\frac{x-3}{7}=\\frac{y-2}{5}=\\frac{z-1}{-9}$ is $(20, b,-a-9)$, then $|a+b|$ is equal to[MHT-CET 2024]","type":"mcq","options":["86","90","84","88"],"imageUrl":null,"set":4}',
+'81a26313-ba27-4e12-bfb4-c7b495aa2fa9',
+'{"text":"If two tangents drawn from a point $P$ to the parabola $y^2 = 16(x-3)$ are at right angles, then the locus of point $P$ is","type":"mcq","options":["$x + 4 = 0$","$x + 2 = 0$","$x + 3 = 0$","$x + 1 = 0$"],"imageUrl":null,"correctIndex":3,"set":4}',
 10,
 NOW(),
 3,
 4
 ),
 (
-'cf40b140-0c53-4123-b2a6-58fff54d98e9',
-'{"text":"The co-ordinates of the foot of the perpendicular from the point $(0,2,3)$ on the line $\\frac{x+3}{5}=\\frac{y+1}{2}=\\frac{z+4}{3}$ is[MHT-CET 2024]","type":"mcq","options":["$\\left(\\frac{48}{19}, \\frac{-23}{19}, \\frac{-13}{19}\\right)$","$\\left(\\frac{-48}{19}, \\frac{-23}{19}, \\frac{-13}{19}\\right)$","$\\left(\\frac{-48}{19}, \\frac{23}{19}, \\frac{-13}{19}\\right)$","$\\left(\\frac{48}{19}, \\frac{23}{19}, \\frac{-13}{19}\\right)$"],"imageUrl":null,"correctIndex":3,"set":5}',
+'0b3bcb76-4917-4eb9-bfec-944acb8ef6eb',
+'{"text":"The line $12x\\cos\\theta + 5y\\sin\\theta = 60$ is tangent to which of the following curves?","type":"mcq","options":["$144x^2 + 25y^2 = 3600$","$x^2 + y^2 = 60$","$x^2 + y^2 = 169$","$25x^2 + 12y^2 = 3600$"],"imageUrl":null,"correctIndex":0,"set":5}',
 10,
 NOW(),
 3,
 5
 ),
 (
-'9f32491d-b225-4f24-b39a-3103cea4b019',
-'{"text":"A line having direction ratios $1,-4,2$ intersects the lines $\\frac{x-7}{3}=\\frac{y-1}{-1}=\\frac{z+2}{1}$ and $\\frac{x}{2}=\\frac{y-7}{3}=\\frac{z}{1}$ at the points A and B resp., then co-ordinates of points $A$ and $B$ are[MHT-CET 2024]","type":"mcq","options":["$A(7,6,8), B(-3,-2,-6)$","$A(8,6,7), B(6,-2,-3)$","$A(8,6,7), B(6,2,3)$","$A(-8,6,-7), B(-6,-2,-3)$"],"imageUrl":null,"correctIndex":3,"set":6}',
+'3b8702c4-e4bf-4e85-a7c8-4161eac05882',
+'{"text":"If the length of the latus rectum of a parabola, whose focus is $(a,a)$ and the tangent at its vertex is $x+y=a$, is $16$, then $|a|$ is equal to","type":"mcq","options":["$2\\sqrt{2}$","$2\\sqrt{3}$","$4\\sqrt{2}$","$4$"],"imageUrl":null,"correctIndex":2,"set":6}',
 10,
 NOW(),
 3,
 6
 ),
 (
-'95c637b4-7dc2-4bcc-be57-e281dd497ac5',
-'{"text":"If the lines $\\frac{x-1}{2}=\\frac{y-2}{3}=\\frac{z-1}{4}$ and $\\frac{x-3}{-1}=\\frac{y-k}{2}=\\frac{z}{1}$ intersect, then $k$ is equal to[MHT-CET 2024]","type":"mcq","options":["$\\frac{-6}{5}$","$\\frac{-5}{6}$","$\\frac{6}{5}$","$\\frac{5}{6}$"],"imageUrl":null,"correctIndex":1,"set":1}',
+'8ef66130-ef4f-4644-80f6-8e6378add975',
+'{"text":"If $y=m_{1}x+c_{1}$ and $y=m_{2}x+c_{2},\\;m_{1}\\neq m_{2}$ are two common tangents of the circle $x^{2}+y^{2}=2$ and the parabola $y^{2}=x$, then the value of $8|m_{1}m_{2}|$ is equal to","type":"mcq","options":["$3+4\\sqrt{2}$","$-5+6\\sqrt{2}$","$-4+3\\sqrt{2}$","$7+6\\sqrt{2}$"],"imageUrl":null,"correctIndex":2,"set":1}',
 10,
 NOW(),
 3,
 1
 ),
 (
-'31135237-7c73-4def-8fea-7db99a9764b8',
-'{"text":"The plane $2 x+3 y+4 z=1$ meets $X$-axis in $A$, $Y$-axis in $B$ and $Z$-axis in $C$. Then the centroid of $\\triangle A B C$ is[MHT-CET 2024]","type":"mcq","options":["$\\left(\\frac{1}{6}, \\frac{1}{9}, \\frac{1}{12}\\right)$","$(2,3,4)$","$\\left(\\frac{1}{2}, \\frac{1}{3}, \\frac{1}{4}\\right)$","$\\left(\\frac{3}{2}, \\frac{3}{3}, \\frac{3}{4}\\right)$"],"imageUrl":null,"correctIndex":0,"set":2}',
+'f29cc727-498a-4ffd-9770-f06977244d66',
+'{"text":"Let a triangle be bounded by the lines $L_1:\\;2x+5y=10$, $L_2:\\;-4x+3y=12$ and the line $L_3$, which passes through the point $P(2,3)$, intersects $L_2$ at $A$ and $L_1$ at $B$. If the point $P$ divides the line-segment $AB$, internally in the ratio $1:3$, then the area of the triangle is equal to:","type":"mcq","options":["$\\dfrac{110}{13}$","$\\dfrac{132}{13}$","$\\dfrac{142}{13}$","$\\dfrac{151}{13}$"],"imageUrl":null,"correctIndex":1,"set":2}',
 10,
 NOW(),
 3,
 2
 ),
 (
-'3763400c-619e-49b5-b95e-84817358e315',
-'{"text":"The equation of the plane, passing through the point $(-1,2,-3)$ and parallel to the lines $\\frac{x-1}{3}=\\frac{y-2}{2}=\\frac{z}{-4}$ and $\\frac{x}{2}=\\frac{y-1}{-3}=\\frac{z-2}{2}$ is[MHT-CET 2024]","type":"mcq","options":["$8 x+14 y-13 z-59=0$","$8 x-14 y-13 z-3=0$","$8 x+14 y+13 z+19=0$","$$8 x-14 y+13 z+75=0 $$"],"imageUrl":null,"correctIndex":2,"set":3}',
+'f2f59993-05d7-43b6-a6ae-58834bb29474',
+'{"text":"The distance between the two points $A$ and $A''$ which lie on $y=2$ such that both the line segments $AB$ and $A''B$ (where $B$ is the point $(2,3)$) subtend angle $\\dfrac{\\pi}{4}$ at the origin, is equal to","type":"mcq","options":["$10$","$\\dfrac{48}{5}$","$\\dfrac{52}{5}$","$3$"],"imageUrl":null,"correctIndex":2,"set":3}',
 10,
 NOW(),
 3,
 3
 ),
 (
-'6592a38f-775c-4dcf-998f-ab21302bb05d',
-'{"text":"The Cartesian equation of the plane, passing through the points $(3,1,1),(1,2,3)$ and $(-1,4,2)$ is[MHT-CET 2024]","type":"mcq","options":["$5 x+6 y+2 z-23=0$","$-5 x+6 y+2 z+23=0$","$5 x+6 y-2 z-23=0$","$5 x-6 y+2 z-23$"],"imageUrl":null,"correctIndex":0,"set":4}',
+'6afb22df-d50d-4848-b6a4-6f76f71aeef5',
+'{"text":"The distance of the origin from the centroid of the triangle whose two sides have the equations $x-2y+1=0$ and $2x-y-1=0$ and whose orthocenter is $\\left(\\tfrac{7}{3},\\tfrac{7}{3}\\right)$ is :","type":"mcq","options":["$\\sqrt{2}$","$2$","$2\\sqrt{2}$","$4$"],"imageUrl":null,"correctIndex":2,"set":4}',
 10,
 NOW(),
 3,
 4
+),
+(
+'b9b98fe1-2177-4538-8cdb-2264ccf79957',
+'{"text":"Let $L$ be the tangent line to the parabola $y^2=4x-20$ at $(6,2)$. If $L$ is also a tangent to the ellipse $\\dfrac{x^2}{2}+\\dfrac{y^2}{b}=1$, then the value of $b$ is equal to","type":"mcq","options":["$14$","$20$","$16$","$11$"],"imageUrl":null,"correctIndex":0,"set":5}',
+10,
+NOW(),
+3,
+5
+),
+(
+'92845fa0-abd5-41be-bb33-04e51980b073',
+'{"text":"Let $ABC$ be a triangle with $A(-3,1)$ and $\\angle ACB=\\theta,\\; 0<\\theta<\\pi/2$. If the equation of the median through $B$ is $2x+y-3=0$ and the equation of angle bisector of $C$ is $7x-4y-1=0$, then $\\tan\\theta$ is equal to","type":"mcq","options":["$\\dfrac{3}{4}$","$\\dfrac{4}{3}$","$2$","$\\dfrac{1}{2}$"],"imageUrl":null,"correctIndex":1,"set":6}',
+10,
+NOW(),
+3,
+6
+),
+(
+'b04dd20d-42b3-4fce-81d4-b291f2f1b026',
+'{"text":"Let $A$ be a fixed point $(0,6)$ and $B$ be a moving point $(2t,0)$. Let $M$ be the mid-point of $AB$ and the perpendicular bisector of $AB$ meets the $y$-axis at $C$. The locus of the mid-point $P$ of $MC$ is","type":"mcq","options":["$3x^{2}+2y-6=0$","$2x^{2}-3y+9=0$","$3x^{2}-2y-6=0$","$2x^{2}+3y-9=0$"],"imageUrl":null,"correctIndex":3,"set":1}',
+10,
+NOW(),
+3,
+1
 );

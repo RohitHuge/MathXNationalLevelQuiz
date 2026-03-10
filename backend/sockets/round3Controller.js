@@ -247,6 +247,19 @@ export const setupRound3Sockets = (io, socket) => {
         }
     });
 
+    // Admin updates team names
+    socket.on('admin:round3:update_team_names', (teamNames) => {
+        // teamNames is expected to be an object: { 1: "Name 1", 2: "Name 2", ... }
+        Object.entries(teamNames).forEach(([id, name]) => {
+            const team = gameState.teams.find(t => t.id === parseInt(id, 10));
+            if (team) {
+                team.name = name;
+            }
+        });
+        io.emit('server:round3:state_update', gameState);
+        console.log('[Round 3] Team names updated by admin');
+    });
+
     // --------------------------------------------------------
     // SUB-ROUND 5: RAPID FIRE
     // --------------------------------------------------------

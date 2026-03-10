@@ -6,8 +6,8 @@ import { useState, useEffect, useCallback } from 'react';
  * @param {Function} onSubmit - Callback to trigger submission on violation limit
  * @param {number} maxWarnings - Number of warnings before auto-submit (default 2 warnings, submit on 3rd violation)
  */
-export function useFullScreenEnforcement(isTesting, onSubmit, maxWarnings = 2) {
-    const [isFullScreen, setIsFullScreen] = useState(true); // Assume true initially or when checking
+export function useFullScreenEnforcement(isTesting, onSubmit, onViolation, maxWarnings = 2) {
+    const [isFullScreen, setIsFullScreen] = useState(true);
     const [warnings, setWarnings] = useState(0);
     const [showWarningModal, setShowWarningModal] = useState(false);
 
@@ -21,19 +21,25 @@ export function useFullScreenEnforcement(isTesting, onSubmit, maxWarnings = 2) {
         }
     }, []);
 
-    const handleViolation = useCallback(() => {
+    const handleViolation = useCallback((type = 'fullscreen') => {
         setWarnings(prev => {
             const newCount = prev + 1;
+
+            // Notify parent component about the violation
+            if (onViolation) {
+                onViolation({ type, currentWarning: newCount, isLast: newCount > maxWarnings });
+            }
+
             if (newCount > maxWarnings) {
                 // Limit reached, trigger submit
                 onSubmit();
-                return prev; // Keep at max to avoid repeated triggers if logic allows
+                return prev;
             } else {
                 setShowWarningModal(true);
                 return newCount;
             }
         });
-    }, [maxWarnings, onSubmit]);
+    }, [maxWarnings, onSubmit, onViolation]);
 
     useEffect(() => {
         if (!isTesting) return;
@@ -42,7 +48,13 @@ export function useFullScreenEnforcement(isTesting, onSubmit, maxWarnings = 2) {
             const isFull = !!document.fullscreenElement;
             setIsFullScreen(isFull);
             if (!isFull) {
-                handleViolation();
+                handleViolation('fullscreen');
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                handleViolation('tab-switch');
             }
         };
 
@@ -53,12 +65,14 @@ export function useFullScreenEnforcement(isTesting, onSubmit, maxWarnings = 2) {
         document.addEventListener('mozfullscreenchange', handleFullScreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
         document.addEventListener('msfullscreenchange', handleFullScreenChange);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             document.removeEventListener('fullscreenchange', handleFullScreenChange);
             document.removeEventListener('mozfullscreenchange', handleFullScreenChange);
             document.removeEventListener('webkitfullscreenchange', handleFullScreenChange);
             document.removeEventListener('msfullscreenchange', handleFullScreenChange);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [isTesting, handleViolation, enterFullScreen]);
 

@@ -6,7 +6,9 @@ import 'katex/dist/katex.min.css';
 import Latex from 'react-latex-next';
 import { useSocket, SocketProvider } from '../SocketContext';
 
-const ClientViewInner = () => {
+import { useFullScreenEnforcement } from '../hooks/useFullScreenEnforcement';
+
+const ClientViewInner = ({ user }) => {
     const { socket, isConnected } = useSocket();
     const [numericAnswer, setNumericAnswer] = useState('');
     const [isLocked, setIsLocked] = useState(false);
@@ -19,6 +21,34 @@ const ClientViewInner = () => {
     const [feedbackMsg, setFeedbackMsg] = useState('');
     const [winnerDetails, setWinnerDetails] = useState(null);
     const [liveAttempts, setLiveAttempts] = useState([]);
+
+    // Anti-Cheat implementation
+    const {
+        warnings,
+        showWarningModal,
+        reEnterFullScreen,
+        remainingWarnings
+    } = useFullScreenEnforcement(
+        !!activeQuestion && !winnerDetails && !isLocked,
+        () => handleForceSubmit(),
+        (violation) => {
+            if (socket && isConnected && user) {
+                socket.emit('client:cheat_detected', {
+                    teamName: user.team_name || user.name || 'Unknown',
+                    type: violation.type,
+                    warningCount: violation.currentWarning
+                });
+            }
+        }
+    );
+
+    const handleForceSubmit = () => {
+        setIsLocked(true);
+        setFeedbackMsg('Access Revoked: Anti-cheat violation limit reached.');
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(err => console.error(err));
+        }
+    };
 
     useEffect(() => {
         if (!socket) return;
@@ -99,13 +129,39 @@ const ClientViewInner = () => {
                 questionId: activeQuestion.id,
                 numericAnswer: parseFloat(numericAnswer),
                 timeTaken: parseFloat(elapsed),
-                clientName: socket.clientName || undefined // Note: using default provided natively via Context wrapping
+                clientName: user?.team_name || user?.name || `Team-${socket.id.substring(0, 4)}`
             });
         }
     };
 
     return (
         <div className="min-h-screen bg-brand-dark text-white font-sans selection:bg-brand-purple relative overflow-hidden flex items-center justify-center p-4 sm:p-8 animate-in fly-in slide-in-from-bottom-5 duration-700">
+            {/* Warning Modal */}
+            {showWarningModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="bg-brand-dark border border-red-500 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
+                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Lock className="text-red-500" size={32} />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-2">Anti-Cheat Alert!</h3>
+                        <p className="text-gray-300 mb-6">
+                            You have violated the test rules (escaped full-screen or switched tabs).
+                            <br /><br />
+                            <span className="font-semibold text-red-500">
+                                Remaining Warnings: {remainingWarnings}
+                            </span>
+                            <br />
+                            <span className="text-xs text-gray-400">The round will be locked for you if warnings are depleted.</span>
+                        </p>
+                        <button
+                            onClick={reEnterFullScreen}
+                            className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all"
+                        >
+                            Return to Round
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-brand-cyan/5 rounded-full blur-[150px] pointer-events-none transform translate-x-1/3 -translate-y-1/3"></div>
             <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-brand-purple/5 rounded-full blur-[100px] pointer-events-none transform -translate-x-1/2 translate-y-1/2"></div>
@@ -144,7 +200,7 @@ const ClientViewInner = () => {
 
                         <div className="flex items-center gap-2 bg-brand-dark px-4 py-2 rounded-full border border-brand-purple">
                             <Timer className="text-brand-purple" size={18} />
-                            <span className="font-mono font-bold">{elapsed}s</span>
+                            <span className="font-mono font-bold text-xl">{elapsed}s</span>
                         </div>
                     </div>
 
@@ -165,17 +221,17 @@ const ClientViewInner = () => {
                     ) : (
                         <>
                             {winnerDetails ? (
-                                <div className="text-center py-10 animate-in zoom-in duration-700">
-                                    <div className="inline-block p-6 rounded-full bg-green-500/20 mb-6">
+                                <div className="text-center py-10 animate-in zoom-in duration-700 bg-green-500/5 rounded-2xl border border-green-500/10">
+                                    <div className="inline-block p-6 rounded-full bg-green-500/20 mb-6 flex-center">
                                         <Trophy className="text-green-400" size={64} />
                                     </div>
                                     <h2 className="text-5xl font-black text-white mb-4">ROUND OVER</h2>
                                     <p className="text-2xl text-gray-300 mb-8">
-                                        Team <span className="text-green-400 font-bold">{winnerDetails.winnerName}</span> won in {winnerDetails.timeTaken}s!
+                                        Team <span className="text-green-400 font-black">{winnerDetails.winnerName}</span> won in {winnerDetails.timeTaken}s!
                                     </p>
-                                    <div className="p-4 bg-brand-dark/50 rounded-xl border border-brand-panel-border inline-block">
-                                        <p className="text-sm text-gray-400 mb-1">Winning Answer</p>
-                                        <p className="text-4xl font-mono text-brand-cyan">{winnerDetails.winningAnswer}</p>
+                                    <div className="p-6 bg-brand-dark/80 rounded-2xl border border-green-500/30 inline-block shadow-lg shadow-green-500/10">
+                                        <p className="text-xs text-green-400/70 font-bold uppercase tracking-widest mb-2">Winning Answer</p>
+                                        <p className="text-5xl font-mono text-white font-black">{winnerDetails.winningAnswer}</p>
                                     </div>
                                 </div>
                             ) : (
@@ -254,10 +310,8 @@ const ClientViewInner = () => {
     );
 };
 
-export function FastFingersClient() {
+export function FastFingersClient({ user }) {
     return (
-        <SocketProvider isAdmin={false} clientName={`Team-${Math.floor(Math.random() * 1000)}`}>
-            <ClientViewInner />
-        </SocketProvider>
+        <ClientViewInner user={user} />
     );
 }

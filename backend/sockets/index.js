@@ -149,7 +149,7 @@ const setupSockets = (io) => {
                 const res = await pool.query(`
                     UPDATE public.live_state 
                     SET current_round = $1, current_stage = $2, timer_end = $3, updated_at = NOW()
-                    RETURNING current_round, current_stage, timer_end, NOW() as server_time
+                    RETURNING current_round, current_stage, timer_end, show_profile, NOW() as server_time
                 `, [round || 'A', stage, endTime || null]);
 
                 if (res.rows.length > 0) {
@@ -159,11 +159,54 @@ const setupSockets = (io) => {
                         round: updatedState.current_round,
                         stage: updatedState.current_stage,
                         timerEnd: updatedState.timer_end,
-                        serverTime: updatedState.server_time
+                        serverTime: updatedState.server_time,
+                        showProfile: updatedState.show_profile
                     });
                 }
             } catch (err) {
                 console.error('Error updating live_state:', err);
+            }
+        });
+
+        // Anti-Cheat Reporting
+        socket.on('client:cheat_detected', (data) => {
+            const { teamName, type, warningCount } = data;
+            const timestamp = new Date().toLocaleTimeString();
+            console.log(`[Anti-Cheat] Violation from ${teamName}: ${type} (Warning #${warningCount}) at ${timestamp}`);
+
+            // Broadcast to all admins
+            io.emit('server:cheat_alert', {
+                teamName,
+                type,
+                warningCount,
+                timestamp
+            });
+        });
+
+        // Toggle Profile Visibility on Dashboard
+        socket.on('admin:toggle_profile_visibility', async (data) => {
+            const { showProfile } = data;
+            console.log(`[Admin] Toggling Profile Visibility to: ${showProfile}`);
+
+            try {
+                const res = await pool.query(`
+                    UPDATE public.live_state 
+                    SET show_profile = $1, updated_at = NOW()
+                    RETURNING current_round, current_stage, timer_end, show_profile, NOW() as server_time
+                `, [showProfile]);
+
+                if (res.rows.length > 0) {
+                    const updatedState = res.rows[0];
+                    io.emit('server:sync_state', {
+                        round: updatedState.current_round,
+                        stage: updatedState.current_stage,
+                        timerEnd: updatedState.timer_end,
+                        serverTime: updatedState.server_time,
+                        showProfile: updatedState.show_profile
+                    });
+                }
+            } catch (err) {
+                console.error('Error toggling profile visibility:', err);
             }
         });
 
@@ -220,7 +263,7 @@ const setupSockets = (io) => {
         // Client requests current state (e.g. on page mount or refresh)
         socket.on('client:request_state', async () => {
             try {
-                const res = await pool.query('SELECT current_round, current_stage, timer_end, NOW() as server_time FROM public.live_state LIMIT 1');
+                const res = await pool.query('SELECT current_round, current_stage, timer_end, show_profile, NOW() as server_time FROM public.live_state LIMIT 1');
                 if (res.rows.length > 0) {
                     const { current_round, current_stage, timer_end, server_time } = res.rows[0];
                     // Send standard format ONLY to the requesting client
@@ -228,7 +271,8 @@ const setupSockets = (io) => {
                         round: current_round,
                         stage: current_stage,
                         timerEnd: timer_end,
-                        serverTime: server_time
+                        serverTime: server_time,
+                        showProfile: res.rows[0].show_profile
                     });
                 }
             } catch (err) {
