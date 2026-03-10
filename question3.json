@@ -1,0 +1,111 @@
+[{
+  "id": "27e6b42e-ab12-4dcc-b3d6-39875999dc3f",
+  "topic_id": "dad0fd45-da6e-4743-afbf-54be76ef508e",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": true,
+  "content": "{\"body\": {\"image\": \"https://ik.imagekit.io/projecttestseries/questions/6bac2632-74e6-4549-81f7-84c64e6de33d.png\", \"latex\": \"Four spheres each of mass $m$ form a square of side $d$ (as shown in figure). A fifth sphere of mass $M$ is situated at the centre of the square. The total gravitational potential energy of the system is\", \"has_image\": true}, \"meta\": {\"source\": {\"pdf_page\": 7, \"confidence\": 0.9, \"is_complete\": true}, \"question_code\": \"25-071\", \"question_serial\": 71}, \"answer\": {\"type\": \"mcq\", \"value\": \"A\"}, \"options\": [{\"id\": \"A\", \"latex\": \"$-\\\\dfrac{Gm}{d}\\\\left[(4+\\\\sqrt{2})m+4\\\\sqrt{2}\\\\,M\\\\right]$\"}, {\"id\": \"B\", \"latex\": \"$-\\\\dfrac{Gm}{d}\\\\left[(4+\\\\sqrt{2})M+4\\\\sqrt{2}\\\\,m\\\\right]$\"}, {\"id\": \"C\", \"latex\": \"$-\\\\dfrac{Gm}{d}\\\\left[3m^{2}+4\\\\sqrt{2}\\\\,M\\\\right]$\"}, {\"id\": \"D\", \"latex\": \"$-\\\\dfrac{Gm}{d}\\\\left[6m^{2}+4\\\\sqrt{2}\\\\,M\\\\right]$\"}], \"paper_id\": null, \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-15 12:56:27.801787+00",
+  "updated_at": "2026-01-15 12:56:27.801787+00",
+  "subject": "Physics",
+  "exam_code": "J"
+}, {
+  "id": "9f360944-c4df-4082-b1db-619e0300435d",
+  "topic_id": "dad0fd45-da6e-4743-afbf-54be76ef508e",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": true,
+  "content": "{\"body\": {\"image\": \"https://ik.imagekit.io/projecttestseries/questions/b7171c35-33d3-4210-b16c-4ab4ba59b2b2.png\", \"latex\": \"A solid sphere of radius $R$ gravitationally attracts a particle placed at $3R$ from its centre with a force $F_1$. Now a spherical cavity of radius $R/2$ is made in the sphere (as shown in figure) and the force becomes $F_2$. The value of $F_1:F_2$ is\", \"has_image\": true}, \"meta\": {\"source\": {\"pdf_page\": 9, \"confidence\": 0.9, \"is_complete\": true}, \"question_code\": \"25-095\", \"question_serial\": 95}, \"answer\": {\"type\": \"mcq\", \"value\": \"D\"}, \"options\": [{\"id\": \"A\", \"latex\": \"41:50\"}, {\"id\": \"B\", \"latex\": \"25:36\"}, {\"id\": \"C\", \"latex\": \"36:25\"}, {\"id\": \"D\", \"latex\": \"50:41\"}], \"paper_id\": null, \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-15 12:55:24.260659+00",
+  "updated_at": "2026-01-15 12:55:24.260659+00",
+  "subject": "Physics",
+  "exam_code": "J"
+}, {
+  "id": "b384286c-ff7a-4500-9f73-06c9f6c6c652",
+  "topic_id": "dad0fd45-da6e-4743-afbf-54be76ef508e",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": true,
+  "content": "{\"body\": {\"image\": \"https://ik.imagekit.io/projecttestseries/questions/bfacbd26-e8a3-45bd-92da-51d0bb752c67.png\", \"latex\": \"A person whose mass is $100\\\\ \\\\mathrm{kg}$ travels from Earth to Mars in a spaceship. Neglect all other objects in sky and take acceleration due to gravity on the surface of the Earth and Mars as $10\\\\ \\\\mathrm{m\\\\,s^{-2}}$ and $4\\\\ \\\\mathrm{m\\\\,s^{-2}}$ respectively. Identify from the below figures, the curve that fits best for the weight of the passenger as a function of time.\", \"has_image\": true}, \"meta\": {\"source\": {\"pdf_page\": 9, \"confidence\": 0.85, \"is_complete\": true}, \"question_code\": \"25-097\", \"question_serial\": 97}, \"answer\": {\"type\": \"mcq\", \"value\": \"C\"}, \"options\": [{\"id\": \"A\", \"latex\": \"(A)\"}, {\"id\": \"B\", \"latex\": \"(B)\"}, {\"id\": \"C\", \"latex\": \"(C)\"}, {\"id\": \"D\", \"latex\": \"(D)\"}], \"paper_id\": null, \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-15 12:55:24.260659+00",
+  "updated_at": "2026-01-15 12:55:24.260659+00",
+  "subject": "Physics",
+  "exam_code": "J"
+}, {
+  "id": "27be40a1-baa4-4e00-8b30-9b7b000342af",
+  "topic_id": "30366915-ea56-4017-8d8a-29f72abd2ba2",
+  "paper_id": "2025-2",
+  "difficulty": null,
+  "has_image": false,
+  "content": "{\"body\": {\"image\": null, \"latex\": \"From a group of $7$ batsmen and $6$ bowlers, $10$ players are to be chosen for a team, which should include at least $4$ batsmen and at least $4$ bowlers. One batsman and one bowler who are captain and vice-captain respectively of the team should be included. Then the total number of ways such a selection can be made, is\", \"has_image\": false}, \"meta\": {\"source\": {\"pdf_page\": 1, \"confidence\": 0.92, \"is_complete\": true}, \"question_code\": \"05-003\", \"question_serial\": 3}, \"answer\": {\"type\": \"mcq\", \"value\": \"B\"}, \"options\": [{\"id\": \"A\", \"latex\": \"$145$\"}, {\"id\": \"B\", \"latex\": \"$155$\"}, {\"id\": \"C\", \"latex\": \"$165$\"}, {\"id\": \"D\", \"latex\": \"$135$\"}], \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-12 11:27:47.59237+00",
+  "updated_at": "2026-01-12 11:27:47.59237+00",
+  "subject": "Mathematics",
+  "exam_code": "J"
+}, {
+  "id": "49c78ab8-7355-47af-a3cc-b6c210574a66",
+  "topic_id": "4f53338d-48b8-472b-90de-6bc06d143891",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": false,
+  "content": "{\"body\": {\"image\": null, \"latex\": \"A cyclist starts from the point $P$ of a circular ground of radius $2\\\\ \\\\mathrm{km}$ and travels along its circumference to the point $S$. The displacement of a cyclist is\", \"has_image\": false}, \"meta\": {\"source\": {\"pdf_page\": 2, \"confidence\": 0.97, \"is_complete\": true}, \"question_code\": \"21-012\", \"question_serial\": 12}, \"answer\": {\"type\": \"mcq\", \"value\": \"D\"}, \"options\": [{\"id\": \"A\", \"latex\": \"$6\\\\ \\\\mathrm{km}$\"}, {\"id\": \"B\", \"latex\": \"$4\\\\ \\\\mathrm{km}$\"}, {\"id\": \"C\", \"latex\": \"$8\\\\ \\\\mathrm{km}$\"}, {\"id\": \"D\", \"latex\": \"$\\\\sqrt{8}\\\\ \\\\mathrm{km}$\"}], \"paper_id\": \"2025-2\", \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-15 11:24:52.078745+00",
+  "updated_at": "2026-01-15 11:24:52.078745+00",
+  "subject": "Physics",
+  "exam_code": "J"
+}, {
+  "id": "e47f00bf-209b-4b11-93d1-b41a6a3af090",
+  "topic_id": "3caf02ec-fc91-450a-ad18-0c070b922fb5",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": false,
+  "content": "{\"body\": {\"image\": null, \"latex\": \"Let $f:(0,\\\\omega)\\\\to\\\\mathbb R$ be a function which is differentiable at all points of its domain and satisfies the condition $x^2 f'(x)=2x f(x)+3$, with $f(1)=4$. Then $2f(2)$ is equal to:\", \"has_image\": false}, \"meta\": {\"source\": {\"pdf_page\": 3, \"confidence\": 0.94, \"is_complete\": true}, \"question_code\": \"09-038\", \"question_serial\": 38}, \"answer\": {\"type\": \"mcq\", \"value\": \"D\"}, \"options\": [{\"id\": \"A\", \"latex\": \"$23$\"}, {\"id\": \"B\", \"latex\": \"$19$\"}, {\"id\": \"C\", \"latex\": \"$29$\"}, {\"id\": \"D\", \"latex\": \"$39$\"}], \"paper_id\": \"2025-1\", \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-16 14:52:52.605394+00",
+  "updated_at": "2026-01-16 14:52:52.605394+00",
+  "subject": "Mathematics",
+  "exam_code": "J"
+}, {
+  "id": "001f46d6-cb95-4830-a0e4-40e525a9a1c1",
+  "topic_id": "3caf02ec-fc91-450a-ad18-0c070b922fb5",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": false,
+  "content": "{\"body\": {\"image\": null, \"latex\": \"If $f(x)=\\\\displaystyle\\\\int \\\\frac{1}{4}(1+x^{1/4})\\\\,dx$, $f(0)=-6$, then $f(1)$ is equal to:\", \"has_image\": false}, \"meta\": {\"source\": {\"pdf_page\": 3, \"confidence\": 0.7, \"is_complete\": true}, \"question_code\": \"09-039\", \"question_serial\": 39}, \"answer\": {\"type\": \"mcq\", \"value\": \"B\"}, \"options\": [{\"id\": \"A\", \"latex\": \"$\\\\ln 2 + 2$\"}, {\"id\": \"B\", \"latex\": \"$4(\\\\ln 2 - 2)$\"}, {\"id\": \"C\", \"latex\": \"$4(\\\\ln 2 + 2)$\"}, {\"id\": \"D\", \"latex\": \"$2 - \\\\ln 2$\"}], \"paper_id\": \"2025-1\", \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-16 14:52:52.605394+00",
+  "updated_at": "2026-01-16 14:52:52.605394+00",
+  "subject": "Mathematics",
+  "exam_code": "J"
+}, {
+  "id": "0054279b-714c-497e-9bc6-46dc87c477be",
+  "topic_id": "3caf02ec-fc91-450a-ad18-0c070b922fb5",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": false,
+  "content": "{\"body\": {\"image\": null, \"latex\": \"The integral $\\\\displaystyle\\\\int_{-1}^{3/2}\\\\left|\\\\frac{\\\\pi}{2}x\\\\sin(\\\\pi x)\\\\right|\\\\,dx$ is equal to:\", \"has_image\": false}, \"meta\": {\"source\": {\"pdf_page\": 2, \"confidence\": 0.93, \"is_complete\": true}, \"question_code\": \"09-026\", \"question_serial\": 26}, \"answer\": {\"type\": \"mcq\", \"value\": \"C\"}, \"options\": [{\"id\": \"A\", \"latex\": \"$3+2\\\\pi$\"}, {\"id\": \"B\", \"latex\": \"$4+\\\\pi$\"}, {\"id\": \"C\", \"latex\": \"$1+3\\\\pi$\"}, {\"id\": \"D\", \"latex\": \"$2+3\\\\pi$\"}], \"paper_id\": \"2025-1\", \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-16 14:52:52.605394+00",
+  "updated_at": "2026-01-16 14:52:52.605394+00",
+  "subject": "Mathematics",
+  "exam_code": "J"
+}, {
+  "id": "767b72a8-96cb-4c8a-b55b-d1431dd5eed5",
+  "topic_id": "1709137f-5b13-4693-9221-3c2e1a69c408",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": false,
+  "content": "{\"body\": {\"image\": null, \"latex\": \"The equation of a common tangent to the parabolas $y=x^{2}$ and $y=-(x-2)^{2}$ is\", \"has_image\": false}, \"meta\": {\"source\": {\"pdf_page\": 18, \"confidence\": 0.95, \"is_complete\": true}, \"question_code\": \"11-245\", \"question_serial\": 245}, \"answer\": {\"type\": \"mcq\", \"value\": \"b\"}, \"options\": [{\"id\": \"A\", \"latex\": \"$y=4(x-2)$\"}, {\"id\": \"B\", \"latex\": \"$y=4(x-1)$\"}, {\"id\": \"C\", \"latex\": \"$y=4(x+1)$\"}, {\"id\": \"D\", \"latex\": \"$y=4(x+2)$\"}], \"paper_id\": \"2022-2\", \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-16 11:53:20.064787+00",
+  "updated_at": "2026-01-16 11:53:20.064787+00",
+  "subject": "Mathematics",
+  "exam_code": "J"
+}, {
+  "id": "aa0e59f1-a05b-41c2-a3c7-c2c8581cda74",
+  "topic_id": "1709137f-5b13-4693-9221-3c2e1a69c408",
+  "paper_id": null,
+  "difficulty": null,
+  "has_image": false,
+  "content": "{\"body\": {\"image\": null, \"latex\": \"Let an ellipse $E: \\\\dfrac{x^2}{a^2}+\\\\dfrac{y^2}{b^2}=1$, $a^2>b^2$, passes through $(\\\\sqrt{\\\\tfrac{3}{2}},1)$ and has eccentricity $\\\\dfrac{1}{\\\\sqrt{3}}$. If a circle, centered at focus $F(\\\\alpha,0)$, $\\\\alpha>0$, of $E$ and radius $\\\\dfrac{2}{\\\\sqrt{3}}$, intersects $E$ at two points $P$ and $Q$, then $PQ^2$ is equal to\", \"has_image\": false}, \"meta\": {\"source\": {\"pdf_page\": 26, \"confidence\": 0.92, \"is_complete\": true}, \"question_code\": \"11-350\", \"question_serial\": 350}, \"answer\": {\"type\": \"mcq\", \"value\": \"b\"}, \"options\": [{\"id\": \"A\", \"latex\": \"$\\\\dfrac{4}{3}$\"}, {\"id\": \"B\", \"latex\": \"$\\\\dfrac{16}{3}$\"}, {\"id\": \"C\", \"latex\": \"$\\\\dfrac{8}{3}$\"}, {\"id\": \"D\", \"latex\": \"$3$\"}], \"paper_id\": \"2021-2\", \"solution\": {\"latex\": null, \"steps\": null}}",
+  "created_at": "2026-01-16 11:59:32.057531+00",
+  "updated_at": "2026-01-16 11:59:32.057531+00",
+  "subject": "Mathematics",
+  "exam_code": "J"
+}]

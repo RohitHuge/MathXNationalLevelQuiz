@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { setupRound3Sockets, startRound3Timer } from './round3Controller.js';
 
 let activeRound2Question = null;
 let round2Leaderboard = [];
@@ -238,8 +239,8 @@ const setupSockets = (io) => {
         // Client requests all questions upon entering Quiz Arena
         socket.on('client:fetch_all_questions', async () => {
             try {
-                // Fetch active questions explicitly referencing public.questions
-                const res = await pool.query('SELECT id, content, marks FROM public.questions ORDER BY created_at ASC');
+                // Fetch active questions explicitly referencing public.questions and only round 1
+                const res = await pool.query('SELECT id, content, marks FROM public.questions WHERE round = 1 ORDER BY created_at ASC');
 
                 // Sanitize: remove correctIndex so clients can't cheat by reading the network tab payload
                 const sanitizedQuestions = res.rows.map(row => {
@@ -258,9 +259,107 @@ const setupSockets = (io) => {
             }
         });
 
-        // Client submits the entire exam mass payload
+        // --- INCREMENTAL SAVE & NEXT ARCHITECTURE ---
+
+        // 1. Initialize Session
+        socket.on('client:start_quiz', async ({ email }) => {
+            if (!email) return;
+            try {
+                const userRes = await pool.query('SELECT id FROM public.users WHERE email = $1 LIMIT 1', [email]);
+                if (userRes.rows.length === 0) return;
+                const userId = userRes.rows[0].id;
+
+                // Check existing session status
+                const sessionRes = await pool.query(`SELECT status FROM public.sessions WHERE user_id = $1 ORDER BY started_at DESC LIMIT 1`, [userId]);
+
+                let currentStatus = 'new';
+                if (sessionRes.rows.length > 0) {
+                    currentStatus = sessionRes.rows[0].status;
+                }
+
+                if (currentStatus === 'submitted') {
+                    // Fetch attempted count
+                    const responseCountRes = await pool.query(`SELECT COUNT(*) as attempted FROM public.responses WHERE user_id = $1`, [userId]);
+                    const attemptedCount = parseInt(responseCountRes.rows[0].attempted, 10);
+
+                    socket.emit('server:session_status', { status: 'submitted', attemptedCount });
+                    return;
+                }
+
+                // Create or return active session
+                await pool.query(`
+                    INSERT INTO public.sessions (user_id)
+                    SELECT $1::varchar
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM public.sessions WHERE user_id = $1 AND status = 'active'
+                    )
+                `, [userId]);
+
+                socket.emit('server:session_status', { status: 'active' });
+                console.log(`[Quiz Session] Started for user: ${userId}`);
+            } catch (err) {
+                console.error('Error starting quiz session:', err);
+            }
+        });
+
+        // 2. Load existing answers for returning users
+        socket.on('client:load_answers', async ({ email }) => {
+            if (!email) return;
+            try {
+                const userRes = await pool.query('SELECT id FROM public.users WHERE email = $1 LIMIT 1', [email]);
+                if (userRes.rows.length === 0) return;
+                const userId = userRes.rows[0].id;
+
+                const res = await pool.query('SELECT question_id, selected_option FROM public.responses WHERE user_id = $1', [userId]);
+                const loadedAnswers = {};
+                res.rows.forEach(row => {
+                    loadedAnswers[row.question_id] = parseInt(row.selected_option, 10);
+                });
+
+                // Emit specifically to the requesting socket
+                socket.emit('server:answers_loaded', loadedAnswers);
+            } catch (err) {
+                console.error('Error loading answers:', err);
+            }
+        });
+
+        // 3. Incrementally save an answer
+        socket.on('client:save_answer', async ({ email, questionId, selectedOption }) => {
+            if (!email || !questionId || selectedOption === undefined) return;
+            try {
+                const userRes = await pool.query('SELECT id FROM public.users WHERE email = $1 LIMIT 1', [email]);
+                if (userRes.rows.length === 0) return;
+                const userId = userRes.rows[0].id;
+
+                // Evaluate correctness vs the server truth
+                const qRes = await pool.query('SELECT content FROM public.questions WHERE id = $1 LIMIT 1', [questionId]);
+                if (qRes.rows.length === 0) return;
+
+                const truthIndex = qRes.rows[0].content?.correctIndex;
+                const isCorrect = (parseInt(selectedOption, 10) === truthIndex);
+
+                // UPSERT answer into public.responses
+                await pool.query(`
+                    INSERT INTO public.responses (user_id, question_id, selected_option, is_correct, answered_at)
+                    VALUES ($1, $2, $3, $4, NOW())
+                    ON CONFLICT (user_id, question_id) 
+                    DO UPDATE SET 
+                        selected_option = EXCLUDED.selected_option,
+                        is_correct = EXCLUDED.is_correct,
+                        answered_at = NOW()
+                `, [userId, questionId, selectedOption.toString(), isCorrect]);
+
+                // Tell the client that the save was successful so it can reload truth
+                socket.emit('server:answer_saved', { questionId });
+
+            } catch (err) {
+                console.error('[Incremental Save] Error:', err);
+            }
+        });
+
+        // 4. Submit Exam (Calculated server-side from incremental saves)
         socket.on('client:submit_exam', async (data) => {
-            const { email, answers } = data; // answers map: { question_id: selected_option_index }
+            const { email } = data; // No bulk answers payload anymore
 
             if (!email) {
                 console.error('Submit Exam failed: Missing User Email');
@@ -268,59 +367,33 @@ const setupSockets = (io) => {
             }
 
             try {
-                console.log(`[Grading] Evaluating exam for user email: ${email}`);
+                console.log(`[Grading] Submitting exam for user email: ${email}`);
 
-                // 1. Resolve Postgres UUID from the synced email
                 const userRes = await pool.query('SELECT id FROM public.users WHERE email = $1 LIMIT 1', [email]);
                 if (userRes.rows.length === 0) {
-                    console.error(`User email ${email} not found in Postgres. Was the sync script run?`);
-                    return; // Abort if user doesn't exist in the SQL database
+                    console.error(`User email ${email} not found in Postgres.`);
+                    return;
                 }
                 const userId = userRes.rows[0].id;
-                console.log(`[Grading] Resolved Postgres UUID: ${userId}`);
 
-                // Fetch all answers mapped
-                const res = await pool.query('SELECT id, content, marks FROM public.questions');
-                const truthMap = res.rows.reduce((acc, row) => {
-                    acc[row.id] = {
-                        correctIndex: row.content?.correctIndex,
-                        marks: row.marks || 10 // default 10 points if undefined
-                    };
-                    return acc;
-                }, {});
+                // Mark session as submitted
+                await pool.query(`
+                    UPDATE public.sessions 
+                    SET submitted_at = NOW(), status = 'submitted' 
+                    WHERE user_id = $1 AND status = 'active'
+                `, [userId]);
 
-                let totalScoreEarned = 0;
-                const detailedScoreLog = {};
-                const responsePromises = [];
+                // Calculate final score purely from public.responses joined with public.questions
+                const scoreRes = await pool.query(`
+                    SELECT COALESCE(SUM(q.marks), 0) AS total_score
+                    FROM public.responses r
+                    JOIN public.questions q ON r.question_id = q.id
+                    WHERE r.user_id = $1 AND r.is_correct = true
+                `, [userId]);
 
-                // Score individual questions against truth
-                for (const [qId, selectedIndex] of Object.entries(answers)) {
-                    const truth = truthMap[qId];
-                    if (!truth) continue; // safety against deleted questions
+                const totalScoreEarned = parseInt(scoreRes.rows[0].total_score, 10);
 
-                    // Guard against null/invalid indices if it's an integer type (though our frontend only sends MCQ right now)
-                    const isCorrect = (selectedIndex === truth.correctIndex);
-
-                    if (isCorrect) {
-                        totalScoreEarned += truth.marks;
-                        detailedScoreLog[qId] = truth.marks; // Log points gained
-                    } else {
-                        detailedScoreLog[qId] = 0; // Missed
-                    }
-
-                    // Prepare individual response rows for public.responses
-                    const insertResponse = pool.query(`
-                        INSERT INTO public.responses (user_id, question_id, selected_option, is_correct, answered_at)
-                        VALUES ($1, $2, $3, $4, NOW())
-                    `, [userId, qId, selectedIndex.toString(), isCorrect]);
-
-                    responsePromises.push(insertResponse);
-                }
-
-                // Await writing all response logs simultaneously
-                await Promise.all(responsePromises);
-
-                // Log final aggregated score to public.results
+                // Insert final score record
                 await pool.query(`
                     INSERT INTO public.results (user_id, total_score, submitted_at)
                     VALUES ($1, $2, NOW())
@@ -328,18 +401,24 @@ const setupSockets = (io) => {
 
                 console.log(`[Grading Complete] SQL User UUID: ${userId} | Score: ${totalScoreEarned}`);
 
-                // Broadcast leaderboard refresh to Admin Portal dynamically
+                // Broadcast leaderboard refresh
                 io.emit('leaderboard:update');
 
             } catch (err) {
-                console.error('Error grading exam:', err);
+                console.error('Error submitting exam:', err);
             }
         });
+
+        // --- ROUND 3 INITIALIZATION ---
+        setupRound3Sockets(io, socket);
 
         socket.on('disconnect', () => {
             console.log(`[Socket] User disconnected: ${socket.id}`);
         });
     });
+
+    // Start global Round 3 timer
+    startRound3Timer(io);
 };
 
 export default setupSockets;

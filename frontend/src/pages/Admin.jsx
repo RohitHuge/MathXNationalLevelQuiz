@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Send, Trophy, Clock, Users, EyeOff, CheckCircle, Zap } from 'lucide-react';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
+import Round3Admin from '../round3/Round3Admin';
 
 export default function Admin() {
     const { socket, isConnected } = useSocket();
@@ -243,6 +244,11 @@ export default function Admin() {
                     className={`flex-1 py-4 text-center text-lg font-bold transition-all ${activeTab === 'B' ? 'bg-[var(--color-neon-cyan)]/20 text-white border-b-2 border-[var(--color-neon-cyan)]' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>
                     Round 2 (FastFingers)
                 </button>
+                <button
+                    onClick={() => setActiveTab('C')}
+                    className={`flex-1 py-4 text-center text-lg font-bold transition-all ${activeTab === 'C' ? 'bg-[var(--color-neon-purple)]/20 text-white border-b-2 border-[var(--color-neon-purple)]' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>
+                    Round 3 (Buzzer)
+                </button>
             </div>
 
             {/* Master Kill switch ALWAYS available */}
@@ -429,7 +435,7 @@ export default function Admin() {
                         </div>
                     </ThemeCard>
                 </div>
-            ) : (
+            ) : activeTab === 'B' ? (
                 <div className="space-y-8 animate-in fade-in duration-500">
 
                     {/* Full Width Stage Control */}
@@ -576,7 +582,9 @@ export default function Admin() {
                         </div>
                     </div>
                 </div>
-            )}
+            ) : activeTab === 'C' ? (
+                <Round3Admin />
+            ) : null}
         </div>
     );
 }

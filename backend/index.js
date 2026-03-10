@@ -12,12 +12,24 @@ import setupSockets from './sockets/index.js';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST"]
+}));
 app.use(express.json()); // Allow parsing JSON incoming HTTP requests
 
 // Root API Health Check
 app.get('/', (req, res) => {
     res.json({ status: "MathX Backend is active and streaming!" });
+});
+
+app.get('/health', (req, res) => {
+    console.log(`[Network Test] Received a health check ping from ${req.ip}`);
+    res.json({
+        status: "success",
+        message: "MathX Backend is perfectly reachable on the local network!",
+        timestamp: new Date().toISOString()
+    });
 });
 
 // REST API Endpoints
@@ -39,6 +51,6 @@ setupSockets(io);
 
 // Boot Application
 const PORT = 3001;
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
     console.log(`MathX Control Backend running on port ${PORT}`);
 });
