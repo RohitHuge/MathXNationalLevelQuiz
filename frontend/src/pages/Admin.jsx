@@ -4,10 +4,10 @@ import { ThemeButton } from '../components/ui/ThemeButton';
 import { useSocket } from '../SocketContext';
 import { getCurrentUser } from '../lib/appwrite';
 import { useNavigate } from 'react-router-dom';
-import { Send, Trophy, Clock, Users, EyeOff, CheckCircle, Lock } from 'lucide-react';
+import { Send, Trophy, Clock, Users, EyeOff, CheckCircle, Lock, Table2, BarChart3, Percent } from 'lucide-react';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
-import Round3Admin from '../round3/Round3Admin';
+import Round3Admin, { Round3HardwareCard } from '../round3/Round3Admin';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -17,6 +17,7 @@ const tabClass = (active, tone) =>
   }`;
 
 const actionCardClass = 'relative flex h-full min-h-0 flex-col overflow-hidden p-4';
+const sideUtilityCardClass = 'relative flex min-h-0 flex-col overflow-hidden p-4';
 
 export default function Admin() {
   const { socket, isConnected } = useSocket();
@@ -35,6 +36,7 @@ export default function Admin() {
   const [winnerFound, setWinnerFound] = useState(false);
   const [showProfile, setShowProfile] = useState(true);
   const [cheatAlerts, setCheatAlerts] = useState([]);
+  const [pointTableState, setPointTableState] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,9 +62,11 @@ export default function Admin() {
         setShowProfile(state.showProfile);
       }
     });
+    socket.on('server:pointtable:state_update', setPointTableState);
 
     socket.emit('client:request_state');
     socket.emit('admin:round2:fetch_questions');
+    socket.emit('admin:pointtable:request_state');
 
     socket.on('server:round2:questions_list', (data) => {
       setQuestions(data);
@@ -91,6 +95,7 @@ export default function Admin() {
       socket.off('server:round2:winner_found');
       socket.off('server:sync_state');
       socket.off('server:cheat_alert');
+      socket.off('server:pointtable:state_update');
     };
   }, [socket]);
 
@@ -219,6 +224,92 @@ export default function Admin() {
     socket.emit('admin:toggle_profile_visibility', { showProfile: !showProfile });
   };
 
+  const handlePointTableDisplay = (mode) => {
+    if (!socket || !isConnected) return;
+    socket.emit('admin:pointtable:set_display_mode', { mode });
+    socket.emit('admin:change_stage', { round: 'P', stage: 1 });
+  };
+
+  const emergencyResetCard = (
+    <ThemeCard className={`${activeTab === 'C' ? sideUtilityCardClass : actionCardClass} border-blue-500/20 hover:border-blue-500/50`}>
+      <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-blue-500/10 blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+      <div className="relative z-10 flex w-full items-center justify-between gap-3">
+        <h3 className="text-sm font-black text-white">Emergency Reset</h3>
+        <ThemeButton variant="secondary" className="shrink-0 border-blue-500/30 px-3 py-2 text-sm text-blue-400 hover:bg-blue-500/10 hover:text-blue-300" onClick={() => handleStageChange('A', 0)} disabled={!isConnected}>
+          Return All
+        </ThemeButton>
+      </div>
+    </ThemeCard>
+  );
+
+  const profileVisibilityCard = (
+    <ThemeCard className={`${activeTab === 'C' ? sideUtilityCardClass : actionCardClass} border-purple-500/20 hover:border-purple-500/50`}>
+      <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-purple-500/10 blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+      <div className="relative z-10 flex w-full items-center justify-between gap-3">
+        <h3 className="text-sm font-black text-white">Profile Visibility</h3>
+        <ThemeButton variant={showProfile ? 'primary' : 'secondary'} className={`flex shrink-0 items-center gap-2 px-3 py-2 text-sm ${showProfile ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-red-500/20 border-red-500/50 text-red-400'}`} onClick={handleVisibilityToggle} disabled={!isConnected}>
+          {showProfile ? <CheckCircle size={16} /> : <EyeOff size={16} />}
+          {showProfile ? 'Showing' : 'Hidden'}
+        </ThemeButton>
+      </div>
+    </ThemeCard>
+  );
+
+  const pointTableCard = (
+    <ThemeCard className={`${activeTab === 'C' ? sideUtilityCardClass : actionCardClass} border-cyan-500/20 hover:border-cyan-500/50 ${activeTab === 'C' ? '' : 'xl:col-span-2'}`}>
+      <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-cyan-500/10 blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+      <div className="relative z-10 flex flex-col gap-4">
+        <div className="flex-1">
+          <h3 className="mb-1 text-base font-black text-white">Point Table Broadcast</h3>
+          <p className="text-xs text-[var(--color-gray-400)]">
+            Manage team scores in `/pointtable` and push the public screen to the table or graphs.
+          </p>
+          {pointTableState && (
+            <div className="mt-3 inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-300">
+              Current View: {pointTableState.displayMode}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <ThemeButton
+            variant="secondary"
+            className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+            onClick={() => navigate('/pointtable')}
+          >
+            Manage Point Table
+          </ThemeButton>
+          <ThemeButton
+            variant="secondary"
+            className="flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
+            onClick={() => handlePointTableDisplay('table')}
+            disabled={!isConnected}
+          >
+            <Table2 size={16} />
+            Table
+          </ThemeButton>
+          <ThemeButton
+            variant="secondary"
+            className="flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
+            onClick={() => handlePointTableDisplay('scoreGraph')}
+            disabled={!isConnected}
+          >
+            <BarChart3 size={16} />
+            Score Graph
+          </ThemeButton>
+          <ThemeButton
+            variant="secondary"
+            className="flex items-center gap-2 border-white/20 text-white hover:bg-white/10"
+            onClick={() => handlePointTableDisplay('accuracyGraph')}
+            disabled={!isConnected}
+          >
+            <Percent size={16} />
+            Accuracy Graph
+          </ThemeButton>
+        </div>
+      </div>
+    </ThemeCard>
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-48">
@@ -254,17 +345,7 @@ export default function Admin() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-5.75rem)] w-full max-w-[1600px] flex-col gap-3 overflow-hidden px-1 md:px-2">
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-gray-800 pb-3">
-        <div>
-          <h2 className="mb-1 flex items-center gap-2 text-2xl font-bold text-white">
-            <svg className="h-7 w-7 text-[var(--color-neon-purple)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Global Controller
-          </h2>
-          <p className="text-sm text-[var(--color-gray-400)]">Compact control center for rounds 1 to 3.</p>
-        </div>
+      <div className="flex justify-end border-b border-gray-800 pb-3">
         <div className="flex items-center gap-2 rounded-full border border-[var(--color-neon-cyan)]/20 bg-black/40 px-3 py-1.5 shadow-[0_0_15px_rgba(0,255,255,0.1)]">
           <div className={`h-2.5 w-2.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
           <span className="text-xs font-bold tracking-[0.24em] text-[var(--color-gray-200)]">{isConnected ? 'LIVE SYNC' : 'OFFLINE'}</span>
@@ -313,34 +394,13 @@ export default function Admin() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        <ThemeCard className={`${actionCardClass} border-blue-500/20 hover:border-blue-500/50`}>
-          <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-blue-500/10 blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative z-10 flex w-full flex-wrap items-center justify-between gap-3 md:flex-nowrap">
-            <div className="flex-1">
-              <h3 className="mb-1 text-base font-black text-white">Emergency Reset</h3>
-              <p className="text-xs text-[var(--color-gray-400)]">Return everyone to the dashboard immediately.</p>
-            </div>
-            <ThemeButton variant="secondary" className="w-full shrink-0 border-blue-500/30 px-4 py-2 text-sm text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 md:w-auto" onClick={() => handleStageChange('A', 0)} disabled={!isConnected}>
-              Return All
-            </ThemeButton>
-          </div>
-        </ThemeCard>
-
-        <ThemeCard className={`${actionCardClass} border-purple-500/20 hover:border-purple-500/50`}>
-          <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-purple-500/10 blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative z-10 flex w-full flex-wrap items-center justify-between gap-3 md:flex-nowrap">
-            <div className="flex-1">
-              <h3 className="mb-1 text-base font-black text-white">Profile Visibility</h3>
-              <p className="text-xs text-[var(--color-gray-400)]">Toggle participant names on user dashboards.</p>
-            </div>
-            <ThemeButton variant={showProfile ? 'primary' : 'secondary'} className={`flex w-full shrink-0 items-center gap-2 px-4 py-2 text-sm md:w-auto ${showProfile ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-red-500/20 border-red-500/50 text-red-400'}`} onClick={handleVisibilityToggle} disabled={!isConnected}>
-              {showProfile ? <CheckCircle size={16} /> : <EyeOff size={16} />}
-              {showProfile ? 'Showing' : 'Hidden'}
-            </ThemeButton>
-          </div>
-        </ThemeCard>
-      </div>
+      {activeTab !== 'C' && (
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {emergencyResetCard}
+          {profileVisibilityCard}
+          {pointTableCard}
+        </div>
+      )}
 
       {activeTab === 'A' ? (
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12">
@@ -524,8 +584,20 @@ export default function Admin() {
           </div>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-hidden">
-          <Round3Admin />
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-12">
+          <div className="min-h-0 xl:col-span-9 flex flex-col gap-3 overflow-hidden">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {emergencyResetCard}
+              {profileVisibilityCard}
+            </div>
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <Round3Admin />
+            </div>
+          </div>
+          <div className="min-h-0 xl:col-span-3 flex flex-col gap-3">
+            {pointTableCard}
+            <Round3HardwareCard />
+          </div>
         </div>
       )}
     </div>

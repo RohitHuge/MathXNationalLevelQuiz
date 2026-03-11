@@ -1,5 +1,6 @@
 import pool from '../config/db.js';
 import { setupRound3Sockets, startRound3Timer } from './round3Controller.js';
+import { setupPointTableSockets } from './pointTableController.js';
 
 let activeRound2Question = null;
 let round2Leaderboard = [];
@@ -455,6 +456,7 @@ const setupSockets = (io) => {
 
         // --- ROUND 3 INITIALIZATION ---
         setupRound3Sockets(io, socket);
+        setupPointTableSockets(io, socket);
 
         socket.on('disconnect', () => {
             console.log(`[Socket] User disconnected: ${socket.id}`);
