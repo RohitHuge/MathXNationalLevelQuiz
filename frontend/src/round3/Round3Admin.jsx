@@ -43,6 +43,7 @@ export default function Round3Admin() {
 
   const {
     activeQuestion,
+    judgedOption,
     timerTime,
     isTimerRunning,
     buzzerLocked,
@@ -381,6 +382,46 @@ export default function Round3Admin() {
                     </button>
                   </div>
                 </div>
+
+                {activeQuestion?.options?.length > 0 && (
+                  <div className="mt-3 rounded-xl border border-white/10 bg-black/40 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Team Answer Marker</span>
+                      <button
+                        onClick={() => socket.emit('admin:round3:clear_judged_option')}
+                        disabled={!judgedOption}
+                        className="rounded border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/60 hover:bg-white/10 disabled:opacity-40"
+                      >
+                        Clear
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      {activeQuestion.options.map((opt, idx) => {
+                        const letter = String.fromCharCode(65 + idx);
+                        const isSelected = judgedOption?.selectedIndex === idx;
+                        const stateClass = isSelected
+                          ? judgedOption.isCorrect
+                            ? 'border-green-500/60 bg-green-500/20 text-green-300'
+                            : 'border-red-500/60 bg-red-500/20 text-red-300'
+                          : 'border-white/10 bg-white/5 text-white/80 hover:border-white/30';
+
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => socket.emit('admin:round3:judge_option', { selectedIndex: idx })}
+                            className={`rounded-xl border px-3 py-2 text-left text-xs font-bold transition-colors ${stateClass}`}
+                          >
+                            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-lg bg-black/30 text-[10px] font-black">
+                              {letter}
+                            </span>
+                            <span>{isSelected ? (judgedOption.isCorrect ? 'Marked Correct' : 'Marked Wrong') : 'Mark This Option'}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="custom-scrollbar relative z-10 flex flex-1 flex-col gap-2 overflow-y-auto pr-1">

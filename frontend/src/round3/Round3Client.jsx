@@ -26,6 +26,7 @@ export function Round3Client() {
     const { socket, isConnected } = useSocket();
     const [gameState, setGameState] = useState(null);
     const [localFontVh, setLocalFontVh] = useState(2.5); // Default font size in vh units
+    const [imageZoom, setImageZoom] = useState(2);
 
     // Buzzer Sound Logic
     const buzzerSound = React.useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2959/2959-preview.mp3'));
@@ -84,8 +85,11 @@ export function Round3Client() {
         clientFontSize = 60,
         allocatedTeamId = null,
         showTimer = true,
+        judgedOption = null,
         rapidFire = {}
     } = gameState;
+
+    const clampedImageZoom = Math.max(0.5, Math.min(3, imageZoom));
 
     const allocatedTeam = teams.find(t => t.id === allocatedTeamId);
     const rfTeam = teams.find(t => t.id === rapidFire?.teamId);
@@ -279,13 +283,6 @@ export function Round3Client() {
                                 )}
 
                                 <div className="flex-1 flex flex-col items-center justify-center mt-12 w-full max-w-5xl mx-auto">
-                                    {/* Visual Round Support */}
-                                    {activeSubRound === 2 && activeQuestion.imageUrl && (
-                                        <div className="mb-10 max-h-[40vh] rounded-2xl overflow-hidden border-2 border-[var(--color-neon-purple)]/30 shadow-[0_0_30px_rgba(188,19,254,0.15)] flex justify-center w-full">
-                                            <img src={activeQuestion.imageUrl} alt="Visual Reference" className="max-w-full max-h-full object-contain" />
-                                        </div>
-                                    )}
-
                                     <div
                                         className="w-full flex flex-col items-center gap-12 transition-all duration-300"
                                         style={{ fontSize: `${localFontVh}vh`, lineHeight: '1.2' }}
@@ -300,9 +297,21 @@ export function Round3Client() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mt-8">
                                                 {activeQuestion.options.map((opt, idx) => {
                                                     const letter = String.fromCharCode(65 + idx); // A, B, C, D
+                                                    const isJudged = judgedOption?.selectedIndex === idx;
+                                                    const optionStateClass = isJudged
+                                                        ? judgedOption.isCorrect
+                                                            ? 'bg-green-500/20 border-green-400 text-white shadow-[0_0_20px_rgba(74,222,128,0.25)]'
+                                                            : 'bg-red-500/20 border-red-400 text-white shadow-[0_0_20px_rgba(248,113,113,0.25)]'
+                                                        : 'bg-white/5 border-white/10 hover:bg-white/10';
+                                                    const badgeStateClass = isJudged
+                                                        ? judgedOption.isCorrect
+                                                            ? 'bg-green-500/20 text-green-300 border-green-400/50'
+                                                            : 'bg-red-500/20 text-red-300 border-red-400/50'
+                                                        : 'bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] border-[var(--color-neon-cyan)]/50';
+
                                                     return (
-                                                        <div key={idx} className="bg-white/5 border border-white/10 rounded-2xl p-6 flex gap-6 items-center shadow-lg hover:bg-white/10 transition-colors">
-                                                            <div className="flex items-center justify-center w-[1.5em] h-[1.5em] shrink-0 rounded-xl bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] font-black border border-[var(--color-neon-cyan)]/50">
+                                                        <div key={idx} className={`border rounded-2xl p-6 flex gap-6 items-center shadow-lg transition-colors ${optionStateClass}`}>
+                                                            <div className={`flex items-center justify-center w-[1.5em] h-[1.5em] shrink-0 rounded-xl font-black border ${badgeStateClass}`}>
                                                                 {letter}
                                                             </div>
                                                             <div className="text-white/90" style={{ fontSize: `${Math.max(2, localFontVh * 0.7)}vh` }}>
@@ -343,6 +352,48 @@ export function Round3Client() {
 
                 {/* Right Panel: Sub-round specific HUD */}
                 <div className="flex-1 flex flex-col gap-6 h-full">
+
+                    {/* VISUAL ROUND IMAGE PANEL (Sub-Round 2) */}
+                    {activeSubRound === 2 && activeQuestion?.imageUrl && (
+                        <div className="bg-black/60 border border-[var(--color-neon-purple)]/40 shadow-[0_0_20px_rgba(188,19,254,0.1)] rounded-3xl p-6 flex flex-col flex-1 min-h-0">
+                            <div className="flex items-center gap-3 mb-4 border-b border-white/10 pb-4">
+                                <Zap size={20} className="text-[var(--color-neon-purple)]" />
+                                <h3 className="text-lg font-bold uppercase tracking-widest text-[var(--color-neon-purple)]">
+                                    Visual Reference
+                                </h3>
+                            </div>
+
+                            <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
+                                <img
+                                    src={activeQuestion.imageUrl}
+                                    alt="Visual Reference"
+                                    className="max-w-full max-h-full object-contain transition-transform duration-200"
+                                    style={{ transform: `scale(${clampedImageZoom})` }}
+                                />
+                            </div>
+
+                            <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
+                                <span className="text-xs font-bold uppercase tracking-widest text-white/50">Zoom</span>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => setImageZoom((prev) => Math.max(0.5, prev - 0.25))}
+                                        className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10"
+                                    >
+                                        <Minus size={16} />
+                                    </button>
+                                    <span className="w-14 text-center text-sm font-mono font-bold text-[var(--color-neon-cyan)]">
+                                        {clampedImageZoom.toFixed(2)}x
+                                    </span>
+                                    <button
+                                        onClick={() => setImageZoom((prev) => Math.min(3, prev + 0.25))}
+                                        className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* RAPID FIRE PROGRESS HUD (Sub-Round 5) */}
                     {activeSubRound === 5 && rapidFire?.active && (

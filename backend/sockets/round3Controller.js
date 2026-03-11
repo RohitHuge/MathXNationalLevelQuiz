@@ -6,6 +6,7 @@ let gameState = {
     currentQuestionIndex: -1,
     activeQuestion: null,
     showAnswer: false,
+    judgedOption: null,
     timerTime: 60,
     isTimerRunning: false,
     imageUrl: null,
@@ -109,6 +110,7 @@ export const setupRound3Sockets = (io, socket) => {
                 };
                 gameState.activeSubRound = subRoundNum;
                 gameState.showAnswer = false;
+                gameState.judgedOption = null;
                 gameState.timerTime = 60;
                 gameState.isTimerRunning = false;
 
@@ -129,11 +131,31 @@ export const setupRound3Sockets = (io, socket) => {
         gameState.activeQuestion = null;
         gameState.buzzerQueue = [];
         gameState.showAnswer = false;
+        gameState.judgedOption = null;
         io.emit('server:round3:state_update', gameState);
     });
 
     socket.on('admin:round3:reveal_answer', () => {
         gameState.showAnswer = true;
+        io.emit('server:round3:state_update', gameState);
+    });
+
+    socket.on('admin:round3:judge_option', ({ selectedIndex }) => {
+        if (!gameState.activeQuestion || !Array.isArray(gameState.activeQuestion.options)) return;
+
+        const parsedIndex = Number.parseInt(selectedIndex, 10);
+        if (!Number.isInteger(parsedIndex) || parsedIndex < 0 || parsedIndex >= gameState.activeQuestion.options.length) return;
+
+        gameState.judgedOption = {
+            selectedIndex: parsedIndex,
+            isCorrect: parsedIndex === gameState.activeQuestion.correctIndex
+        };
+
+        io.emit('server:round3:state_update', gameState);
+    });
+
+    socket.on('admin:round3:clear_judged_option', () => {
+        gameState.judgedOption = null;
         io.emit('server:round3:state_update', gameState);
     });
 
@@ -315,6 +337,7 @@ export const setupRound3Sockets = (io, socket) => {
             options: currentQ.content?.options || [],
             imageUrl: currentQ.content?.imageUrl || null
         };
+        gameState.judgedOption = null;
 
         io.emit('server:round3:state_update', gameState);
         console.log(`[Rapid Fire] Started Set ${setNumber} for Team ${teamId}`);
@@ -341,10 +364,12 @@ export const setupRound3Sockets = (io, socket) => {
                 options: currentQ.content?.options || [],
                 imageUrl: currentQ.content?.imageUrl || null
             };
+            gameState.judgedOption = null;
         } else {
             // All questions answered — clear active question, wait for calculate
             rf.questionIndex = nextIndex;
             gameState.activeQuestion = null;
+            gameState.judgedOption = null;
         }
 
         io.emit('server:round3:state_update', gameState);
@@ -381,6 +406,7 @@ export const setupRound3Sockets = (io, socket) => {
         };
         rf.showResults = true;
         gameState.activeQuestion = null;
+        gameState.judgedOption = null;
 
         io.emit('server:round3:state_update', gameState);
         console.log(`[Rapid Fire] Results calculated: ${correctCount}/${rf.questions.length} for Team ${rf.teamId}`);
@@ -399,6 +425,7 @@ export const setupRound3Sockets = (io, socket) => {
             results: null
         };
         gameState.activeQuestion = null;
+        gameState.judgedOption = null;
         io.emit('server:round3:state_update', gameState);
     });
 };
