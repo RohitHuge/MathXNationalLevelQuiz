@@ -3,6 +3,47 @@ import { useSocket } from '../SocketContext';
 import { Play, Pause, Trophy, Settings2, Eye, EyeOff, Plus, Minus, List, Clock, Zap, Lock, Unlock, Send } from 'lucide-react';
 import Latex from 'react-latex-next';
 
+export function Round3HardwareCard() {
+  const { socket } = useSocket();
+  const [gameState, setGameState] = useState(null);
+
+  useEffect(() => {
+    if (!socket) return undefined;
+
+    socket.on('server:round3:state_update', setGameState);
+    socket.emit('admin:round3:request_state');
+
+    return () => {
+      socket.off('server:round3:state_update');
+    };
+  }, [socket]);
+
+  const buzzerLocked = gameState?.buzzerLocked ?? true;
+
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-[var(--color-neon-purple)]/10 blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+      <h2 className="relative z-10 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/50">
+        <Zap className="h-4 w-4" />
+        Hardware State
+      </h2>
+      <div className="relative z-10 flex h-full flex-col justify-center">
+        {buzzerLocked ? (
+          <button onClick={() => socket.emit('admin:round3:unlock_buzzers')} className="flex w-full flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-green-500/50 bg-green-500/10 p-4 text-base font-black text-green-500 hover:bg-green-500/20">
+            <Unlock size={24} />
+            ARM BUZZERS NOW
+          </button>
+        ) : (
+          <button onClick={() => socket.emit('admin:round3:lock_buzzers')} className="flex w-full flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-red-500/20 p-4 text-base font-black text-red-500 hover:bg-red-500 hover:text-white animate-pulse">
+            <Lock size={24} />
+            BUZZERS LIVE - LOCK GLOBALLY
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Round3Admin() {
   const { socket } = useSocket();
   const [gameState, setGameState] = useState(null);
@@ -43,6 +84,7 @@ export default function Round3Admin() {
 
   const {
     activeQuestion,
+    judgedOption,
     timerTime,
     isTimerRunning,
     buzzerLocked,
@@ -95,40 +137,6 @@ export default function Round3Admin() {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden font-sans">
-      <header className="flex flex-col items-stretch justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] md:flex-row md:items-center">
-        <div>
-          <h1 className="flex items-center gap-2 bg-gradient-to-r from-[var(--color-neon-pink)] to-[var(--color-neon-blue)] bg-clip-text text-2xl font-black uppercase tracking-wide text-transparent">
-            <Settings2 className="text-[var(--color-neon-pink)]" size={20} />
-            Round 3 Stage Manager
-          </h1>
-          <p className="mb-2 mt-1 text-xs text-[var(--color-gray-400)]">Administer the five buzzer sub-rounds.</p>
-          <div className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4, 5].map((r) => (
-              <button
-                key={r}
-                onClick={() => handleSubRoundChange(r)}
-                className={`rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors ${selectedSubRound === r ? 'bg-[var(--color-neon-cyan)] text-black shadow-[0_0_10px_rgba(0,255,255,0.5)]' : 'border border-gray-700 bg-gray-800/50 text-gray-400 hover:bg-gray-800'}`}
-              >
-                SR {r}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex w-full flex-wrap gap-2 md:w-auto">
-          <button onClick={() => handleStageChange(1)} className="flex-1 rounded-xl border border-[var(--color-neon-cyan)]/30 bg-black/40 px-4 py-2 text-sm font-bold text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)]/20 md:flex-none">
-            Force Waiting Room
-          </button>
-          <button onClick={() => handleStageChange(2)} className="flex-1 rounded-xl bg-[var(--color-neon-blue)] px-5 py-2 text-sm font-bold text-white shadow-[0_0_15px_rgba(0,136,255,0.4)] hover:bg-[var(--color-neon-blue)]/80 md:flex-none">
-            Launch Projector
-          </button>
-          <button onClick={initTeamEdit} className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20">
-            <Settings2 size={16} />
-            Team Names
-          </button>
-        </div>
-      </header>
-
       {showTeamEdit && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#1a1a2e] p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
@@ -167,6 +175,38 @@ export default function Round3Admin() {
 
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-3">
         <div className="col-span-12 flex h-full min-h-[18rem] flex-col gap-3 lg:col-span-4 lg:min-h-0">
+          <div className="relative flex flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="absolute top-0 right-0 h-28 w-28 rounded-full bg-[var(--color-neon-pink)]/10 blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+            <h2 className="relative z-10 flex items-center gap-2 bg-gradient-to-r from-[var(--color-neon-pink)] to-[var(--color-neon-blue)] bg-clip-text text-lg font-black uppercase tracking-wide text-transparent">
+              <Settings2 className="text-[var(--color-neon-pink)]" size={18} />
+              Round 3 Stage Manager
+            </h2>
+            <p className="relative z-10 mb-3 mt-1 text-[11px] text-[var(--color-gray-400)]">Control sub-round flow and projector state.</p>
+            <div className="relative z-10 mb-3 grid grid-cols-5 gap-2">
+              {[1, 2, 3, 4, 5].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => handleSubRoundChange(r)}
+                  className={`rounded-lg px-2 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors ${selectedSubRound === r ? 'bg-[var(--color-neon-cyan)] text-black shadow-[0_0_10px_rgba(0,255,255,0.5)]' : 'border border-gray-700 bg-gray-800/50 text-gray-400 hover:bg-gray-800'}`}
+                >
+                  SR {r}
+                </button>
+              ))}
+            </div>
+            <div className="relative z-10 grid grid-cols-1 gap-2">
+              <button onClick={() => handleStageChange(1)} className="rounded-xl border border-[var(--color-neon-cyan)]/30 bg-black/40 px-4 py-2 text-sm font-bold text-[var(--color-neon-cyan)] hover:bg-[var(--color-neon-cyan)]/20">
+                Force Waiting Room
+              </button>
+              <button onClick={() => handleStageChange(2)} className="rounded-xl bg-[var(--color-neon-blue)] px-5 py-2 text-sm font-bold text-white shadow-[0_0_15px_rgba(0,136,255,0.4)] hover:bg-[var(--color-neon-blue)]/80">
+                Launch Projector
+              </button>
+              <button onClick={initTeamEdit} className="flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20">
+                <Settings2 size={16} />
+                Team Names
+              </button>
+            </div>
+          </div>
+
           <div className="relative flex flex-shrink-0 flex-col items-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-[var(--color-neon-cyan)]/10 blur-2xl -translate-y-1/2 translate-x-1/2"></div>
             <h2 className="relative z-10 mb-4 flex w-full items-center justify-between px-2 text-xs font-semibold uppercase tracking-widest text-white/50">
@@ -207,26 +247,6 @@ export default function Round3Admin() {
             </div>
           </div>
 
-          <div className="relative flex flex-1 flex-col gap-3 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4">
-            <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-[var(--color-neon-purple)]/10 blur-3xl translate-y-1/2 -translate-x-1/4"></div>
-            <h2 className="relative z-10 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/50">
-              <Zap className="h-4 w-4" />
-              Hardware State
-            </h2>
-            <div className="relative z-10 flex h-full flex-col justify-center">
-              {buzzerLocked ? (
-                <button onClick={() => socket.emit('admin:round3:unlock_buzzers')} className="flex w-full flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-green-500/50 bg-green-500/10 p-4 text-base font-black text-green-500 hover:bg-green-500/20">
-                  <Unlock size={24} />
-                  ARM BUZZERS NOW
-                </button>
-              ) : (
-                <button onClick={() => socket.emit('admin:round3:lock_buzzers')} className="flex w-full flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-red-500/20 p-4 text-base font-black text-red-500 hover:bg-red-500 hover:text-white animate-pulse">
-                  <Lock size={24} />
-                  BUZZERS LIVE - LOCK GLOBALLY
-                </button>
-              )}
-            </div>
-          </div>
         </div>
 
         <div className="col-span-12 flex h-full min-h-[20rem] flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-4 lg:min-h-0">
@@ -381,6 +401,46 @@ export default function Round3Admin() {
                     </button>
                   </div>
                 </div>
+
+                {activeQuestion?.options?.length > 0 && (
+                  <div className="mt-3 rounded-xl border border-white/10 bg-black/40 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Team Answer Marker</span>
+                      <button
+                        onClick={() => socket.emit('admin:round3:clear_judged_option')}
+                        disabled={!judgedOption}
+                        className="rounded border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/60 hover:bg-white/10 disabled:opacity-40"
+                      >
+                        Clear
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      {activeQuestion.options.map((opt, idx) => {
+                        const letter = String.fromCharCode(65 + idx);
+                        const isSelected = judgedOption?.selectedIndex === idx;
+                        const stateClass = isSelected
+                          ? judgedOption.isCorrect
+                            ? 'border-green-500/60 bg-green-500/20 text-green-300'
+                            : 'border-red-500/60 bg-red-500/20 text-red-300'
+                          : 'border-white/10 bg-white/5 text-white/80 hover:border-white/30';
+
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => socket.emit('admin:round3:judge_option', { selectedIndex: idx })}
+                            className={`rounded-xl border px-3 py-2 text-left text-xs font-bold transition-colors ${stateClass}`}
+                          >
+                            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-lg bg-black/30 text-[10px] font-black">
+                              {letter}
+                            </span>
+                            <span>{isSelected ? (judgedOption.isCorrect ? 'Marked Correct' : 'Marked Wrong') : 'Mark This Option'}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="custom-scrollbar relative z-10 flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
@@ -425,11 +485,11 @@ export default function Round3Admin() {
           <div className="relative z-10 mb-3 flex items-center justify-between border-b border-white/10 pb-3">
             <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/50">
               <Trophy className="h-4 w-4" />
-              Team Scoring
+              Team Control
             </h2>
           </div>
 
-          <div className="custom-scrollbar relative z-10 flex flex-1 flex-col gap-3 overflow-y-auto pr-1">
+          <div className="custom-scrollbar relative z-10 grid flex-1 grid-cols-1 gap-3 overflow-y-auto pr-1 md:grid-cols-2">
             {teams.map((team) => {
               const buzzIndex = buzzerQueue.findIndex((b) => b.teamId === team.id);
               const hasBuzzed = buzzIndex !== -1;
@@ -444,26 +504,21 @@ export default function Round3Admin() {
 
               return (
                 <div key={team.id} className={`flex flex-col gap-3 rounded-xl border-2 p-4 ${styles}`}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col">
-                      <span className="flex items-center gap-2 text-lg font-bold text-white">
-                        {team.id}. {team.name}
-                        {hasBuzzed && (
-                          <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${isPassed ? 'bg-red-500 text-white' : 'bg-[var(--color-neon-pink)] text-white'}`}>
-                            #{buzzIndex + 1}
-                          </span>
-                        )}
-                      </span>
-                      {isActiveTurn && <span className="mt-1 text-xs font-bold uppercase tracking-widest text-[var(--color-neon-pink)] animate-pulse">Hardware Priority Turn</span>}
-                      {isPassed && <span className="mt-1 text-xs font-bold uppercase tracking-widest text-red-500 line-through">Passed Over</span>}
-                    </div>
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/50">
-                      <span className="text-xl font-black text-[var(--color-neon-cyan)]">{team.score}</span>
-                    </div>
+                  <div className="flex flex-col">
+                    <span className="flex items-center gap-2 text-lg font-bold text-white">
+                      {team.id}. {team.name}
+                      {hasBuzzed && (
+                        <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${isPassed ? 'bg-red-500 text-white' : 'bg-[var(--color-neon-pink)] text-white'}`}>
+                          #{buzzIndex + 1}
+                        </span>
+                      )}
+                    </span>
+                    {isActiveTurn && <span className="mt-1 text-xs font-bold uppercase tracking-widest text-[var(--color-neon-pink)] animate-pulse">Hardware Priority Turn</span>}
+                    {isPassed && <span className="mt-1 text-xs font-bold uppercase tracking-widest text-red-500 line-through">Passed Over</span>}
                   </div>
 
                   <div className="mt-1 flex items-center justify-between border-t border-white/10 pt-2">
-                    <div className="mr-4 flex flex-1 flex-col gap-2">
+                    <div className="flex flex-1 flex-col gap-2">
                       {isActiveTurn && (
                         <button onClick={() => socket.emit('admin:round3:pass_next')} className="w-full rounded border border-red-500/50 bg-red-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-red-500 hover:bg-red-500 hover:text-white">
                           Pass to Next Buzzer
@@ -474,15 +529,6 @@ export default function Round3Admin() {
                         className={`w-full rounded border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${allocatedTeamId === team.id ? 'border-[var(--color-neon-cyan)] bg-[var(--color-neon-cyan)] text-black' : 'border-white/20 bg-transparent text-white/50 hover:text-white hover:border-white/50'}`}
                       >
                         {allocatedTeamId === team.id ? 'Un-Allocate' : 'Allocate Turn'}
-                      </button>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button onClick={() => socket.emit('admin:round3:award_points', { teamId: team.id, points: -5 })} className="rounded-lg border border-red-500/30 bg-red-500/20 p-1.5 text-red-500 hover:bg-red-500/40">
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => socket.emit('admin:round3:award_points', { teamId: team.id, points: 10 })} className="rounded-lg border border-green-500/30 bg-green-500/20 p-1.5 text-green-400 hover:bg-green-500/40">
-                        <Plus className="h-4 w-4" />
                       </button>
                     </div>
                   </div>

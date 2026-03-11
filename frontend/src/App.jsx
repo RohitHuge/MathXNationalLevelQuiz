@@ -13,6 +13,8 @@ import { FastFingersClient } from './round2/FastFingersClient';
 import Round2ProtectedRoute from './round2/Round2ProtectedRoute';
 import Round3Dashboard from './round3/Round3Dashboard';
 import Round3Client from './round3/Round3Client';
+import PointTableAdmin from './pointtable/PointTableAdmin';
+import PointTableClient from './pointtable/PointTableClient';
 import { getCurrentUser, logout } from './lib/appwrite';
 import { SocketProvider, useSocket } from './SocketContext';
 
@@ -43,7 +45,7 @@ function AppContent() {
     // Listen for state synchronization payload from PostgreSQL
     socket.on('server:sync_state', (state) => {
       // Do not interrupt the administrator dashboard
-      if (location.pathname.includes('/admin')) return;
+      if (location.pathname.includes('/admin') || location.pathname === '/pointtable') return;
 
       const roundStr = String(state.round).toUpperCase();
       const stageNum = parseInt(state.stage, 10);
@@ -61,6 +63,8 @@ function AppContent() {
       } else if (roundStr === 'C') { // Round 3 logic
         if (stageNum === 1) targetPath = '/round3/dashboard';
         else if (stageNum === 2) targetPath = '/round3/client';
+      } else if (roundStr === 'P') { // Point table public display
+        if (stageNum === 1) targetPath = '/pointtable/client';
       }
 
       // Sync Profile Visibility
@@ -75,7 +79,7 @@ function AppContent() {
     });
 
     // Directly request the exact Postgres chronological state upon mount/reload
-    if (!location.pathname.includes('/admin')) {
+    if (!location.pathname.includes('/admin') && location.pathname !== '/pointtable') {
       socket.emit('client:request_state');
     }
 
@@ -118,7 +122,8 @@ function AppContent() {
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/round2/dashboard';
   const isProjector = location.pathname.endsWith('/client');
   const isAdminRoute = location.pathname.includes('/admin');
-  const hideHeader = isDashboard || isProjector;
+  const isPointTableAdminRoute = location.pathname === '/pointtable';
+  const hideHeader = isDashboard || isProjector || isPointTableAdminRoute;
 
   return (
     <div className="min-h-screen bg-[var(--color-slate-900)] text-[var(--color-gray-200)] font-base selection:bg-[var(--color-blue-500)] selection:text-white flex flex-col">
@@ -150,7 +155,7 @@ function AppContent() {
       <main className={
         hideHeader
           ? "relative z-10 w-full flex-grow p-0 m-0"
-          : isAdminRoute
+          : isAdminRoute || isPointTableAdminRoute
             ? "relative z-10 w-full flex-grow overflow-hidden px-2 py-2 md:px-3 md:py-3"
             : "container mx-auto px-4 py-8 relative z-10 flex-grow"
       }>
@@ -234,6 +239,14 @@ function AppContent() {
             element={
               <Round3Client />
             }
+          />
+          <Route
+            path="/pointtable"
+            element={<PointTableAdmin />}
+          />
+          <Route
+            path="/pointtable/client"
+            element={<PointTableClient />}
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

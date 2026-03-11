@@ -26,6 +26,7 @@ export function Round3Client() {
     const { socket, isConnected } = useSocket();
     const [gameState, setGameState] = useState(null);
     const [localFontVh, setLocalFontVh] = useState(2.5); // Default font size in vh units
+    const [imageZoom, setImageZoom] = useState(2);
 
     // Buzzer Sound Logic
     const buzzerSound = React.useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2959/2959-preview.mp3'));
@@ -84,8 +85,11 @@ export function Round3Client() {
         clientFontSize = 60,
         allocatedTeamId = null,
         showTimer = true,
+        judgedOption = null,
         rapidFire = {}
     } = gameState;
+
+    const clampedImageZoom = Math.max(0.5, Math.min(3, imageZoom));
 
     const allocatedTeam = teams.find(t => t.id === allocatedTeamId);
     const rfTeam = teams.find(t => t.id === rapidFire?.teamId);
@@ -100,6 +104,32 @@ export function Round3Client() {
         4: "Buzzer Round",
         5: "Rapid Fire"
     };
+
+    const waitingSymbols = [
+        { symbol: '\u222B', className: 'top-[10%] left-[8%] text-5xl text-cyan-400/18', animate: { y: [0, -20, 16, 0], x: [0, 8, -6, 0], rotate: [0, 6, -5, 0] }, transition: { duration: 7.2, delay: 0.4, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u03C0', className: 'top-[16%] right-[9%] text-4xl text-pink-400/18', animate: { y: [0, 18, -14, 0], x: [0, -10, 5, 0], rotate: [0, -4, 7, 0] }, transition: { duration: 8.4, delay: 1.3, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u03A3', className: 'bottom-[14%] left-[12%] text-5xl text-yellow-300/18', animate: { y: [0, -14, 12, 0], x: [0, 6, -8, 0], rotate: [0, 5, -3, 0] }, transition: { duration: 6.9, delay: 2.1, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u221A', className: 'bottom-[12%] right-[14%] text-4xl text-cyan-300/18', animate: { y: [0, 20, -10, 0], x: [0, -7, 9, 0], rotate: [0, -6, 4, 0] }, transition: { duration: 7.8, delay: 0.7, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u221E', className: 'top-[32%] left-[10%] text-4xl text-white/12', animate: { y: [0, -12, 18, 0], x: [0, 11, -7, 0], rotate: [0, 4, -6, 0] }, transition: { duration: 9.1, delay: 1.9, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u2206', className: 'top-[28%] right-[12%] text-4xl text-white/12', animate: { y: [0, 14, -16, 0], x: [0, -9, 6, 0], rotate: [0, -5, 6, 0] }, transition: { duration: 6.6, delay: 2.6, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: 'x\u00B2 + y\u00B2', className: 'top-[22%] left-[24%] text-3xl text-white/10', animate: { y: [0, -10, 12, 0], x: [0, 7, -5, 0] }, transition: { duration: 8.8, delay: 0.9, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: 'lim x\u21920', className: 'top-[22%] right-[24%] text-3xl text-white/10', animate: { y: [0, 11, -13, 0], x: [0, -8, 5, 0] }, transition: { duration: 7.7, delay: 1.7, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: 'e^i\u03C0 + 1 = 0', className: 'bottom-[24%] left-[22%] text-3xl text-white/10', animate: { y: [0, -12, 8, 0], x: [0, 9, -4, 0] }, transition: { duration: 9.4, delay: 2.8, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: 'd/dx', className: 'bottom-[24%] right-[23%] text-3xl text-white/10', animate: { y: [0, 13, -9, 0], x: [0, -6, 7, 0] }, transition: { duration: 8.1, delay: 0.2, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u03B8', className: 'top-[50%] left-[6%] text-4xl text-pink-300/14', animate: { y: [0, -16, 10, 0], x: [0, 8, -5, 0], rotate: [0, 5, -4, 0] }, transition: { duration: 7.4, delay: 1.1, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u03B1 + \u03B2', className: 'bottom-[42%] right-[7%] text-3xl text-cyan-300/14', animate: { y: [0, 15, -11, 0], x: [0, -8, 4, 0], rotate: [0, -4, 5, 0] }, transition: { duration: 8.9, delay: 2.4, repeat: Infinity, ease: 'easeInOut' } },
+    ];
+
+    const waitingTiles = [
+        { symbol: '+', animate: { y: [0, -10, 6, 0], rotate: [0, 7, -5, 0] }, transition: { duration: 6.8, delay: 0.2, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u2212', animate: { y: [0, 8, -12, 0], rotate: [0, -6, 4, 0] }, transition: { duration: 7.6, delay: 1.1, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u00D7', animate: { y: [0, -7, 11, 0], rotate: [0, 5, -7, 0] }, transition: { duration: 6.4, delay: 1.8, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u00F7', animate: { y: [0, 10, -8, 0], rotate: [0, -4, 6, 0] }, transition: { duration: 8.1, delay: 0.5, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '=', animate: { y: [0, -9, 7, 0], rotate: [0, 3, -4, 0] }, transition: { duration: 7.2, delay: 2.2, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u221E', animate: { y: [0, 12, -9, 0], rotate: [0, -5, 5, 0] }, transition: { duration: 8.7, delay: 0.8, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u2206', animate: { y: [0, -8, 10, 0], rotate: [0, 6, -3, 0] }, transition: { duration: 6.9, delay: 1.5, repeat: Infinity, ease: 'easeInOut' } },
+        { symbol: '\u03B8', animate: { y: [0, 11, -10, 0], rotate: [0, -7, 4, 0] }, transition: { duration: 8.3, delay: 2.5, repeat: Infinity, ease: 'easeInOut' } },
+    ];
 
     return (
         <div className="h-screen w-screen overflow-hidden bg-[#050510] text-white flex flex-col font-sans select-none fixed inset-0">
@@ -228,20 +258,64 @@ export function Round3Client() {
             </header>
 
             {/* Main Content Arena */}
-            <main className="flex-1 relative z-10 flex flex-col xl:flex-row gap-8 p-8 max-w-[100vw] mx-auto w-full h-full">
+            <main className={`flex-1 relative z-10 flex w-full h-full ${isWaiting ? 'items-center justify-center p-8' : 'flex-col gap-8 p-8 xl:flex-row'}`}>
+
+                {isWaiting ? (
+                    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/50 text-center backdrop-blur-sm">
+                        <div className="absolute inset-0 pointer-events-none">
+                            {waitingSymbols.map((item) => (
+                                <motion.div
+                                    key={item.symbol}
+                                    className={`absolute font-black ${item.className}`}
+                                    animate={item.animate}
+                                    transition={item.transition}
+                                >
+                                    {item.symbol}
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        <div className="relative z-10 flex w-full max-w-6xl flex-col items-center justify-center px-8">
+                            <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-[var(--color-neon-cyan)]/25 bg-[var(--color-neon-cyan)]/10 px-6 py-2 text-sm font-bold uppercase tracking-[0.35em] text-[var(--color-neon-cyan)]">
+                                <Rocket className="h-5 w-5" />
+                                MathX Presents
+                            </div>
+
+                            <h1 className="bg-gradient-to-r from-white via-[var(--color-neon-cyan)] to-[var(--color-neon-pink)] bg-clip-text text-5xl font-black uppercase tracking-[0.18em] text-transparent md:text-7xl">
+                                National Level Quiz
+                            </h1>
+
+                            <div className="mt-6 flex items-center gap-4">
+                                <div className="h-[2px] w-16 bg-[var(--color-neon-pink)]/50"></div>
+                                <div className="rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-bold uppercase tracking-[0.35em] text-white/70">
+                                    {subRoundNames[activeSubRound] || 'Awaiting Phase'}
+                                </div>
+                                <div className="h-[2px] w-16 bg-[var(--color-neon-cyan)]/50"></div>
+                            </div>
+
+                            <p className="mt-8 text-2xl font-medium uppercase tracking-[0.28em] text-white/55 animate-pulse">
+                                Prepare for the next challenge
+                            </p>
+
+                            <div className="mt-12 grid grid-cols-4 gap-5 md:gap-7">
+                                {waitingTiles.map((item) => (
+                                    <motion.div
+                                        key={item.symbol}
+                                        className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-3xl font-black text-white/70 shadow-[0_0_20px_rgba(255,255,255,0.04)] md:h-20 md:w-20"
+                                        animate={item.animate}
+                                        transition={item.transition}
+                                    >
+                                        {item.symbol}
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <>
 
                 {/* Left Panel: The Question Board (Takes ~75% width) */}
                 <div className="flex-[3] flex flex-col relative h-full">
-                    {isWaiting ? (
-                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center w-full h-full text-center bg-black/40 rounded-3xl border border-white/10 backdrop-blur-sm">
-                            <Rocket className="w-32 h-32 mb-8 text-white/10" />
-                            <h2 className="text-6xl font-black uppercase tracking-[0.2em] mb-4 text-white">
-                                {subRoundNames[activeSubRound] || "Awaiting Phase"}
-                            </h2>
-                            <div className="w-24 h-[2px] bg-[var(--color-neon-cyan)]/40 my-6"></div>
-                            <p className="text-xl tracking-[0.3em] uppercase font-medium text-white/50 animate-pulse">Prepare for next question</p>
-                        </div>
-                    ) : (
                         <div className="flex flex-col h-full gap-6">
 
                             {/* Horizontal Progress Timer above question */}
@@ -279,13 +353,6 @@ export function Round3Client() {
                                 )}
 
                                 <div className="flex-1 flex flex-col items-center justify-center mt-12 w-full max-w-5xl mx-auto">
-                                    {/* Visual Round Support */}
-                                    {activeSubRound === 2 && activeQuestion.imageUrl && (
-                                        <div className="mb-10 max-h-[40vh] rounded-2xl overflow-hidden border-2 border-[var(--color-neon-purple)]/30 shadow-[0_0_30px_rgba(188,19,254,0.15)] flex justify-center w-full">
-                                            <img src={activeQuestion.imageUrl} alt="Visual Reference" className="max-w-full max-h-full object-contain" />
-                                        </div>
-                                    )}
-
                                     <div
                                         className="w-full flex flex-col items-center gap-12 transition-all duration-300"
                                         style={{ fontSize: `${localFontVh}vh`, lineHeight: '1.2' }}
@@ -300,9 +367,21 @@ export function Round3Client() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mt-8">
                                                 {activeQuestion.options.map((opt, idx) => {
                                                     const letter = String.fromCharCode(65 + idx); // A, B, C, D
+                                                    const isJudged = judgedOption?.selectedIndex === idx;
+                                                    const optionStateClass = isJudged
+                                                        ? judgedOption.isCorrect
+                                                            ? 'bg-green-500/20 border-green-400 text-white shadow-[0_0_20px_rgba(74,222,128,0.25)]'
+                                                            : 'bg-red-500/20 border-red-400 text-white shadow-[0_0_20px_rgba(248,113,113,0.25)]'
+                                                        : 'bg-white/5 border-white/10 hover:bg-white/10';
+                                                    const badgeStateClass = isJudged
+                                                        ? judgedOption.isCorrect
+                                                            ? 'bg-green-500/20 text-green-300 border-green-400/50'
+                                                            : 'bg-red-500/20 text-red-300 border-red-400/50'
+                                                        : 'bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] border-[var(--color-neon-cyan)]/50';
+
                                                     return (
-                                                        <div key={idx} className="bg-white/5 border border-white/10 rounded-2xl p-6 flex gap-6 items-center shadow-lg hover:bg-white/10 transition-colors">
-                                                            <div className="flex items-center justify-center w-[1.5em] h-[1.5em] shrink-0 rounded-xl bg-[var(--color-neon-cyan)]/20 text-[var(--color-neon-cyan)] font-black border border-[var(--color-neon-cyan)]/50">
+                                                        <div key={idx} className={`border rounded-2xl p-6 flex gap-6 items-center shadow-lg transition-colors ${optionStateClass}`}>
+                                                            <div className={`flex items-center justify-center w-[1.5em] h-[1.5em] shrink-0 rounded-xl font-black border ${badgeStateClass}`}>
                                                                 {letter}
                                                             </div>
                                                             <div className="text-white/90" style={{ fontSize: `${Math.max(2, localFontVh * 0.7)}vh` }}>
@@ -338,11 +417,52 @@ export function Round3Client() {
                                 </AnimatePresence>
                             </motion.div>
                         </div>
-                    )}
                 </div>
 
                 {/* Right Panel: Sub-round specific HUD */}
                 <div className="flex-1 flex flex-col gap-6 h-full">
+
+                    {/* VISUAL ROUND IMAGE PANEL (Sub-Round 2) */}
+                    {activeSubRound === 2 && activeQuestion?.imageUrl && (
+                        <div className="bg-black/60 border border-[var(--color-neon-purple)]/40 shadow-[0_0_20px_rgba(188,19,254,0.1)] rounded-3xl p-6 flex flex-col flex-1 min-h-0">
+                            <div className="flex items-center gap-3 mb-4 border-b border-white/10 pb-4">
+                                <Zap size={20} className="text-[var(--color-neon-purple)]" />
+                                <h3 className="text-lg font-bold uppercase tracking-widest text-[var(--color-neon-purple)]">
+                                    Visual Reference
+                                </h3>
+                            </div>
+
+                            <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
+                                <img
+                                    src={activeQuestion.imageUrl}
+                                    alt="Visual Reference"
+                                    className="max-w-full max-h-full object-contain transition-transform duration-200"
+                                    style={{ transform: `scale(${clampedImageZoom})` }}
+                                />
+                            </div>
+
+                            <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
+                                <span className="text-xs font-bold uppercase tracking-widest text-white/50">Zoom</span>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => setImageZoom((prev) => Math.max(0.5, prev - 0.25))}
+                                        className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10"
+                                    >
+                                        <Minus size={16} />
+                                    </button>
+                                    <span className="w-14 text-center text-sm font-mono font-bold text-[var(--color-neon-cyan)]">
+                                        {clampedImageZoom.toFixed(2)}x
+                                    </span>
+                                    <button
+                                        onClick={() => setImageZoom((prev) => Math.min(3, prev + 0.25))}
+                                        className="rounded-lg border border-white/10 bg-white/5 p-2 text-white hover:bg-white/10"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* RAPID FIRE PROGRESS HUD (Sub-Round 5) */}
                     {activeSubRound === 5 && rapidFire?.active && (
@@ -436,31 +556,9 @@ export function Round3Client() {
                         </div>
                     )}
 
-                    {/* SCOREBOARD (Only visible when NO question is active) */}
-                    {isWaiting && (
-                        <div className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col flex-1">
-                            <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                                <h3 className="text-xl font-bold uppercase tracking-widest flex items-center gap-3">
-                                    <Trophy size={24} className="text-[var(--color-neon-cyan)]" /> Leaderboard
-                                </h3>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-[var(--color-neon-cyan)]-scrollbar">
-                                {[...teams].sort((a, b) => b.score - a.score).map((team, index) => (
-                                    <div key={team.id} className="flex justify-between items-center bg-black/40 p-4 rounded-xl border border-white/5 hover:border-white/20 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-white/30 font-black text-xl w-6">{index + 1}</div>
-                                            <div className="font-bold text-lg">{team.id}. {team.name}</div>
-                                        </div>
-                                        <div className="font-black text-2xl text-[var(--color-neon-cyan)] bg-[var(--color-neon-cyan)]/10 px-4 py-1 rounded-lg">
-                                            {team.score}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </div>
+                    </>
+                )}
             </main>
         </div>
     );
