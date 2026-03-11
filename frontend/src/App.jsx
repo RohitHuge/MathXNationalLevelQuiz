@@ -87,19 +87,26 @@ function AppContent() {
   }, [socket, user, location.pathname, navigate]);
 
   useEffect(() => {
+    if (!socket) return;
     checkUser();
-  }, []);
+  }, [socket]);
 
   const checkUser = async () => {
     try {
       const session = await getCurrentUser();
+      const profileResponse = await new Promise((resolve) => {
+        socket.timeout(5000).emit('client:get_profile', { id: session.$id }, (err, response) => {
+          if (err) {
+            resolve(null);
+            return;
+          }
 
-      // Post-Authentication: Fetch PostgreSQL Profile (Team Name, Full Name, etc.)
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/profile/${session.$id}`);
-      if (response.ok) {
-        const profile = await response.json();
-        // Merge Appwrite session with PostgreSQL profile data
-        setUser({ ...session, ...profile });
+          resolve(response);
+        });
+      });
+
+      if (profileResponse?.ok && profileResponse.profile) {
+        setUser({ ...session, ...profileResponse.profile });
       } else {
         setUser(session);
       }

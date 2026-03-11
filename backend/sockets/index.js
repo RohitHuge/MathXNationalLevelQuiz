@@ -281,6 +281,43 @@ const setupSockets = (io) => {
             }
         });
 
+        // Fetch SQL-backed profile data for the authenticated Appwrite user.
+        socket.on('client:get_profile', async ({ id }, callback) => {
+            if (!id) {
+                if (typeof callback === 'function') {
+                    callback({ ok: false, error: 'User ID is required.' });
+                }
+                return;
+            }
+
+            try {
+                const query = `
+                    SELECT u.id, u.full_name, u.email, u.college_name, t.team_name, u.is_leader
+                    FROM public.users u
+                    LEFT JOIN public.team t ON u.team_id = t.id
+                    WHERE u.id = $1
+                    LIMIT 1;
+                `;
+                const result = await pool.query(query, [id]);
+
+                if (result.rows.length === 0) {
+                    if (typeof callback === 'function') {
+                        callback({ ok: false, error: 'User not found.' });
+                    }
+                    return;
+                }
+
+                if (typeof callback === 'function') {
+                    callback({ ok: true, profile: result.rows[0] });
+                }
+            } catch (err) {
+                console.error('Socket profile fetch error:', err);
+                if (typeof callback === 'function') {
+                    callback({ ok: false, error: 'Internal Server Error' });
+                }
+            }
+        });
+
         // Client requests all questions upon entering Quiz Arena
         socket.on('client:fetch_all_questions', async () => {
             try {
