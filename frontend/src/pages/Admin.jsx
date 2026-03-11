@@ -398,7 +398,6 @@ export default function Admin() {
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           {emergencyResetCard}
           {profileVisibilityCard}
-          {pointTableCard}
         </div>
       )}
 
