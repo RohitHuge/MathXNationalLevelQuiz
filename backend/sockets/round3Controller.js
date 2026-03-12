@@ -29,9 +29,9 @@ let gameState = {
         questions: [],        // Full 10 questions (including correctIndex — server only)
         teamId: null,         // Which team is playing
         adminAnswers: [],     // Array of selectedOption per question index
+        reviewAnswers: [],    // Array of selectedOption per question index during review
         phase: 'idle',        // idle | playing | review
-        retryQuestionIndex: null,
-        retrySelectedOption: null,
+        reviewQuestionIndex: null,
         showResults: false,   // Whether to show the results modal on client
         results: null         // Calculated results payload for client
     },
@@ -63,6 +63,22 @@ const initDB = async () => {
 };
 
 initDB();
+
+const buildRapidFireQuestion = (questionRow) => ({
+    id: questionRow.id,
+    text: questionRow.content?.text,
+    mathText: questionRow.content?.mathText || '',
+    options: questionRow.content?.options || [],
+    imageUrl: questionRow.content?.imageUrl || null
+});
+
+const setRapidFireActiveQuestion = (questions, questionIndex) => {
+    const currentQuestion = questions[questionIndex];
+    gameState.activeQuestion = currentQuestion ? buildRapidFireQuestion(currentQuestion) : null;
+    gameState.judgedOption = null;
+    gameState.timerTime = 60;
+    gameState.isTimerRunning = false;
+};
 
 export const setupRound3Sockets = (io, socket) => {
     // --------------------------------------------------------
@@ -325,25 +341,14 @@ export const setupRound3Sockets = (io, socket) => {
             questions,           // Full question data with correctIndex (server holds it)
             teamId,
             adminAnswers: [],
+            reviewAnswers: [],
             phase: 'playing',
-            retryQuestionIndex: null,
-            retrySelectedOption: null,
+            reviewQuestionIndex: null,
             showResults: false,
             results: null
         };
         gameState.activeSubRound = 5;
-
-        // Build sanitized current question for clients (no correctIndex)
-        const currentQ = questions[0];
-        const { correctIndex, ...safeContent } = currentQ.content;
-        gameState.activeQuestion = {
-            id: currentQ.id,
-            text: currentQ.content?.text,
-            mathText: currentQ.content?.mathText || '',
-            options: currentQ.content?.options || [],
-            imageUrl: currentQ.content?.imageUrl || null
-        };
-        gameState.judgedOption = null;
+        setRapidFireActiveQuestion(questions, 0);
 
         io.emit('server:round3:state_update', gameState);
         console.log(`[Rapid Fire] Started Set ${setNumber} for Team ${teamId}`);
@@ -362,19 +367,12 @@ export const setupRound3Sockets = (io, socket) => {
         if (nextIndex < rf.questions.length) {
             // Move to next question
             rf.questionIndex = nextIndex;
-            const currentQ = rf.questions[nextIndex];
-            gameState.activeQuestion = {
-                id: currentQ.id,
-                text: currentQ.content?.text,
-                mathText: currentQ.content?.mathText || '',
-                options: currentQ.content?.options || [],
-                imageUrl: currentQ.content?.imageUrl || null
-            };
-            gameState.judgedOption = null;
+            setRapidFireActiveQuestion(rf.questions, nextIndex);
         } else {
             // All questions answered — move to the review board
             rf.questionIndex = nextIndex;
             rf.phase = 'review';
+            rf.reviewQuestionIndex = null;
             gameState.activeQuestion = null;
             gameState.judgedOption = null;
         }
@@ -390,18 +388,11 @@ export const setupRound3Sockets = (io, socket) => {
 
         if (nextIndex < rf.questions.length) {
             rf.questionIndex = nextIndex;
-            const currentQ = rf.questions[nextIndex];
-            gameState.activeQuestion = {
-                id: currentQ.id,
-                text: currentQ.content?.text,
-                mathText: currentQ.content?.mathText || '',
-                options: currentQ.content?.options || [],
-                imageUrl: currentQ.content?.imageUrl || null
-            };
-            gameState.judgedOption = null;
+            setRapidFireActiveQuestion(rf.questions, nextIndex);
         } else {
             rf.questionIndex = nextIndex;
             rf.phase = 'review';
+            rf.reviewQuestionIndex = null;
             gameState.activeQuestion = null;
             gameState.judgedOption = null;
         }
@@ -420,8 +411,7 @@ export const setupRound3Sockets = (io, socket) => {
         const options = rf.questions[parsedIndex]?.content?.options || [];
         if (!Number.isInteger(parsedOption) || parsedOption < 0 || parsedOption >= options.length) return;
 
-        rf.retryQuestionIndex = parsedIndex;
-        rf.retrySelectedOption = parsedOption;
+        rf.reviewAnswers[parsedIndex] = parsedOption;
         gameState.activeQuestion = null;
         gameState.judgedOption = null;
 
@@ -435,9 +425,7 @@ export const setupRound3Sockets = (io, socket) => {
 
         const breakdown = rf.questions.map((q, i) => {
             const correctIndex = q.content?.correctIndex;
-            const selectedOption = i === rf.retryQuestionIndex && rf.retrySelectedOption !== null
-                ? rf.retrySelectedOption
-                : rf.adminAnswers[i] ?? null;
+            const selectedOption = rf.reviewAnswers[i] ?? rf.adminAnswers[i] ?? null;
             const isCorrect = selectedOption !== null && selectedOption === correctIndex;
             return {
                 questionNumber: i + 1,
@@ -446,7 +434,7 @@ export const setupRound3Sockets = (io, socket) => {
                 correctIndex,
                 selectedOption,
                 isCorrect,
-                wasRetried: i === rf.retryQuestionIndex && rf.retrySelectedOption !== null
+                wasRetried: rf.reviewAnswers[i] !== undefined
             };
         });
 
@@ -459,7 +447,7 @@ export const setupRound3Sockets = (io, socket) => {
             total: rf.questions.length,
             correctCount,
             breakdown,
-            retryQuestionIndex: rf.retryQuestionIndex
+            reviewAnswers: rf.reviewAnswers
         };
         rf.showResults = true;
         gameState.activeQuestion = null;
@@ -478,9 +466,9 @@ export const setupRound3Sockets = (io, socket) => {
             questions: [],
             teamId: null,
             adminAnswers: [],
+            reviewAnswers: [],
             phase: 'idle',
-            retryQuestionIndex: null,
-            retrySelectedOption: null,
+            reviewQuestionIndex: null,
             showResults: false,
             results: null
         };
