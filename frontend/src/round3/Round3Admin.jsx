@@ -134,6 +134,8 @@ export default function Round3Admin() {
   const rapidFire = gameState.rapidFire;
   const progressMax = Math.max(rapidFire?.questions?.length || 0, 1);
   const progressWidth = rapidFire ? (rapidFire.questionIndex / progressMax) * 100 : 0;
+  const rfPhase = rapidFire?.phase || 'idle';
+  const rfRetryQuestion = rapidFire?.retryQuestionIndex ?? null;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden font-sans">
@@ -325,7 +327,7 @@ export default function Round3Admin() {
                     </div>
                   </div>
 
-                  {rapidFire.questionIndex < rapidFire.questions.length ? (
+                  {rfPhase === 'playing' && rapidFire.questionIndex < rapidFire.questions.length ? (
                     <>
                       <div className="rounded-xl border border-white/10 bg-black/40 p-3 text-sm leading-relaxed text-white/80">
                         <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-yellow-400">Q{rapidFire.questionIndex + 1}</div>
@@ -346,9 +348,64 @@ export default function Round3Admin() {
                           </button>
                         ))}
                       </div>
+
+                      <button
+                        onClick={() => socket.emit('admin:round3:rf_skip')}
+                        className="rounded-xl border border-amber-400/40 bg-amber-400/10 py-3 text-sm font-black uppercase tracking-wider text-amber-300 hover:bg-amber-400/20"
+                      >
+                        Skip This Question
+                      </button>
                     </>
                   ) : (
-                    <div className="py-4 text-center font-bold text-green-400">All questions answered.</div>
+                    <div className="flex flex-col gap-3">
+                      <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-center text-sm font-bold text-green-300">
+                        All 10 questions completed. Mark the retry answer on any one question below.
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3">
+                        {rapidFire.questions.map((question, index) => {
+                          const hadOriginalAnswer = rapidFire.adminAnswers[index] !== undefined;
+                          const isRetrySelected = rfRetryQuestion === index;
+                          const hasRetryAnswer = isRetrySelected && rapidFire.retrySelectedOption !== null;
+
+                          return (
+                            <div
+                              key={question.id}
+                              className={`rounded-xl border p-3 text-left transition-colors ${isRetrySelected ? 'border-cyan-400 bg-cyan-400/15 text-white' : 'border-white/10 bg-black/40 text-white/80'}`}
+                            >
+                              <div className="mb-1 flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-yellow-400">Q{index + 1}</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                                  {hasRetryAnswer ? 'Retry Answered' : hadOriginalAnswer ? 'Answered' : 'Unanswered'}
+                                </span>
+                              </div>
+                              <div className="mb-3 text-xs leading-relaxed">
+                                <Latex>{question.content?.mathText || question.content?.text || ''}</Latex>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                {(question.content?.options || []).map((opt, idx) => {
+                                  const isMarkedRetry = isRetrySelected && rapidFire.retrySelectedOption === idx;
+
+                                  return (
+                                    <button
+                                      key={idx}
+                                      onClick={() => socket.emit('admin:round3:rf_review_answer', { questionIndex: index, selectedOption: idx })}
+                                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition-colors ${isMarkedRetry ? 'border-cyan-400 bg-cyan-400/20 text-white' : 'border-white/20 bg-white/5 text-white hover:border-cyan-400/40 hover:bg-cyan-400/10'}`}
+                                    >
+                                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-black ${isMarkedRetry ? 'bg-cyan-400/30 text-cyan-200' : 'bg-white/10 text-white/70'}`}>
+                                        {String.fromCharCode(65 + idx)}
+                                      </span>
+                                      <span className="line-clamp-2 text-left"><Latex>{opt}</Latex></span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
 
                   <div className="mt-auto flex gap-2 pt-2">
