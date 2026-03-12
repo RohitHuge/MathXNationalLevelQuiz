@@ -1,0 +1,21 @@
+{
+    "name": "buzzer-express-backend",
+    "version": "1.0.0",
+    "description": "Local Arduino Express & Socket.io server bridging to VPS",
+    "main": "server.js",
+    "type": "module",
+    "scripts": {
+        "dev": "nodemon server.js",
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "@serialport/parser-readline": "^12.0.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.21.0",
+        "nodemon": "^3.1.14",
+        "serialport": "^12.0.0",
+        "socket.io": "^4.7.5",
+        "socket.io-client": "^4.7.5"
+    }
+}
