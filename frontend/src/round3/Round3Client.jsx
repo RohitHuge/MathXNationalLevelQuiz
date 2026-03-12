@@ -93,8 +93,10 @@ export function Round3Client() {
 
     const allocatedTeam = teams.find(t => t.id === allocatedTeamId);
     const rfTeam = teams.find(t => t.id === rapidFire?.teamId);
-
-    const isWaiting = !activeQuestion;
+    const rfPhase = rapidFire?.phase || 'idle';
+    const rfRetryQuestionIndex = rapidFire?.retryQuestionIndex ?? null;
+    const isRapidFireReview = activeSubRound === 5 && rapidFire?.active && rfPhase === 'review' && !activeQuestion;
+    const isWaiting = !activeQuestion && !isRapidFireReview;
 
     // Sub-Round Names
     const subRoundNames = {
@@ -152,7 +154,7 @@ export function Round3Client() {
                                 <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 font-bold uppercase tracking-widest text-sm mb-4">
                                     <Zap size={16} /> Rapid Fire Results — Set {rapidFire.results.setNumber}
                                 </div>
-                                <h2 className="text-5xl font-black text-white mb-2">{rapidFire.results.teamId}. {rapidFire.results.teamName}</h2>
+                                <h2 className="text-5xl font-black text-white mb-2">{rapidFire.results.teamName}</h2>
                                 <div className="flex items-center justify-center gap-6 mt-4">
                                     <div className="text-center">
                                         <div className="text-6xl font-black text-green-400">{rapidFire.results.correctCount}</div>
@@ -186,6 +188,11 @@ export function Round3Client() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Q{item.questionNumber}</div>
+                                            {item.wasRetried && (
+                                                <div className="mb-2 inline-flex rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-cyan-300">
+                                                    Retry Used
+                                                </div>
+                                            )}
                                             <div className="text-sm text-white/80 line-clamp-2 mb-2">
                                                 <Latex>{item.text}</Latex>
                                             </div>
@@ -260,7 +267,54 @@ export function Round3Client() {
             {/* Main Content Arena */}
             <main className={`flex-1 relative z-10 flex w-full h-full ${isWaiting ? 'items-center justify-center p-8' : 'flex-col gap-8 p-8 xl:flex-row'}`}>
 
-                {isWaiting ? (
+                {isRapidFireReview ? (
+                    <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl border border-yellow-400/20 bg-black/50 p-8 backdrop-blur-sm">
+                        <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto pr-2 md:grid-cols-2 xl:grid-cols-3">
+                            {rapidFire.questions.map((question, index) => {
+                                const hadOriginalAnswer = rapidFire.adminAnswers[index] !== undefined;
+                                const isRetryQuestion = rfRetryQuestionIndex === index;
+                                const hasRetryAnswer = isRetryQuestion && rapidFire.retrySelectedOption !== null;
+
+                                return (
+                                    <div
+                                        key={question.id}
+                                        className={`rounded-3xl border p-5 ${isRetryQuestion ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-white/10 bg-white/[0.03]'}`}
+                                    >
+                                        <div className="mb-3 flex items-center justify-between gap-3">
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-yellow-300">
+                                                Q{index + 1}
+                                            </div>
+                                            <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">
+                                                {hasRetryAnswer ? 'Retry Answered' : hadOriginalAnswer ? 'Answered' : 'Pending'}
+                                            </div>
+                                        </div>
+                                        <div className="text-base leading-relaxed text-white/85">
+                                            <Latex>{question.content?.mathText || question.content?.text || ''}</Latex>
+                                        </div>
+                                        {!!question.content?.options?.length && (
+                                            <div className="mt-4 grid grid-cols-2 gap-2">
+                                                {question.content.options.map((opt, optIndex) => (
+                                                    <div
+                                                        key={optIndex}
+                                                        className={`rounded-xl border px-3 py-2 text-sm ${isRetryQuestion && rapidFire.retrySelectedOption === optIndex
+                                                            ? 'border-cyan-400/60 bg-cyan-400/15 text-white'
+                                                            : 'border-white/10 bg-white/5 text-white/70'
+                                                            }`}
+                                                    >
+                                                        <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-lg bg-black/30 text-[10px] font-black">
+                                                            {String.fromCharCode(65 + optIndex)}
+                                                        </span>
+                                                        <Latex>{opt}</Latex>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ) : isWaiting ? (
                     <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/50 text-center backdrop-blur-sm">
                         <div className="absolute inset-0 pointer-events-none">
                             {waitingSymbols.map((item) => (
@@ -475,15 +529,23 @@ export function Round3Client() {
                             </div>
                             <div className="text-center">
                                 <div className="text-5xl font-black text-white mb-1">
-                                    {Math.min(rapidFire.questionIndex + 1, rapidFire.questions?.length || 10)}
-                                    <span className="text-white/30 text-2xl"> / {rapidFire.questions?.length || 10}</span>
+                                    {rfPhase === 'review'
+                                        ? 'Review'
+                                        : rfRetryQuestionIndex !== null
+                                            ? `Q${rfRetryQuestionIndex + 1}`
+                                            : Math.min(rapidFire.questionIndex + 1, rapidFire.questions?.length || 10)}
+                                    {rfPhase === 'playing' && (
+                                        <span className="text-white/30 text-2xl"> / {rapidFire.questions?.length || 10}</span>
+                                    )}
                                 </div>
-                                <div className="text-xs text-white/40 uppercase tracking-widest">Question</div>
+                                <div className="text-xs text-white/40 uppercase tracking-widest">
+                                    {rfPhase === 'review' ? 'All Questions Shown' : rfRetryQuestionIndex !== null ? 'Retry Selected' : 'Question'}
+                                </div>
                             </div>
                             <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
                                 <motion.div
                                     className="h-full bg-yellow-400 rounded-full"
-                                    animate={{ width: `${((rapidFire.questionIndex || 0) / (rapidFire.questions?.length || 10)) * 100}%` }}
+                                    animate={{ width: `${rfPhase === 'review' ? 100 : ((rapidFire.questionIndex || 0) / (rapidFire.questions?.length || 10)) * 100}%` }}
                                     transition={{ duration: 0.3 }}
                                 />
                             </div>
