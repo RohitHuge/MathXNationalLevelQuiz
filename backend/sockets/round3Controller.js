@@ -76,8 +76,6 @@ const setRapidFireActiveQuestion = (questions, questionIndex) => {
     const currentQuestion = questions[questionIndex];
     gameState.activeQuestion = currentQuestion ? buildRapidFireQuestion(currentQuestion) : null;
     gameState.judgedOption = null;
-    gameState.timerTime = 60;
-    gameState.isTimerRunning = false;
 };
 
 export const setupRound3Sockets = (io, socket) => {
@@ -243,6 +241,12 @@ export const setupRound3Sockets = (io, socket) => {
 
         const { teamId, timestamp } = data;
 
+        io.emit('server:round3:buzzer_hit', {
+            teamId,
+            timestamp: timestamp || Date.now(),
+            activeSubRound: gameState.activeSubRound
+        });
+
         // Sub-Round 3: Block Allocated Team from queueing 
         if (gameState.activeSubRound === 3) {
             // Use loose equality (==) because teamId from hardware is Number, but allocatedTeamId might be String internally
@@ -348,6 +352,8 @@ export const setupRound3Sockets = (io, socket) => {
             results: null
         };
         gameState.activeSubRound = 5;
+        gameState.timerTime = 60;
+        gameState.isTimerRunning = false;
         setRapidFireActiveQuestion(questions, 0);
 
         io.emit('server:round3:state_update', gameState);
@@ -450,6 +456,7 @@ export const setupRound3Sockets = (io, socket) => {
             reviewAnswers: rf.reviewAnswers
         };
         rf.showResults = true;
+        gameState.isTimerRunning = false;
         gameState.activeQuestion = null;
         gameState.judgedOption = null;
 
@@ -474,6 +481,8 @@ export const setupRound3Sockets = (io, socket) => {
         };
         gameState.activeQuestion = null;
         gameState.judgedOption = null;
+        gameState.timerTime = 60;
+        gameState.isTimerRunning = false;
         io.emit('server:round3:state_update', gameState);
     });
 };

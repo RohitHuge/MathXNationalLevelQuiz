@@ -30,21 +30,27 @@ export function Round3Client() {
 
     // Buzzer Sound Logic
     const buzzerSound = React.useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2959/2959-preview.mp3'));
-    const prevQueueLength = React.useRef(0);
 
     useEffect(() => {
         if (!socket) return;
 
-        socket.on('server:round3:state_update', (state) => {
-            // Check if queue length increased -> play sound
-            const currentQueue = state.buzzerQueue || [];
-            if (currentQueue.length > prevQueueLength.current) {
-                buzzerSound.current.currentTime = 0; // Reset for overlap
-                buzzerSound.current.play().catch(err => console.error("Sound play failed:", err));
-            }
-            prevQueueLength.current = currentQueue.length;
+        const playBuzzerSound = () => {
+            buzzerSound.current.currentTime = 0;
+            buzzerSound.current.play().catch(err => console.error("Sound play failed:", err));
+        };
+
+        const handleStateUpdate = (state) => {
             setGameState(state);
-        });
+        };
+
+        const handleBuzzerHit = ({ activeSubRound }) => {
+            if (activeSubRound === 3 || activeSubRound === 4) {
+                playBuzzerSound();
+            }
+        };
+
+        socket.on('server:round3:state_update', handleStateUpdate);
+        socket.on('server:round3:buzzer_hit', handleBuzzerHit);
 
         socket.on('server:round3:timer_tick', (time) => {
             setGameState(prev => prev ? { ...prev, timerTime: time } : prev);
@@ -54,7 +60,8 @@ export function Round3Client() {
         socket.emit('client:round3:request_state');
 
         return () => {
-            socket.off('server:round3:state_update');
+            socket.off('server:round3:state_update', handleStateUpdate);
+            socket.off('server:round3:buzzer_hit', handleBuzzerHit);
             socket.off('server:round3:timer_tick');
         };
     }, [socket]);
