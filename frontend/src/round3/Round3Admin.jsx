@@ -133,9 +133,13 @@ export default function Round3Admin() {
 
   const rapidFire = gameState.rapidFire;
   const progressMax = Math.max(rapidFire?.questions?.length || 0, 1);
-  const progressWidth = rapidFire ? (rapidFire.questionIndex / progressMax) * 100 : 0;
   const rfPhase = rapidFire?.phase || 'idle';
-  const rfRetryQuestion = rapidFire?.retryQuestionIndex ?? null;
+  const progressStep = rapidFire
+    ? rfPhase === 'review'
+      ? progressMax
+      : Math.min(rapidFire.questionIndex, progressMax)
+    : 0;
+  const progressWidth = (progressStep / progressMax) * 100;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden font-sans">
@@ -319,7 +323,11 @@ export default function Round3Admin() {
                 <>
                   <div>
                     <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wider text-white/40">
-                      <span>Question {Math.min(rapidFire.questionIndex + 1, rapidFire.questions.length)} of {rapidFire.questions.length}</span>
+                      <span>
+                        {rfPhase === 'review'
+                          ? `Review Board ${rapidFire.questions.length} Questions`
+                          : `Question ${Math.min(rapidFire.questionIndex + 1, rapidFire.questions.length)} of ${rapidFire.questions.length}`}
+                      </span>
                       <span>Set {rapidFire.setNumber} | {teams?.find((t) => t.id === rapidFire.teamId)?.name}</span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
@@ -359,41 +367,36 @@ export default function Round3Admin() {
                   ) : (
                     <div className="flex flex-col gap-3">
                       <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-center text-sm font-bold text-green-300">
-                        All 10 questions completed. Mark the retry answer on any one question below.
+                        Review board is active. All questions are visible, and every answer can be selected or changed here.
                       </div>
 
                       <div className="grid grid-cols-1 gap-3">
                         {rapidFire.questions.map((question, index) => {
-                          const hadOriginalAnswer = rapidFire.adminAnswers[index] !== undefined;
-                          const isRetrySelected = rfRetryQuestion === index;
-                          const hasRetryAnswer = isRetrySelected && rapidFire.retrySelectedOption !== null;
+                          const reviewedAnswer = rapidFire.reviewAnswers?.[index];
+                          const originalAnswer = rapidFire.adminAnswers[index];
+                          const selectedAnswer = reviewedAnswer ?? originalAnswer;
 
                           return (
                             <div
                               key={question.id}
-                              className={`rounded-xl border p-3 text-left transition-colors ${isRetrySelected ? 'border-cyan-400 bg-cyan-400/15 text-white' : 'border-white/10 bg-black/40 text-white/80'}`}
+                              className={`rounded-xl border p-3 text-left transition-colors ${reviewedAnswer !== undefined ? 'border-cyan-400 bg-cyan-400/15 text-white' : 'border-white/10 bg-black/40 text-white/80'}`}
                             >
-                              <div className="mb-1 flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-yellow-400">Q{index + 1}</span>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
-                                  {hasRetryAnswer ? 'Retry Answered' : hadOriginalAnswer ? 'Answered' : 'Unanswered'}
-                                </span>
-                              </div>
+                              <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-yellow-400">Q{index + 1}</div>
                               <div className="mb-3 text-xs leading-relaxed">
                                 <Latex>{question.content?.mathText || question.content?.text || ''}</Latex>
                               </div>
 
                               <div className="grid grid-cols-2 gap-2">
                                 {(question.content?.options || []).map((opt, idx) => {
-                                  const isMarkedRetry = isRetrySelected && rapidFire.retrySelectedOption === idx;
+                                  const isSelected = selectedAnswer === idx;
 
                                   return (
                                     <button
                                       key={idx}
                                       onClick={() => socket.emit('admin:round3:rf_review_answer', { questionIndex: index, selectedOption: idx })}
-                                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition-colors ${isMarkedRetry ? 'border-cyan-400 bg-cyan-400/20 text-white' : 'border-white/20 bg-white/5 text-white hover:border-cyan-400/40 hover:bg-cyan-400/10'}`}
+                                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition-colors ${isSelected ? 'border-cyan-400 bg-cyan-400/20 text-white' : 'border-white/20 bg-white/5 text-white hover:border-cyan-400/40 hover:bg-cyan-400/10'}`}
                                     >
-                                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-black ${isMarkedRetry ? 'bg-cyan-400/30 text-cyan-200' : 'bg-white/10 text-white/70'}`}>
+                                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-[10px] font-black ${isSelected ? 'bg-cyan-400/30 text-cyan-200' : 'bg-white/10 text-white/70'}`}>
                                         {String.fromCharCode(65 + idx)}
                                       </span>
                                       <span className="line-clamp-2 text-left"><Latex>{opt}</Latex></span>

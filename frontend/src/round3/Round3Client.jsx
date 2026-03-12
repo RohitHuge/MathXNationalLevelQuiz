@@ -94,7 +94,6 @@ export function Round3Client() {
     const allocatedTeam = teams.find(t => t.id === allocatedTeamId);
     const rfTeam = teams.find(t => t.id === rapidFire?.teamId);
     const rfPhase = rapidFire?.phase || 'idle';
-    const rfRetryQuestionIndex = rapidFire?.retryQuestionIndex ?? null;
     const isRapidFireReview = activeSubRound === 5 && rapidFire?.active && rfPhase === 'review' && !activeQuestion;
     const isWaiting = !activeQuestion && !isRapidFireReview;
 
@@ -269,24 +268,29 @@ export function Round3Client() {
 
                 {isRapidFireReview ? (
                     <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl border border-yellow-400/20 bg-black/50 p-8 backdrop-blur-sm">
+                        {showTimer && (
+                            <div className="mb-6 flex items-center gap-6 rounded-3xl border border-white/10 bg-black/40 p-6 backdrop-blur-sm">
+                                <Clock className="w-8 h-8 shrink-0 text-[var(--color-neon-cyan)]" />
+                                <div className="mt-6 flex-1">
+                                    <HorizontalTimer time={timerTime} maxTime={60} />
+                                </div>
+                                <span className={`w-24 text-right font-mono text-5xl font-black tracking-tighter ${timerTime <= 10 ? 'animate-pulse text-[var(--color-neon-pink)]' : 'text-white'}`}>{timerTime}s</span>
+                            </div>
+                        )}
+
                         <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto pr-2 md:grid-cols-2 xl:grid-cols-3">
                             {rapidFire.questions.map((question, index) => {
-                                const hadOriginalAnswer = rapidFire.adminAnswers[index] !== undefined;
-                                const isRetryQuestion = rfRetryQuestionIndex === index;
-                                const hasRetryAnswer = isRetryQuestion && rapidFire.retrySelectedOption !== null;
+                                const reviewedAnswer = rapidFire.reviewAnswers?.[index];
+                                const originalAnswer = rapidFire.adminAnswers[index];
+                                const selectedAnswer = reviewedAnswer ?? originalAnswer;
 
                                 return (
                                     <div
                                         key={question.id}
-                                        className={`rounded-3xl border p-5 ${isRetryQuestion ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-white/10 bg-white/[0.03]'}`}
+                                        className={`rounded-3xl border p-5 ${reviewedAnswer !== undefined ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-white/10 bg-white/[0.03]'}`}
                                     >
-                                        <div className="mb-3 flex items-center justify-between gap-3">
-                                            <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-yellow-300">
-                                                Q{index + 1}
-                                            </div>
-                                            <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">
-                                                {hasRetryAnswer ? 'Retry Answered' : hadOriginalAnswer ? 'Answered' : 'Pending'}
-                                            </div>
+                                        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-yellow-300">
+                                            Q{index + 1}
                                         </div>
                                         <div className="text-base leading-relaxed text-white/85">
                                             <Latex>{question.content?.mathText || question.content?.text || ''}</Latex>
@@ -296,7 +300,7 @@ export function Round3Client() {
                                                 {question.content.options.map((opt, optIndex) => (
                                                     <div
                                                         key={optIndex}
-                                                        className={`rounded-xl border px-3 py-2 text-sm ${isRetryQuestion && rapidFire.retrySelectedOption === optIndex
+                                                        className={`rounded-xl border px-3 py-2 text-sm ${selectedAnswer === optIndex
                                                             ? 'border-cyan-400/60 bg-cyan-400/15 text-white'
                                                             : 'border-white/10 bg-white/5 text-white/70'
                                                             }`}
@@ -531,15 +535,13 @@ export function Round3Client() {
                                 <div className="text-5xl font-black text-white mb-1">
                                     {rfPhase === 'review'
                                         ? 'Review'
-                                        : rfRetryQuestionIndex !== null
-                                            ? `Q${rfRetryQuestionIndex + 1}`
-                                            : Math.min(rapidFire.questionIndex + 1, rapidFire.questions?.length || 10)}
+                                        : Math.min(rapidFire.questionIndex + 1, rapidFire.questions?.length || 10)}
                                     {rfPhase === 'playing' && (
                                         <span className="text-white/30 text-2xl"> / {rapidFire.questions?.length || 10}</span>
                                     )}
                                 </div>
                                 <div className="text-xs text-white/40 uppercase tracking-widest">
-                                    {rfPhase === 'review' ? 'All Questions Shown' : rfRetryQuestionIndex !== null ? 'Retry Selected' : 'Question'}
+                                    {rfPhase === 'review' ? 'All Questions Visible' : 'Question'}
                                 </div>
                             </div>
                             <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">

@@ -236,15 +236,6 @@ try {
       if (!isNaN(teamId) && teamId >= 1 && teamId <= 6) {
         console.log(`🔥 [BUZZ] Team ${teamId} pressed buzzer! Forwarding to VPS...`);
 
-        // Momentary Glow: Turn ON instantly for 1.5 seconds so hardware acknowledges the press
-        sendLightCommand(teamId, 'U');
-
-        setTimeout(() => {
-          console.log(`⏳ [Glow End] Reverting Team ${teamId} to round-specific state`);
-          // Re-sync with the global game state to restore correct U/B/O mode
-          updateArduinoLights(lastState);
-        }, 1500);
-
         // Emit the exact physical hit to the Backend's Round 3 Controller
         vpsSocket.emit('client:round3:buzzer_pressed', {
           teamId: teamId,
@@ -255,7 +246,7 @@ try {
         // (Optional) Emit to Round 2 as well if they share the codebase
         vpsSocket.emit('fastfingers:buzzer:hit', teamId);
 
-        // Light is now managed by the VPS state update for consistency across rounds
+        // Light state is managed only by VPS queue/rank updates.
       } else {
         console.log(`[Hardware Debug] Ignoring unrecognized hardware signal: "${cleanData}"`);
       }
