@@ -361,7 +361,11 @@ const setupSockets = (io) => {
 
                 if (currentStatus === 'submitted') {
                     // Fetch attempted count
-                    const responseCountRes = await pool.query(`SELECT COUNT(*) as attempted FROM public.responses WHERE user_id = $1`, [userId]);
+                    const responseCountRes = await pool.query(`
+                        SELECT COUNT(*) AS attempted
+                        FROM public.responses
+                        WHERE user_id = $1 AND selected_option <> '-1'
+                    `, [userId]);
                     const attemptedCount = parseInt(responseCountRes.rows[0].attempted, 10);
 
                     socket.emit('server:session_status', { status: 'submitted', attemptedCount });
@@ -475,6 +479,13 @@ const setupSockets = (io) => {
 
                 const totalScoreEarned = parseInt(scoreRes.rows[0].total_score, 10);
 
+                const attemptedCountRes = await pool.query(`
+                    SELECT COUNT(*) AS attempted
+                    FROM public.responses
+                    WHERE user_id = $1 AND selected_option <> '-1'
+                `, [userId]);
+                const attemptedCount = parseInt(attemptedCountRes.rows[0].attempted, 10);
+
                 // Insert final score record
                 await pool.query(`
                     INSERT INTO public.results (user_id, total_score, submitted_at)
@@ -482,6 +493,8 @@ const setupSockets = (io) => {
                 `, [userId, totalScoreEarned]);
 
                 console.log(`[Grading Complete] SQL User UUID: ${userId} | Score: ${totalScoreEarned}`);
+
+                socket.emit('server:session_status', { status: 'submitted', attemptedCount });
 
                 // Broadcast leaderboard refresh
                 io.emit('leaderboard:update');

@@ -29,7 +29,7 @@ export function Round3Client() {
     const [imageZoom, setImageZoom] = useState(2);
 
     // Buzzer Sound Logic
-    const buzzerSound = React.useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2959/2959-preview.mp3'));
+    const buzzerSound = React.useRef(new Audio('/buzzer.mp3'));
 
     useEffect(() => {
         if (!socket) return;
