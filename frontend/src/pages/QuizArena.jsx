@@ -48,6 +48,18 @@ export default function QuizArena({ user }) {
 
     // We'll use the user's mapped email for PostgreSQL UUID lookup
 
+    const getLocalAttemptedCount = () => {
+        const savedAttempted = Object.values(answers).filter((value) => value >= 0).length;
+        const currentQuestionId = questions[currentIndex]?.id;
+
+        if (localSelection === null || !currentQuestionId) {
+            return savedAttempted;
+        }
+
+        const hadSavedAnswer = answers[currentQuestionId] !== undefined && answers[currentQuestionId] >= 0;
+        return hadSavedAnswer ? savedAttempted : savedAttempted + 1;
+    };
+
     // Effect to toggle the body class for global background styling
     useEffect(() => {
         if (isDarkMode) {
@@ -238,7 +250,7 @@ export default function QuizArena({ user }) {
         }
 
         // Count how many they attempted locally before final submit
-        const localAttempted = Object.keys(answers).length;
+        const localAttempted = getLocalAttemptedCount();
         setAttemptedCount(localAttempted);
 
         setSubmitted(true);

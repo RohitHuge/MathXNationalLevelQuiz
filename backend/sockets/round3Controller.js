@@ -8,6 +8,7 @@ let gameState = {
     showAnswer: false,
     judgedOption: null,
     timerTime: 60,
+    timerMax: 60,
     isTimerRunning: false,
     imageUrl: null,
 
@@ -68,8 +69,10 @@ const buildRapidFireQuestion = (questionRow) => ({
     id: questionRow.id,
     text: questionRow.content?.text,
     mathText: questionRow.content?.mathText || '',
+    infoText: questionRow.content?.infoText || '',
     options: questionRow.content?.options || [],
-    imageUrl: questionRow.content?.imageUrl || null
+    imageUrl: questionRow.content?.imageUrl || null,
+    answerText: questionRow.content?.answerText || questionRow.content?.correctAnswer || null
 });
 
 const setRapidFireActiveQuestion = (questions, questionIndex) => {
@@ -121,14 +124,17 @@ export const setupRound3Sockets = (io, socket) => {
                     id: question.id,
                     text: question.content?.text || 'Question',
                     mathText: question.content?.mathText || '',
+                    infoText: question.content?.infoText || '',
                     imageUrl: question.content?.imageUrl || null, // For visual round
                     options: question.content?.options || [],
-                    correctIndex: question.content?.correctIndex
+                    correctIndex: question.content?.correctIndex,
+                    answerText: question.content?.answerText || question.content?.correctAnswer || null
                 };
                 gameState.activeSubRound = subRoundNum;
                 gameState.showAnswer = false;
                 gameState.judgedOption = null;
                 gameState.timerTime = 60;
+                gameState.timerMax = 60;
                 gameState.isTimerRunning = false;
 
                 // Reset buzzer mechanics and allocations for the new question
@@ -200,7 +206,9 @@ export const setupRound3Sockets = (io, socket) => {
     });
 
     socket.on('admin:round3:set_timer', (time) => {
-        gameState.timerTime = parseInt(time, 10) || 0;
+        const parsedTime = parseInt(time, 10) || 0;
+        gameState.timerTime = parsedTime;
+        gameState.timerMax = parsedTime;
         io.emit('server:round3:state_update', gameState);
     });
 
@@ -353,6 +361,7 @@ export const setupRound3Sockets = (io, socket) => {
         };
         gameState.activeSubRound = 5;
         gameState.timerTime = 60;
+        gameState.timerMax = 60;
         gameState.isTimerRunning = false;
         setRapidFireActiveQuestion(questions, 0);
 
@@ -482,6 +491,7 @@ export const setupRound3Sockets = (io, socket) => {
         gameState.activeQuestion = null;
         gameState.judgedOption = null;
         gameState.timerTime = 60;
+        gameState.timerMax = 60;
         gameState.isTimerRunning = false;
         io.emit('server:round3:state_update', gameState);
     });

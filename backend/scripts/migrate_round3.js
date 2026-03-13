@@ -61,22 +61,31 @@ async function importRound3Questions() {
 
             // Calculate exact array index (A=0, B=1, C=2, D=3)
             let correctIndex = null;
+            let answerText = null;
             if (nestedContent.answer?.value) {
-                const charCode = nestedContent.answer.value.toUpperCase().charCodeAt(0);
-                correctIndex = charCode - 65; // 'A' becomes 0
+                const rawAnswer = String(nestedContent.answer.value).trim();
+                const normalizedAnswer = rawAnswer.toUpperCase();
+                if (normalizedAnswer.length === 1 && normalizedAnswer >= 'A' && normalizedAnswer <= 'D') {
+                    correctIndex = normalizedAnswer.charCodeAt(0) - 65; // 'A' becomes 0
+                } else if (rawAnswer) {
+                    answerText = rawAnswer;
+                }
             }
 
             // Map options array correctly
             const mappedOptions = Array.isArray(nestedContent.options)
                 ? nestedContent.options.map(opt => opt.latex || opt.text || '')
                 : [];
+            const hasNamedAnswer = Boolean(answerText);
 
             const cleanContentObject = {
-                type: 'mcq',
+                type: hasNamedAnswer ? 'visual-identification' : 'mcq',
                 text: nestedContent.body?.latex || '',
+                infoText: nestedContent.body?.info || nestedContent.body?.description || '',
                 imageUrl: hasImage ? nestedContent.body?.image : null,
-                options: mappedOptions,
-                correctIndex: correctIndex
+                options: hasNamedAnswer ? [] : mappedOptions,
+                correctIndex: hasNamedAnswer ? null : correctIndex,
+                answerText
             };
 
             // 5. Insert directly into public.questions for Round 3

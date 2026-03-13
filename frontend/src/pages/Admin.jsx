@@ -18,6 +18,7 @@ const tabClass = (active, tone) =>
 
 const actionCardClass = 'relative flex h-full min-h-0 flex-col overflow-hidden p-4';
 const sideUtilityCardClass = 'relative flex min-h-0 flex-col overflow-hidden p-4';
+const API_BASE_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
 export default function Admin() {
   const { socket, isConnected } = useSocket();
@@ -30,6 +31,8 @@ export default function Admin() {
   const [topNTeams, setTopNTeams] = useState(20);
   const [isQualifying, setIsQualifying] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
+  const [isDownloadingRankings, setIsDownloadingRankings] = useState(false);
+  const [isDownloadingQualifiedPublic, setIsDownloadingQualifiedPublic] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [activeQuestionId, setActiveQuestionId] = useState(null);
   const [clients, setClients] = useState([]);
@@ -135,7 +138,7 @@ export default function Admin() {
     if (!window.confirm(`Are you sure you want to grant Round 2 Access to the Top ${topNTeams} Teams?`)) return;
     setIsQualifying(true);
     try {
-      const res = await fetch('/api/round2/qualify', {
+      const res = await fetch(`${API_BASE_URL}/api/round2/qualify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ n: parseInt(topNTeams, 10) }),
@@ -160,12 +163,12 @@ export default function Admin() {
   const generateQualifiedTeamsPDF = (qualifiedTeams) => {
     const doc = new jsPDF();
     doc.setFontSize(20);
-    doc.text('Qualified Teams - Round 1 to Round 2', 14, 22);
+    doc.text('Qualified Team Leaders - Round 1 to Round 2', 14, 22);
     doc.setFontSize(11);
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
 
-    const tableColumn = ['#', 'Team Name', 'Member Name', 'Email ID', 'Total Score'];
+    const tableColumn = ['#', 'Team Name', 'Leader Name', 'Email ID', 'Total Score'];
     const tableRows = qualifiedTeams.map((team, index) => ([
       index + 1,
       team.team_name,
@@ -186,11 +189,102 @@ export default function Admin() {
     doc.save(`Qualified_Teams_Round2_${new Date().getTime()}.pdf`);
   };
 
+  const generateRankedTeamsPDF = (rankedTeams) => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('All Teams Ranking - Round 1', 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tableColumn = ['Rank', 'Team Name', 'Total Score'];
+    const tableRows = rankedTeams.map((team) => ([
+      team.rank,
+      team.team_name,
+      team.total_score || 0,
+    ]));
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'striped',
+      headStyles: { fillColor: [34, 197, 94] },
+      styles: { fontSize: 9 },
+    });
+
+    doc.save(`All_Teams_Ranking_${new Date().getTime()}.pdf`);
+  };
+
+  const generatePublicQualifiedTeamsPDF = (qualifiedTeams) => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Qualified Teams - Public List', 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tableColumn = ['Rank', 'Team Name', 'Total Score'];
+    const tableRows = qualifiedTeams.map((team) => ([
+      team.rank,
+      team.team_name,
+      team.total_score || 0,
+    ]));
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] },
+      styles: { fontSize: 9 },
+    });
+
+    doc.save(`Qualified_Teams_Public_${new Date().getTime()}.pdf`);
+  };
+
+  const fetchRound2Reports = async () => {
+    const res = await fetch(`${API_BASE_URL}/api/round2/reports?n=${parseInt(topNTeams, 10) || 20}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to fetch Round 2 reports.');
+    }
+
+    return data;
+  };
+
+  const handleDownloadRankings = async () => {
+    setIsDownloadingRankings(true);
+    try {
+      const data = await fetchRound2Reports();
+      generateRankedTeamsPDF(data.rankedTeams || []);
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Failed to download ranked teams list.');
+    } finally {
+      setIsDownloadingRankings(false);
+    }
+  };
+
+  const handleDownloadQualifiedPublic = async () => {
+    setIsDownloadingQualifiedPublic(true);
+    try {
+      const data = await fetchRound2Reports();
+      generatePublicQualifiedTeamsPDF(data.qualifiedTeams || []);
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Failed to download qualified teams public list.');
+    } finally {
+      setIsDownloadingQualifiedPublic(false);
+    }
+  };
+
   const handleRevokeAll = async () => {
     if (!window.confirm('WARNING: Are you sure you want to REVOKE Round 2 Access from ALL users?')) return;
     setIsRevoking(true);
     try {
-      const res = await fetch('/api/round2/revoke', {
+      const res = await fetch(`${API_BASE_URL}/api/round2/revoke`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -420,8 +514,8 @@ export default function Admin() {
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[var(--color-neon-cyan)]">Quiz Duration</label>
               <div className="flex flex-col gap-2">
                 <input type="number" value={timerMinutes} onChange={(e) => setTimerMinutes(parseInt(e.target.value, 10) || 0)} className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-base font-mono text-white focus:outline-none focus:border-[var(--color-neon-cyan)]" min="1" />
-                <div className="grid grid-cols-4 gap-2">
-                  {[15, 30, 60, 90].map((mins) => (
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 15, 30, 60, 90].map((mins) => (
                     <button key={mins} onClick={() => setTimerMinutes(mins)} className={`rounded py-1.5 text-xs font-bold transition-colors ${timerMinutes === mins ? 'bg-[var(--color-neon-cyan)] text-slate-900 shadow-[0_0_10px_rgba(0,255,255,0.3)]' : 'bg-slate-800 text-[var(--color-neon-cyan)] hover:bg-slate-700'}`}>
                       {mins}m
                     </button>
@@ -459,6 +553,24 @@ export default function Admin() {
                 <ThemeButton variant="primary" className={`mt-auto w-full px-4 py-2 text-sm ${isQualifying ? 'bg-amber-600 cursor-not-allowed' : 'bg-amber-600/20 border-amber-500/50 text-white hover:bg-amber-600'}`} onClick={handleQualifyTeams} disabled={isQualifying}>
                   {isQualifying ? 'Processing...' : `Qualify Top ${topNTeams}`}
                 </ThemeButton>
+                <div className="mt-3 grid grid-cols-1 gap-2">
+                  <ThemeButton
+                    variant="secondary"
+                    className={`w-full px-4 py-2 text-sm ${isDownloadingRankings ? 'bg-green-900 cursor-not-allowed text-white' : 'border-green-500/50 text-green-400 hover:bg-green-500 hover:text-white'}`}
+                    onClick={handleDownloadRankings}
+                    disabled={isDownloadingRankings}
+                  >
+                    {isDownloadingRankings ? 'Preparing Rankings...' : 'Download All Teams Ranking'}
+                  </ThemeButton>
+                  <ThemeButton
+                    variant="secondary"
+                    className={`w-full px-4 py-2 text-sm ${isDownloadingQualifiedPublic ? 'bg-blue-900 cursor-not-allowed text-white' : 'border-blue-500/50 text-blue-400 hover:bg-blue-500 hover:text-white'}`}
+                    onClick={handleDownloadQualifiedPublic}
+                    disabled={isDownloadingQualifiedPublic}
+                  >
+                    {isDownloadingQualifiedPublic ? 'Preparing Public List...' : `Download Qualified Top ${topNTeams} Public List`}
+                  </ThemeButton>
+                </div>
               </div>
 
               <div className="flex flex-col rounded-xl border border-red-500/20 bg-black/40 p-4">

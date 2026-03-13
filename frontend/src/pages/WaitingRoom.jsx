@@ -51,8 +51,8 @@ export default function WaitingRoom({ user }) {
         $id: 'demo',
         title: 'MathX National Level Quiz 2026',
         description: 'A prestigious national-level assessment conceptualized to evaluate pinnacle mathematical intuition, advanced algebraic manipulation, and high-order logic operations within a highly secure virtual environment.',
-        duration: 15,
-        questionCount: 3
+        duration: 60,
+        questionCount: 50
     };
 
 
@@ -158,9 +158,9 @@ export default function WaitingRoom({ user }) {
                             <div className="mb-12">
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
                                     <h3 className="text-4xl font-black text-white leading-tight">{quizDetails.title}</h3>
-                                    <span className="glass-panel text-[var(--color-neon-cyan)] text-sm font-black px-5 py-2 rounded-full uppercase tracking-widest border border-[var(--color-neon-cyan)]/30 shadow-[0_0_15px_rgba(0,243,255,0.2)] whitespace-nowrap">
+                                    {/* <span className="glass-panel text-[var(--color-neon-cyan)] text-sm font-black px-5 py-2 rounded-full uppercase tracking-widest border border-[var(--color-neon-cyan)]/30 shadow-[0_0_15px_rgba(0,243,255,0.2)] whitespace-nowrap">
                                         SIMULATION
-                                    </span>
+                                    </span> */}
                                 </div>
                                 <p className="text-[var(--color-gray-300)] text-lg leading-relaxed max-w-4xl font-medium">
                                     {quizDetails.description}
