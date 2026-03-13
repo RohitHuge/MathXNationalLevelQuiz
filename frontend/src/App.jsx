@@ -61,7 +61,7 @@ function AppContent() {
         else if (stageNum === 1) targetPath = '/round2/dashboard'; // FastFingers Branded Dashboard
         else if (stageNum === 2) targetPath = '/round2/client'; // FastFingers Live Radar
       } else if (roundStr === 'C') { // Round 3 logic
-        if (stageNum === 1) targetPath = '/round3/dashboard';
+        if (stageNum === 1) targetPath = '/round3/dashbaord';
         else if (stageNum === 2) targetPath = '/round3/client';
       } else if (roundStr === 'P') { // Point table public display
         if (stageNum === 1) targetPath = '/pointtable/client';
@@ -236,9 +236,15 @@ function AppContent() {
             }
           />
           <Route
-            path="/round3/dashboard"
+            path="/round3/dashbaord"
             element={
               <Round3Dashboard />
+            }
+          />
+          <Route
+            path="/round3/dashboard"
+            element={
+              <Navigate to="/round3/dashbaord" replace />
             }
           />
           <Route

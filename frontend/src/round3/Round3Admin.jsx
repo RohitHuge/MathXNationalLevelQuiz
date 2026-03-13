@@ -140,6 +140,9 @@ export default function Round3Admin() {
       : Math.min(rapidFire.questionIndex, progressMax)
     : 0;
   const progressWidth = (progressStep / progressMax) * 100;
+  const isPassOnRound = selectedSubRound === 3;
+  const activeQueueIndex = isPassOnRound ? passCount - 1 : passCount;
+  const isAllocatedTurnActive = isPassOnRound && allocatedTeamId !== null && passCount === 0;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden font-sans">
@@ -553,11 +556,13 @@ export default function Round3Admin() {
             {teams.map((team) => {
               const buzzIndex = buzzerQueue.findIndex((b) => b.teamId === team.id);
               const hasBuzzed = buzzIndex !== -1;
-              const isActiveTurn = hasBuzzed && buzzIndex === passCount;
-              const isPassed = hasBuzzed && buzzIndex < passCount;
+              const isAllocatedActiveCard = isAllocatedTurnActive && allocatedTeamId === team.id;
+              const isActiveTurn = hasBuzzed && buzzIndex === activeQueueIndex;
+              const isPassed = hasBuzzed && buzzIndex < activeQueueIndex;
 
               let styles = 'bg-black/40 border-white/5 hover:border-white/20';
-              if (isActiveTurn) styles = 'bg-[var(--color-neon-pink)]/10 border-[var(--color-neon-pink)] shadow-[0_0_20px_rgba(255,0,255,0.2)]';
+              if (isAllocatedActiveCard) styles = 'bg-[var(--color-neon-cyan)]/15 border-[var(--color-neon-cyan)] shadow-[0_0_20px_rgba(0,255,255,0.2)] ring-1 ring-[var(--color-neon-cyan)]';
+              else if (isActiveTurn) styles = 'bg-[var(--color-neon-pink)]/10 border-[var(--color-neon-pink)] shadow-[0_0_20px_rgba(255,0,255,0.2)]';
               else if (hasBuzzed && !isPassed) styles = 'bg-green-500/10 border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.1)] ring-1 ring-green-500/50';
               else if (isPassed) styles = 'bg-red-500/10 border-red-500/30 opacity-60';
               else if (allocatedTeamId === team.id) styles = 'bg-[var(--color-neon-cyan)]/10 border-[var(--color-neon-cyan)] shadow-[0_0_15px_rgba(0,255,255,0.2)]';
@@ -573,13 +578,14 @@ export default function Round3Admin() {
                         </span>
                       )}
                     </span>
+                    {isAllocatedActiveCard && <span className="mt-1 text-xs font-bold uppercase tracking-widest text-[var(--color-neon-cyan)] animate-pulse">Allocated Team Answering First</span>}
                     {isActiveTurn && <span className="mt-1 text-xs font-bold uppercase tracking-widest text-[var(--color-neon-pink)] animate-pulse">Hardware Priority Turn</span>}
                     {isPassed && <span className="mt-1 text-xs font-bold uppercase tracking-widest text-red-500 line-through">Passed Over</span>}
                   </div>
 
                   <div className="mt-1 flex items-center justify-between border-t border-white/10 pt-2">
                     <div className="flex flex-1 flex-col gap-2">
-                      {isActiveTurn && (
+                      {(isAllocatedActiveCard || isActiveTurn) && (
                         <button onClick={() => socket.emit('admin:round3:pass_next')} className="w-full rounded border border-red-500/50 bg-red-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-red-500 hover:bg-red-500 hover:text-white">
                           Pass to Next Buzzer
                         </button>

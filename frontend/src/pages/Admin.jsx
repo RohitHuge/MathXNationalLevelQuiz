@@ -18,6 +18,7 @@ const tabClass = (active, tone) =>
 
 const actionCardClass = 'relative flex h-full min-h-0 flex-col overflow-hidden p-4';
 const sideUtilityCardClass = 'relative flex min-h-0 flex-col overflow-hidden p-4';
+const API_BASE_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
 export default function Admin() {
   const { socket, isConnected } = useSocket();
@@ -137,7 +138,7 @@ export default function Admin() {
     if (!window.confirm(`Are you sure you want to grant Round 2 Access to the Top ${topNTeams} Teams?`)) return;
     setIsQualifying(true);
     try {
-      const res = await fetch('/api/round2/qualify', {
+      const res = await fetch(`${API_BASE_URL}/api/round2/qualify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ n: parseInt(topNTeams, 10) }),
@@ -243,7 +244,7 @@ export default function Admin() {
   };
 
   const fetchRound2Reports = async () => {
-    const res = await fetch(`/api/round2/reports?n=${parseInt(topNTeams, 10) || 20}`);
+    const res = await fetch(`${API_BASE_URL}/api/round2/reports?n=${parseInt(topNTeams, 10) || 20}`);
     const data = await res.json();
 
     if (!res.ok) {
@@ -283,7 +284,7 @@ export default function Admin() {
     if (!window.confirm('WARNING: Are you sure you want to REVOKE Round 2 Access from ALL users?')) return;
     setIsRevoking(true);
     try {
-      const res = await fetch('/api/round2/revoke', {
+      const res = await fetch(`${API_BASE_URL}/api/round2/revoke`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

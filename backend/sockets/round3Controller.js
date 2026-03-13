@@ -8,6 +8,7 @@ let gameState = {
     showAnswer: false,
     judgedOption: null,
     timerTime: 60,
+    timerMax: 60,
     isTimerRunning: false,
     imageUrl: null,
 
@@ -129,6 +130,7 @@ export const setupRound3Sockets = (io, socket) => {
                 gameState.showAnswer = false;
                 gameState.judgedOption = null;
                 gameState.timerTime = 60;
+                gameState.timerMax = 60;
                 gameState.isTimerRunning = false;
 
                 // Reset buzzer mechanics and allocations for the new question
@@ -200,7 +202,9 @@ export const setupRound3Sockets = (io, socket) => {
     });
 
     socket.on('admin:round3:set_timer', (time) => {
-        gameState.timerTime = parseInt(time, 10) || 0;
+        const parsedTime = parseInt(time, 10) || 0;
+        gameState.timerTime = parsedTime;
+        gameState.timerMax = parsedTime;
         io.emit('server:round3:state_update', gameState);
     });
 
@@ -353,6 +357,7 @@ export const setupRound3Sockets = (io, socket) => {
         };
         gameState.activeSubRound = 5;
         gameState.timerTime = 60;
+        gameState.timerMax = 60;
         gameState.isTimerRunning = false;
         setRapidFireActiveQuestion(questions, 0);
 
@@ -482,6 +487,7 @@ export const setupRound3Sockets = (io, socket) => {
         gameState.activeQuestion = null;
         gameState.judgedOption = null;
         gameState.timerTime = 60;
+        gameState.timerMax = 60;
         gameState.isTimerRunning = false;
         io.emit('server:round3:state_update', gameState);
     });

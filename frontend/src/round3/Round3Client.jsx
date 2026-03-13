@@ -6,8 +6,9 @@ import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
 
 const HorizontalTimer = ({ time, maxTime = 60 }) => {
-    const clampedTime = Math.max(0, Math.min(time, maxTime));
-    const percentage = (clampedTime / maxTime) * 100;
+    const safeMaxTime = Math.max(maxTime || 0, 1);
+    const clampedTime = Math.max(0, Math.min(time, safeMaxTime));
+    const percentage = (clampedTime / safeMaxTime) * 100;
     const isCritical = clampedTime <= 10;
 
     return (
@@ -85,6 +86,7 @@ export function Round3Client() {
         activeQuestion,
         showAnswer,
         timerTime,
+        timerMax = 60,
         buzzerQueue = [],
         passCount = 0,
         buzzerLocked,
@@ -103,6 +105,9 @@ export function Round3Client() {
     const rfPhase = rapidFire?.phase || 'idle';
     const isRapidFireReview = activeSubRound === 5 && rapidFire?.active && rfPhase === 'review' && !activeQuestion;
     const isWaiting = !activeQuestion && !isRapidFireReview;
+    const isPassOnRound = activeSubRound === 3;
+    const activeQueueIndex = isPassOnRound ? passCount - 1 : passCount;
+    const isAllocatedTurnActive = isPassOnRound && allocatedTeamId !== null && passCount === 0;
 
     // Sub-Round Names
     const subRoundNames = {
@@ -279,7 +284,7 @@ export function Round3Client() {
                             <div className="mb-6 flex items-center gap-6 rounded-3xl border border-white/10 bg-black/40 p-6 backdrop-blur-sm">
                                 <Clock className="w-8 h-8 shrink-0 text-[var(--color-neon-cyan)]" />
                                 <div className="mt-6 flex-1">
-                                    <HorizontalTimer time={timerTime} maxTime={60} />
+                                    <HorizontalTimer time={timerTime} maxTime={timerMax} />
                                 </div>
                                 <span className={`w-24 text-right font-mono text-5xl font-black tracking-tighter ${timerTime <= 10 ? 'animate-pulse text-[var(--color-neon-pink)]' : 'text-white'}`}>{timerTime}s</span>
                             </div>
@@ -388,7 +393,7 @@ export function Round3Client() {
                                 <div className="flex items-center gap-6 bg-black/40 p-6 rounded-3xl border border-white/10 backdrop-blur-sm">
                                     <Clock className="w-8 h-8 shrink-0 text-[var(--color-neon-cyan)]" />
                                     <div className="flex-1 mt-6">
-                                        <HorizontalTimer time={timerTime} maxTime={60} />
+                                        <HorizontalTimer time={timerTime} maxTime={timerMax} />
                                     </div>
                                     <span className={`text-5xl font-black font-mono tracking-tighter w-24 text-right ${timerTime <= 10 ? 'text-[var(--color-neon-pink)] animate-pulse' : 'text-white'}`}>{timerTime}s</span>
                                 </div>
@@ -568,7 +573,7 @@ export function Round3Client() {
 
                     {/* BUZZER QUEUE HUD (Active in Subround 3 & 4) */}
                     {(activeSubRound === 3 || activeSubRound === 4) && (
-                        <div className="bg-black/60 border border-[var(--color-neon-purple)]/40 shadow-[0_0_20px_rgba(188,19,254,0.1)] rounded-3xl p-6 flex flex-col h-1/2">
+                        <div className="bg-black/60 border border-[var(--color-neon-purple)]/40 shadow-[0_0_20px_rgba(188,19,254,0.1)] rounded-3xl p-6 flex flex-1 min-h-0 flex-col">
                             <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
                                 <h3 className="text-xl font-bold uppercase tracking-widest text-[var(--color-neon-purple)] flex items-center gap-3">
                                     <Zap size={24} /> Buzzer Queue
@@ -586,6 +591,14 @@ export function Round3Client() {
                             </div>
 
                             <div className="flex-1 overflow-y-auto space-y-3 custom-[var(--color-neon-purple)]-scrollbar pr-2">
+                                {isAllocatedTurnActive && allocatedTeam && (
+                                    <div className="rounded-xl border border-[var(--color-neon-cyan)]/50 bg-[var(--color-neon-cyan)]/10 p-4 text-white shadow-[0_0_15px_rgba(0,255,255,0.2)]">
+                                        <div className="text-xs font-bold uppercase tracking-widest text-[var(--color-neon-cyan)]">Answering Now</div>
+                                        <div className="mt-1 text-lg font-black">{allocatedTeam.id}. {allocatedTeam.name}</div>
+                                        <div className="mt-1 text-xs font-bold uppercase tracking-widest text-white/50">Allocated team gets the first chance</div>
+                                    </div>
+                                )}
+
                                 {buzzerQueue.length === 0 ? (
                                     <div className="h-full flex flex-col items-center justify-center text-white/20">
                                         <AlertTriangle size={48} className="mb-4" />
@@ -595,9 +608,8 @@ export function Round3Client() {
                                     <AnimatePresence>
                                         {buzzerQueue.map((buzz, i) => {
                                             const teamInfo = teams.find(t => t.id === buzz.teamId);
-                                            // The active answering team is the one at index `passCount`
-                                            const isActiveTurn = i === passCount;
-                                            const isPassed = i < passCount;
+                                            const isActiveTurn = i === activeQueueIndex;
+                                            const isPassed = i < activeQueueIndex;
 
                                             let queueStyle = "bg-white/5 border-white/10 text-white/50";
                                             if (isActiveTurn) queueStyle = "bg-[var(--color-neon-cyan)]/20 border-[var(--color-neon-cyan)]/50 text-white shadow-[0_0_15px_rgba(0,255,255,0.3)] ring-2 ring-[var(--color-neon-cyan)]";
