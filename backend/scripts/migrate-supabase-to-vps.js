@@ -116,7 +116,7 @@ async function migrateData() {
                             appwriteUserId,            // userId
                             user.email,            // email
                             user.phone || undefined, // phone (Appwrite requires strong format, could be error prone if invalid)
-                            '12345678',            // password
+                            '1729',            // password
                             user.full_name         // name
                         );
                         console.log(`   ✅ Appwrite Account created.`);
