@@ -144,6 +144,7 @@ export default function Round3Admin() {
   const isPassOnRound = selectedSubRound === 3;
   const activeQueueIndex = isPassOnRound ? passCount - 1 : passCount;
   const isAllocatedTurnActive = isPassOnRound && allocatedTeamId !== null && passCount === 0;
+  const activeQuestionHasNamedAnswer = Boolean(activeQuestion?.answerText) && (!activeQuestion?.options || activeQuestion.options.length === 0);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden font-sans">
@@ -505,6 +506,15 @@ export default function Round3Admin() {
                     </div>
                   </div>
                 )}
+
+                {activeQuestionHasNamedAnswer && (
+                  <div className="mt-3 rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-xs text-cyan-100">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">Visual Identification</div>
+                    <div className="mt-2 leading-relaxed text-white/80">
+                      This question has no MCQ options. Revealing the answer will show only the mathematician&apos;s name.
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="custom-scrollbar relative z-10 flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
@@ -515,10 +525,24 @@ export default function Round3Admin() {
                 ) : (
                   questions.map((q) => {
                     const isActive = activeQuestion?.id === q.id;
+                    const prompt = q.content?.infoText || q.content?.mathText || q.content?.text || 'Untitled question';
+                    const isNamedAnswerQuestion = Boolean(q.content?.answerText || q.content?.correctAnswer) && !(q.content?.options?.length > 0);
                     return (
                       <div key={q.id} className={`flex flex-col gap-2 rounded-xl border p-3 ${isActive ? 'border-[var(--color-neon-cyan)] bg-[var(--color-neon-cyan)]/20 shadow-[0_0_15px_rgba(0,255,255,0.1)]' : 'border-white/5 bg-black/40 hover:border-white/20'}`}>
                         <div className="line-clamp-3 text-sm leading-relaxed text-white/80">
-                          <Latex>{q.content?.mathText || q.content?.text}</Latex>
+                          <Latex>{prompt}</Latex>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {q.content?.imageUrl && (
+                            <span className="rounded-full border border-[var(--color-neon-purple)]/30 bg-[var(--color-neon-purple)]/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-neon-purple)]">
+                              Image
+                            </span>
+                          )}
+                          {isNamedAnswerQuestion && (
+                            <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                              Name Answer
+                            </span>
+                          )}
                         </div>
                         <div className="mt-1 flex items-center justify-between border-t border-white/5 pt-2">
                           <span className="text-[10px] font-mono font-bold text-[var(--color-neon-cyan)]">Q.{q.id} ({q.marks} pts)</span>

@@ -39,25 +39,34 @@ const importRound3QuestionsFromJSON = async () => {
 
             // Determine correct index from letter (A, B, C, D)
             let correctIndex = null;
+            let answerText = null;
             if (rawContent.answer?.value) {
-                const char = String(rawContent.answer.value).trim().toUpperCase();
-                if (char >= 'A' && char <= 'D') {
+                const rawAnswer = String(rawContent.answer.value).trim();
+                const char = rawAnswer.toUpperCase();
+                if (char >= 'A' && char <= 'D' && char.length === 1) {
                     correctIndex = char.charCodeAt(0) - 65;
+                } else if (rawAnswer) {
+                    answerText = rawAnswer;
                 }
             }
+
+            const mappedOptions = Array.isArray(rawContent.options)
+                ? rawContent.options.map(o => o.latex || o.text || o)
+                : [];
+            const hasNamedAnswer = Boolean(answerText);
 
             // Map standard keys to Round 3 sub-round schema
             const formattedContent = {
                 text: rawContent.body?.text || "",
                 mathText: rawContent.body?.latex || "",
-                options: Array.isArray(rawContent.options)
-                    ? rawContent.options.map(o => o.latex || o.text || o)
-                    : [],
-                correctIndex: correctIndex,
+                infoText: rawContent.body?.info || rawContent.body?.description || "",
+                options: hasNamedAnswer ? [] : mappedOptions,
+                correctIndex: hasNamedAnswer ? null : correctIndex,
+                answerText,
                 imageUrl: rawContent.body?.image || null,
                 // For sub-round 5 (Rapid Fire), sets are used (1-6)
                 set: rawContent.set || (SUB_ROUND === 5 ? (Math.floor(index / 10) + 1) : 0),
-                type: rawContent.type || (rawContent.options?.length > 0 ? "mcq" : "integer")
+                type: rawContent.type || (hasNamedAnswer ? "visual-identification" : rawContent.options?.length > 0 ? "mcq" : "integer")
             };
 
             const query = `

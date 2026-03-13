@@ -69,8 +69,10 @@ const buildRapidFireQuestion = (questionRow) => ({
     id: questionRow.id,
     text: questionRow.content?.text,
     mathText: questionRow.content?.mathText || '',
+    infoText: questionRow.content?.infoText || '',
     options: questionRow.content?.options || [],
-    imageUrl: questionRow.content?.imageUrl || null
+    imageUrl: questionRow.content?.imageUrl || null,
+    answerText: questionRow.content?.answerText || questionRow.content?.correctAnswer || null
 });
 
 const setRapidFireActiveQuestion = (questions, questionIndex) => {
@@ -122,9 +124,11 @@ export const setupRound3Sockets = (io, socket) => {
                     id: question.id,
                     text: question.content?.text || 'Question',
                     mathText: question.content?.mathText || '',
+                    infoText: question.content?.infoText || '',
                     imageUrl: question.content?.imageUrl || null, // For visual round
                     options: question.content?.options || [],
-                    correctIndex: question.content?.correctIndex
+                    correctIndex: question.content?.correctIndex,
+                    answerText: question.content?.answerText || question.content?.correctAnswer || null
                 };
                 gameState.activeSubRound = subRoundNum;
                 gameState.showAnswer = false;

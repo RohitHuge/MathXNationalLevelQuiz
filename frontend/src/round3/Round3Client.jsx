@@ -108,6 +108,11 @@ export function Round3Client() {
     const isPassOnRound = activeSubRound === 3;
     const activeQueueIndex = isPassOnRound ? passCount - 1 : passCount;
     const isAllocatedTurnActive = isPassOnRound && allocatedTeamId !== null && passCount === 0;
+    const questionPrompt = activeQuestion?.infoText || activeQuestion?.mathText || activeQuestion?.text || '';
+    const isVisualIdentification = Boolean(activeQuestion?.imageUrl)
+        && Boolean(activeQuestion?.answerText)
+        && (!activeQuestion?.options || activeQuestion.options.length === 0);
+    const showVisualPanel = Boolean(activeQuestion?.imageUrl) && (activeSubRound === 2 || isVisualIdentification);
 
     // Sub-Round Names
     const subRoundNames = {
@@ -425,11 +430,13 @@ export function Round3Client() {
                                 <div className="flex-1 flex flex-col items-center justify-center mt-12 w-full max-w-5xl mx-auto">
                                     <div
                                         className="w-full flex flex-col items-center gap-12 transition-all duration-300"
-                                        style={{ fontSize: `${localFontVh}vh`, lineHeight: '1.2' }}
+                                        style={{ fontSize: `${localFontVh * 1.1}vh`, lineHeight: '1.2' }}
                                     >
                                         {/* Main Question Text */}
-                                        <div className="leading-tight font-medium text-white text-center break-words w-full">
-                                            <Latex>{activeQuestion.mathText || activeQuestion.text}</Latex>
+                                        <div className="w-full text-center">
+                                            <div className="leading-tight font-medium text-white break-words w-full">
+                                                <Latex>{questionPrompt}</Latex>
+                                            </div>
                                         </div>
 
                                         {/* MCQ Options */}
@@ -477,7 +484,9 @@ export function Round3Client() {
                                             <span className="block text-green-400 font-bold tracking-widest uppercase mb-2 text-[0.4em]">Correct Answer</span>
                                             <div className="font-black text-white" style={{ fontSize: `${localFontVh * 0.8}vh` }}>
                                                 <Latex>
-                                                    {activeQuestion.options && activeQuestion.correctIndex !== undefined
+                                                    {activeQuestion.answerText
+                                                        ? activeQuestion.answerText
+                                                        : activeQuestion.options && activeQuestion.correctIndex !== undefined
                                                         ? `${String.fromCharCode(65 + activeQuestion.correctIndex)}. ${activeQuestion.options[activeQuestion.correctIndex]}`
                                                         : "Answer revealed by Quizmaster!"}
                                                 </Latex>
@@ -493,19 +502,19 @@ export function Round3Client() {
                 <div className="flex-1 flex flex-col gap-6 h-full">
 
                     {/* VISUAL ROUND IMAGE PANEL (Sub-Round 2) */}
-                    {activeSubRound === 2 && activeQuestion?.imageUrl && (
+                    {showVisualPanel && (
                         <div className="bg-black/60 border border-[var(--color-neon-purple)]/40 shadow-[0_0_20px_rgba(188,19,254,0.1)] rounded-3xl p-6 flex flex-col flex-1 min-h-0">
                             <div className="flex items-center gap-3 mb-4 border-b border-white/10 pb-4">
                                 <Zap size={20} className="text-[var(--color-neon-purple)]" />
                                 <h3 className="text-lg font-bold uppercase tracking-widest text-[var(--color-neon-purple)]">
-                                    Visual Reference
+                                    {isVisualIdentification ? 'Visual Clue' : 'Visual Reference'}
                                 </h3>
                             </div>
 
                             <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
                                 <img
                                     src={activeQuestion.imageUrl}
-                                    alt="Visual Reference"
+                                    alt={isVisualIdentification ? "Mathematician visual clue" : "Visual Reference"}
                                     className="max-w-full max-h-full object-contain transition-transform duration-200"
                                     style={{ transform: `scale(${clampedImageZoom})` }}
                                 />
