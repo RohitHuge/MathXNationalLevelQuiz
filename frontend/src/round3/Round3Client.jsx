@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useSocket } from '../SocketContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rocket, Trophy, Clock, Zap, Lock, Unlock, AlertTriangle, Minus, Plus, Volume2 } from 'lucide-react';
-import Latex from 'react-latex-next';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
 const HorizontalTimer = ({ time, maxTime = 60 }) => {
@@ -23,11 +25,34 @@ const HorizontalTimer = ({ time, maxTime = 60 }) => {
     );
 };
 
+const toMarkdown = (input = '') => {
+    if (!input) return '';
+    return input
+        .replace(/(?:\\begin\{itemize\}|\\\\begin\{itemize\})/g, '')
+        .replace(/(?:\\end\{itemize\}|\\\\end\{itemize\})/g, '')
+        .replace(/(^|\n)\s*(?:\\\\item|\\item)\s+/g, '$1- ');
+};
+
+const MarkdownMath = ({ children }) => (
+    <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+            p: ({ children }) => <p className="leading-tight">{children}</p>,
+            ul: ({ children }) => <ul className="list-disc pl-6 space-y-2 text-left">{children}</ul>,
+            ol: ({ children }) => <ol className="list-decimal pl-6 space-y-2 text-left">{children}</ol>,
+            li: ({ children }) => <li className="leading-snug">{children}</li>
+        }}
+    >
+        {toMarkdown(children)}
+    </ReactMarkdown>
+);
+
 export function Round3Client() {
     const { socket, isConnected } = useSocket();
     const [gameState, setGameState] = useState(null);
     const [localFontVh, setLocalFontVh] = useState(2.5); // Default font size in vh units
-    const [imageZoom, setImageZoom] = useState(2);
+    const [imageZoom, setImageZoom] = useState(1);
 
     // Buzzer Sound Logic
     const buzzerSound = React.useRef(new Audio('/buzzer.mp3'));
@@ -210,7 +235,7 @@ export function Round3Client() {
                                                 </div>
                                             )}
                                             <div className="text-sm text-white/80 line-clamp-2 mb-2">
-                                                <Latex>{item.text}</Latex>
+                                                <MarkdownMath>{item.text}</MarkdownMath>
                                             </div>
                                             <div className="flex gap-2 flex-wrap">
                                                 {item.options.map((opt, idx) => (
@@ -310,7 +335,7 @@ export function Round3Client() {
                                             Q{index + 1}
                                         </div>
                                         <div className="text-base leading-relaxed text-white/85">
-                                            <Latex>{question.content?.mathText || question.content?.text || ''}</Latex>
+                                            <MarkdownMath>{question.content?.mathText || question.content?.text || ''}</MarkdownMath>
                                         </div>
                                         {!!question.content?.options?.length && (
                                             <div className="mt-4 grid grid-cols-2 gap-2">
@@ -325,7 +350,7 @@ export function Round3Client() {
                                                         <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-lg bg-black/30 text-[10px] font-black">
                                                             {String.fromCharCode(65 + optIndex)}
                                                         </span>
-                                                        <Latex>{opt}</Latex>
+                                                        <MarkdownMath>{opt}</MarkdownMath>
                                                     </div>
                                                 ))}
                                             </div>
@@ -435,7 +460,7 @@ export function Round3Client() {
                                         {/* Main Question Text */}
                                         <div className="w-full text-center">
                                             <div className="leading-tight font-medium text-white break-words w-full">
-                                                <Latex>{questionPrompt}</Latex>
+                                                <MarkdownMath>{questionPrompt}</MarkdownMath>
                                             </div>
                                         </div>
 
@@ -462,7 +487,7 @@ export function Round3Client() {
                                                                 {letter}
                                                             </div>
                                                             <div className="text-white/90" style={{ fontSize: `${Math.max(2, localFontVh * 0.7)}vh` }}>
-                                                                <Latex>{opt}</Latex>
+                                                                <MarkdownMath>{opt}</MarkdownMath>
                                                             </div>
                                                         </div>
                                                     )
@@ -483,13 +508,13 @@ export function Round3Client() {
                                         >
                                             <span className="block text-green-400 font-bold tracking-widest uppercase mb-2 text-[0.4em]">Correct Answer</span>
                                             <div className="font-black text-white" style={{ fontSize: `${localFontVh * 0.8}vh` }}>
-                                                <Latex>
+                                                <MarkdownMath>
                                                     {activeQuestion.answerText
                                                         ? activeQuestion.answerText
                                                         : activeQuestion.options && activeQuestion.correctIndex !== undefined
                                                         ? `${String.fromCharCode(65 + activeQuestion.correctIndex)}. ${activeQuestion.options[activeQuestion.correctIndex]}`
                                                         : "Answer revealed by Quizmaster!"}
-                                                </Latex>
+                                                </MarkdownMath>
                                             </div>
                                         </motion.div>
                                     )}
