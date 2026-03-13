@@ -441,13 +441,10 @@ export function Round3Client() {
                                 </div>
 
                                 {allocatedTeamId && (
-                                    <div className={`absolute top-8 right-8 px-6 py-2 border rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(255,0,255,0.3)] animate-pulse bg-[var(--color-neon-pink)]/20 border-[var(--color-neon-pink)] text-[var(--color-neon-pink)]`}>
+                                    <div className={`absolute top-8 right-8 px-6 py-2 border bg-red-500 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(255,0,255,0.3)] animate-pulse bg-[var(--color-neon-pink)]/20 border-[var(--color-neon-pink)] text-[var(--color-neon-pink)]`}>
                                         <Zap className="text-[var(--color-neon-pink)]" size={20} />
-                                        <span className={`font-bold tracking-widest uppercase text-[var(--color-neon-pink)]`}>
-                                            {activeSubRound === 3
-                                                ? `Base: ${allocatedTeam?.id}. ${allocatedTeam?.name} (Blocked)`
-                                                : `Allocated: ${allocatedTeam?.id}. ${allocatedTeam?.name}`
-                                            }
+                                        <span className={`font-bold tracking-widest text-white uppercase text-[var(--color-neon-pink)]`}>
+                                          {`Allocated: ${allocatedTeam?.id}. ${allocatedTeam?.name}`}
                                         </span>
                                     </div>
                                 )}
@@ -575,7 +572,7 @@ export function Round3Client() {
                                 <h3 className="text-lg font-bold uppercase tracking-widest text-yellow-400 flex items-center gap-3">
                                     <Zap size={20} /> Rapid Fire
                                 </h3>
-                                <span className="text-sm font-bold text-white/60">Set {rapidFire.setNumber}</span>
+                                  <span className="text-2xl font-black text-white/80">Set {rapidFire.setNumber}</span>
                             </div>
                             <div className="text-center">
                                 <div className="text-5xl font-black text-white mb-1">
