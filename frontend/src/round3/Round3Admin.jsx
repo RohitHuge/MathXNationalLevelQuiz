@@ -98,6 +98,7 @@ export default function Round3Admin() {
 
   const handleSubRoundChange = (round) => {
     setSelectedSubRound(round);
+    socket.emit('admin:round3:update_state', { activeSubRound: round });
     if (round === 5) {
       socket.emit('admin:round3:rf_load_sets');
     } else {
