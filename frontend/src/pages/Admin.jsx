@@ -30,6 +30,8 @@ export default function Admin() {
   const [topNTeams, setTopNTeams] = useState(20);
   const [isQualifying, setIsQualifying] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
+  const [isDownloadingRankings, setIsDownloadingRankings] = useState(false);
+  const [isDownloadingQualifiedPublic, setIsDownloadingQualifiedPublic] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [activeQuestionId, setActiveQuestionId] = useState(null);
   const [clients, setClients] = useState([]);
@@ -160,12 +162,12 @@ export default function Admin() {
   const generateQualifiedTeamsPDF = (qualifiedTeams) => {
     const doc = new jsPDF();
     doc.setFontSize(20);
-    doc.text('Qualified Teams - Round 1 to Round 2', 14, 22);
+    doc.text('Qualified Team Leaders - Round 1 to Round 2', 14, 22);
     doc.setFontSize(11);
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
 
-    const tableColumn = ['#', 'Team Name', 'Member Name', 'Email ID', 'Total Score'];
+    const tableColumn = ['#', 'Team Name', 'Leader Name', 'Email ID', 'Total Score'];
     const tableRows = qualifiedTeams.map((team, index) => ([
       index + 1,
       team.team_name,
@@ -184,6 +186,97 @@ export default function Admin() {
     });
 
     doc.save(`Qualified_Teams_Round2_${new Date().getTime()}.pdf`);
+  };
+
+  const generateRankedTeamsPDF = (rankedTeams) => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('All Teams Ranking - Round 1', 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tableColumn = ['Rank', 'Team Name', 'Total Score'];
+    const tableRows = rankedTeams.map((team) => ([
+      team.rank,
+      team.team_name,
+      team.total_score || 0,
+    ]));
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'striped',
+      headStyles: { fillColor: [34, 197, 94] },
+      styles: { fontSize: 9 },
+    });
+
+    doc.save(`All_Teams_Ranking_${new Date().getTime()}.pdf`);
+  };
+
+  const generatePublicQualifiedTeamsPDF = (qualifiedTeams) => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Qualified Teams - Public List', 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tableColumn = ['Rank', 'Team Name', 'Total Score'];
+    const tableRows = qualifiedTeams.map((team) => ([
+      team.rank,
+      team.team_name,
+      team.total_score || 0,
+    ]));
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] },
+      styles: { fontSize: 9 },
+    });
+
+    doc.save(`Qualified_Teams_Public_${new Date().getTime()}.pdf`);
+  };
+
+  const fetchRound2Reports = async () => {
+    const res = await fetch(`/api/round2/reports?n=${parseInt(topNTeams, 10) || 20}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to fetch Round 2 reports.');
+    }
+
+    return data;
+  };
+
+  const handleDownloadRankings = async () => {
+    setIsDownloadingRankings(true);
+    try {
+      const data = await fetchRound2Reports();
+      generateRankedTeamsPDF(data.rankedTeams || []);
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Failed to download ranked teams list.');
+    } finally {
+      setIsDownloadingRankings(false);
+    }
+  };
+
+  const handleDownloadQualifiedPublic = async () => {
+    setIsDownloadingQualifiedPublic(true);
+    try {
+      const data = await fetchRound2Reports();
+      generatePublicQualifiedTeamsPDF(data.qualifiedTeams || []);
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Failed to download qualified teams public list.');
+    } finally {
+      setIsDownloadingQualifiedPublic(false);
+    }
   };
 
   const handleRevokeAll = async () => {
@@ -459,6 +552,24 @@ export default function Admin() {
                 <ThemeButton variant="primary" className={`mt-auto w-full px-4 py-2 text-sm ${isQualifying ? 'bg-amber-600 cursor-not-allowed' : 'bg-amber-600/20 border-amber-500/50 text-white hover:bg-amber-600'}`} onClick={handleQualifyTeams} disabled={isQualifying}>
                   {isQualifying ? 'Processing...' : `Qualify Top ${topNTeams}`}
                 </ThemeButton>
+                <div className="mt-3 grid grid-cols-1 gap-2">
+                  <ThemeButton
+                    variant="secondary"
+                    className={`w-full px-4 py-2 text-sm ${isDownloadingRankings ? 'bg-green-900 cursor-not-allowed text-white' : 'border-green-500/50 text-green-400 hover:bg-green-500 hover:text-white'}`}
+                    onClick={handleDownloadRankings}
+                    disabled={isDownloadingRankings}
+                  >
+                    {isDownloadingRankings ? 'Preparing Rankings...' : 'Download All Teams Ranking'}
+                  </ThemeButton>
+                  <ThemeButton
+                    variant="secondary"
+                    className={`w-full px-4 py-2 text-sm ${isDownloadingQualifiedPublic ? 'bg-blue-900 cursor-not-allowed text-white' : 'border-blue-500/50 text-blue-400 hover:bg-blue-500 hover:text-white'}`}
+                    onClick={handleDownloadQualifiedPublic}
+                    disabled={isDownloadingQualifiedPublic}
+                  >
+                    {isDownloadingQualifiedPublic ? 'Preparing Public List...' : `Download Qualified Top ${topNTeams} Public List`}
+                  </ThemeButton>
+                </div>
               </div>
 
               <div className="flex flex-col rounded-xl border border-red-500/20 bg-black/40 p-4">
