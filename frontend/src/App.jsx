@@ -136,12 +136,15 @@ function AppContent() {
     <div className="min-h-screen bg-[var(--color-slate-900)] text-[var(--color-gray-200)] font-base selection:bg-[var(--color-blue-500)] selection:text-white flex flex-col">
       {!hideHeader && (
         <header className="border-b border-gray-800 sticky top-0 z-40 bg-[var(--color-slate-900)]/80 backdrop-blur-md">
-          <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="container mx-auto px-6 h-16 flex items-center justify-between relative">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold text-white shadow-sm">
                 M
               </div>
               <h1 className="text-xl font-bold tracking-tight text-white">Math<span className="text-blue-500">X</span> CBT</h1>
+            <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 text-[10px] md:text-sm font-black uppercase tracking-[0.3em] text-[var(--color-gray-500)] whitespace-nowrap">
+              Department of Applied Sciences and Humanities
+            </div>
             </div>
             <div className="flex items-center gap-6">
               {user ? (

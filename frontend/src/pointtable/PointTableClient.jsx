@@ -39,8 +39,8 @@ function LineGraph({ rounds, teams, type = 'score' }) {
   const tickValues = Array.from({ length: 5 }, (_, index) => (maxValue / 4) * index);
 
   return (
-    <div className="h-full rounded-[2rem] border border-white/10 bg-black/40 p-5 overflow-hidden">
-      <div className="mb-5 flex items-center justify-between gap-4">
+    <div className="h-full rounded-[2rem] border border-white/10 bg-black/40 p-5 overflow-hidden flex flex-col">
+      <div className="mb-5 flex items-center justify-between gap-4 shrink-0">
         <div>
           <h3 className="text-2xl font-black text-white">
             {type === 'score' ? 'Score Progression' : 'Accuracy by Round'}
@@ -54,56 +54,60 @@ function LineGraph({ rounds, teams, type = 'score' }) {
         </div>
       </div>
 
-      <div className="h-[calc(100%-5rem)]">
-        <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-full w-full">
-          {tickValues.map((tick) => {
-            const y = getY(tick);
-            return (
-              <g key={tick}>
-                <line x1={PADDING.left} x2={CHART_WIDTH - PADDING.right} y1={y} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="6 6" />
-                <text x={PADDING.left - 14} y={y + 4} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="12">
-                  {type === 'score' ? Math.round(tick) : `${Math.round(tick)}%`}
-                </text>
-              </g>
-            );
-          })}
+      <div className="flex flex-1 min-h-0 gap-6">
+        <div className="flex-1 h-full min-w-0">
+          <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-full w-full">
+            {tickValues.map((tick) => {
+              const y = getY(tick);
+              return (
+                <g key={tick}>
+                  <line x1={PADDING.left} x2={CHART_WIDTH - PADDING.right} y1={y} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="6 6" />
+                  <text x={PADDING.left - 14} y={y + 4} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="12">
+                    {type === 'score' ? Math.round(tick) : `${Math.round(tick)}%`}
+                  </text>
+                </g>
+              );
+            })}
 
-          {rounds.map((round, index) => {
-            const x = getX(index);
-            return (
-              <g key={round.key}>
-                <line x1={x} x2={x} y1={PADDING.top} y2={CHART_HEIGHT - PADDING.bottom} stroke="rgba(255,255,255,0.04)" />
-                <text x={x} y={CHART_HEIGHT - PADDING.bottom + 28} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="12">
-                  {round.label}
-                </text>
-              </g>
-            );
-          })}
+            {rounds.map((round, index) => {
+              const x = getX(index);
+              return (
+                <g key={round.key}>
+                  <line x1={x} x2={x} y1={PADDING.top} y2={CHART_HEIGHT - PADDING.bottom} stroke="rgba(255,255,255,0.04)" />
+                  <text x={x} y={CHART_HEIGHT - PADDING.bottom + 28} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="12">
+                    {round.label}
+                  </text>
+                </g>
+              );
+            })}
 
-          {chartSeries.map((series) => {
-            const points = series.values.map((value, index) => `${getX(index)},${getY(value)}`).join(' ');
-            return (
-              <g key={series.id}>
-                <polyline fill="none" stroke={series.color} strokeWidth="4" points={points} strokeLinecap="round" strokeLinejoin="round" />
-                {series.values.map((value, index) => (
-                  <g key={`${series.id}-${index}`}>
-                    <circle cx={getX(index)} cy={getY(value)} r="6" fill={series.color} />
-                    <circle cx={getX(index)} cy={getY(value)} r="11" fill="transparent" stroke={series.color} strokeOpacity="0.25" />
-                  </g>
-                ))}
-              </g>
-            );
-          })}
-        </svg>
-      </div>
+            {chartSeries.map((series) => {
+              const points = series.values.map((value, index) => `${getX(index)},${getY(value)}`).join(' ');
+              return (
+                <g key={series.id}>
+                  <polyline fill="none" stroke={series.color} strokeWidth="4" points={points} strokeLinecap="round" strokeLinejoin="round" />
+                  {series.values.map((value, index) => (
+                    <g key={`${series.id}-${index}`}>
+                      <circle cx={getX(index)} cy={getY(value)} r="6" fill={series.color} />
+                      <circle cx={getX(index)} cy={getY(value)} r="11" fill="transparent" stroke={series.color} strokeOpacity="0.25" />
+                    </g>
+                  ))}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
 
-      <div className="mt-4 flex flex-wrap gap-3">
-        {chartSeries.map((series) => (
-          <div key={series.id} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: series.color }}></span>
-            <span className="text-sm font-bold text-white/85">{series.name}</span>
+        <div className="w-56 shrink-0 custom-scrollbar overflow-y-auto pr-2">
+          <div className="flex flex-col gap-2">
+            {chartSeries.map((series) => (
+              <div key={series.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 p-3">
+                <span className="h-4 w-4 shrink-0 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.2)]" style={{ backgroundColor: series.color }}></span>
+                <span className="text-sm font-bold text-white/85 line-clamp-1">{series.name}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
